@@ -262,6 +262,7 @@ test.describe('studio: nested groups', () => {
     )
     // Clear the room below the group first so nothing sits between it and the bottom.
     await page.locator(item('note')).click()
+    await expect(page.locator('[data-gridla-selected]')).toHaveCount(1)
     await page.keyboard.press('Delete')
     await expect(page.locator(item('note'))).toHaveCount(0)
     await page.locator('[data-gridla-drag-handle="body"]').click()
