@@ -126,7 +126,7 @@ function kb(bytes: number): string {
 }
 
 function gzipSize(bytes: Uint8Array | string): number {
-  const input = typeof bytes === 'string' ? Buffer.from(bytes) : bytes
+  const input = typeof bytes === 'string' ? new TextEncoder().encode(bytes) : new Uint8Array(bytes)
   return Bun.gzipSync(input).byteLength
 }
 
@@ -164,7 +164,8 @@ function localModuleGraph(entry: string): string[] {
   return [...seen]
 }
 
-const REACT_REFERENCE = /(?:from\s*|import\s*\(?\s*|require\s*\(\s*)["'](?:react|react-dom)(?:\/[^"']*)?["']/
+const REACT_REFERENCE =
+  /(?:from\s*|import\s*\(?\s*|require\s*\(\s*)["'](?:react|react-dom)(?:\/[^"']*)?["']/
 const JSX_RUNTIME = /react\/jsx(?:-dev)?-runtime/
 const INLINED_REACT_MARKERS = [
   'Symbol.for("react.',
@@ -287,7 +288,8 @@ await check('tarball contents', () => {
   }>(path.join(packageRoot, 'package.json'))
   const deps = Object.keys(manifest.dependencies ?? {})
   if (deps.length > 0) problems.push(`dependencies must be empty, found: ${deps.join(', ')}`)
-  if (!manifest.peerDependencies?.react) problems.push('react must stay an (optional) peer dependency')
+  if (!manifest.peerDependencies?.react)
+    problems.push('react must stay an (optional) peer dependency')
 
   // Every export target must exist in the tarball.
   const targets: string[] = []
@@ -339,7 +341,8 @@ await check('source maps', () => {
   }
   if (problems.length > 0) fail(problems.join('\n'))
   const sourceCount = maps.reduce(
-    (sum, map) => sum + (readJson<{ sources?: string[] }>(path.join(packageRoot, map)).sources?.length ?? 0),
+    (sum, map) =>
+      sum + (readJson<{ sources?: string[] }>(path.join(packageRoot, map)).sources?.length ?? 0),
     0,
   )
   record('source maps', 'pass', `${maps.length} maps, ${sourceCount} relative sources`)
@@ -373,7 +376,8 @@ await check('react entry keeps React external', () => {
     problems.push('dist/react.js does not import from the external "react" module')
   }
   for (const marker of INLINED_REACT_MARKERS) {
-    if (code.includes(marker)) problems.push(`dist/react.js contains inlined React marker ${marker}`)
+    if (code.includes(marker))
+      problems.push(`dist/react.js contains inlined React marker ${marker}`)
   }
   // Chunks shared with the core entry must stay React-free too.
   for (const file of localModuleGraph(entry)) {
@@ -392,10 +396,18 @@ await check('react entry keeps React external', () => {
   )
 })
 
-type Fixture = { name: string; runs: string[][]; needsReact: boolean }
+type Fixture = { name: string; runs: string[][]; needsReact: boolean; typecheck: boolean }
 const FIXTURES: Fixture[] = [
-  { name: 'vanilla-esm', runs: [['node', 'main.mjs'], ['bun', 'main.mjs']], needsReact: false },
-  { name: 'react-consumer', runs: [['bun', 'main.tsx']], needsReact: true },
+  {
+    name: 'vanilla-esm',
+    runs: [
+      ['node', 'main.mjs'],
+      ['bun', 'main.mjs'],
+    ],
+    needsReact: false,
+    typecheck: false,
+  },
+  { name: 'react-consumer', runs: [['bun', 'main.tsx']], needsReact: true, typecheck: true },
 ]
 
 /**
@@ -423,7 +435,7 @@ function resolveFrom(cwd: string, specifier: string, runtime: 'node' | 'bun'): s
   return runOrFail(cmd, { cwd }).stdout.trim()
 }
 
-for (const fixture of FIXTURES) {
+async function verifyFixture(fixture: Fixture): Promise<void> {
   const label = `consumer: ${fixture.name}`
   await check(label, () => {
     if (!tarball) fail('no tarball (pack failed)')
@@ -435,7 +447,9 @@ for (const fixture of FIXTURES) {
     for (const runtime of ['node', 'bun'] as const) {
       const resolved = resolveFrom(dir, 'gridla', runtime)
       if (!resolved.startsWith(expectedPrefix)) {
-        fail(`${runtime} resolves "gridla" to ${resolved}, expected the packed copy under ${installed}`)
+        fail(
+          `${runtime} resolves "gridla" to ${resolved}, expected the packed copy under ${installed}`,
+        )
       }
     }
 
@@ -463,7 +477,25 @@ for (const fixture of FIXTURES) {
     }
     record(label, 'pass', fixture.runs.map((cmd) => cmd.join(' ')).join(' | '))
   })
+
+  if (fixture.typecheck) {
+    // Types must resolve from the packed declarations under NodeNext resolution.
+    await check(`typecheck: ${fixture.name}`, () => {
+      if (!tarball) fail('no tarball (pack failed)')
+      const dir = path.join(CONSUMERS, fixture.name)
+      const result = run(['bunx', 'tsc', '-p', 'tsconfig.json', '--noEmit'], { cwd: dir })
+      if (result.code !== 0)
+        fail(`tsc (nodenext) failed against the packed types\n${indent(result.output)}`)
+      record(`typecheck: ${fixture.name}`, 'pass', 'tsc --moduleResolution nodenext')
+    })
+  }
 }
+
+// Fixtures run one after another: each check reports into the shared results list.
+await FIXTURES.reduce(
+  (previous, fixture) => previous.then(() => verifyFixture(fixture)),
+  Promise.resolve(),
+)
 
 await check('import without window/document/React', () => {
   if (!tarball) fail('no tarball (pack failed)')
@@ -563,7 +595,9 @@ const passed = results.filter((r) => r.status === 'pass')
 
 console.log('\n== summary')
 for (const result of results) {
-  console.log(`  [${ICON[result.status]}] ${result.name}${result.detail ? ` - ${result.detail.split('\n')[0]}` : ''}`)
+  console.log(
+    `  [${ICON[result.status]}] ${result.name}${result.detail ? ` - ${result.detail.split('\n')[0]}` : ''}`,
+  )
 }
 console.log(`\n${passed.length} passed, ${warned.length} warnings, ${failed.length} failed`)
 

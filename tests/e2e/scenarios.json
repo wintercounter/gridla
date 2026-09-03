@@ -1,0 +1,374 @@
+{
+  "$comment": "Generated from the port ledger; one entry per ported-react-or-studio row in tests/e2e/PORT-LEDGER.md.",
+  "scenarios": [
+    {
+      "id": "C-002",
+      "demo": "gallery: custom chrome and selection",
+      "title": "In edit mode, clicking an item body selects it and the edit overlay shields interactive content inside the item from the click.",
+      "setup": "Edit mode on; one item renders an interactive child button that records clicks.",
+      "action": "Click the item body over the child button.",
+      "assertion": "Item reports selected; the child button click counter stays at 0.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-003",
+      "demo": "studio: nested groups",
+      "title": "Clicking a child inside a group selects the child directly; the parent group never appears in the selection-change log.",
+      "setup": "Group containing two children; selection-change listener records every selected id.",
+      "action": "Click the first child.",
+      "assertion": "Recorded selection ids never include the group id; child ends selected.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-004",
+      "demo": "gallery: pointer interactions",
+      "title": "In edit mode there is no top-centre move handle; a resize handle becomes active only when the pointer nears the matching edge of the selected item.",
+      "setup": "Edit mode; one item selected.",
+      "action": "Hover the item centre, then hover 2 px inside its east edge.",
+      "assertion": "No move handle exists; zero active resize handles at centre, exactly one active east handle at the edge.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-006",
+      "demo": "gallery: pointer interactions",
+      "title": "Outside edit mode, an item with free move/resize policy can be dragged via its proximity move handle and shows an active east handle on edge hover.",
+      "setup": "View mode (no edit chrome); two side-by-side items with free move and resize.",
+      "action": "Hover top-centre to reveal the move handle, drag the item down 120 px; then hover the east edge.",
+      "assertion": "Item y increased by ≈120; exactly one active east resize handle appears.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-007",
+      "demo": "studio: nested groups",
+      "title": "A 5 px drag of a child inside a group shows a drop preview that stays inside the group rect and never re-parents the child.",
+      "setup": "Root with a header group and a body group; body group has two children.",
+      "action": "Pointer-down on a body child, move 5 px, hold; then release.",
+      "assertion": "Every drop-preview rect lies inside the body-group rect (±4 px); after release the child depth is unchanged.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-008",
+      "demo": "gallery: pointer interactions",
+      "title": "A pointercancel during a pending drag leaves the item in place; a real drag suppresses text selection on the document and clears it after drop.",
+      "setup": "Two stacked items, edit mode.",
+      "action": "Pointer-down + 1 px move, dispatch pointercancel, release; then drag the first item down over the second.",
+      "assertion": "After cancel, item position unchanged (<3 px) and no selection-suppressed flag; during the drag a selection-suppressed flag is set and window selection is empty; after drop the flag is cleared and the neighbour moved down ≥20 px.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-009",
+      "demo": "studio: edit-mode overrides",
+      "title": "Edit mode overrides per-item movement/resize locks meant for end users: a locked header item can be moved and resized while editing.",
+      "setup": "Header group with a title item whose end-user movement and resize are locked; edit mode on.",
+      "action": "Drag the title 160 px east; then drag its east handle +60 px.",
+      "assertion": "Title x increased and width increased.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-011",
+      "demo": "gallery: push/swap comparison",
+      "title": "While dragging over a sibling, a drop preview appears at the swap target; a later resize of the swapped item does not compact it back.",
+      "setup": "Two side-by-side items with a gap; swap policy.",
+      "action": "Drag left item over the right item and hold; release; then resize the right item east by 40 px.",
+      "assertion": "During hold, preview x ≈ right item original x (<8 px); after resize the right item x/y unchanged (<8 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-014",
+      "demo": "studio: nested groups",
+      "title": "After a cross-group drop, the committed item rect equals the drop preview shown just before release (within 3 px).",
+      "setup": "Header group + body group; body has two children.",
+      "action": "Drag a body child into the header, hold, read preview rect, release.",
+      "assertion": "Committed x/y equal preview x/y within 3 px.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "C-032",
+      "demo": "gallery: keyboard interactions",
+      "title": "Arrow moves the selected item one step, Shift+Arrow ten steps, Ctrl+Arrow grows the east edge with the left edge anchored.",
+      "setup": "Item with free space on every side; select it.",
+      "action": "Press ArrowRight, Shift+ArrowRight, Control+ArrowRight.",
+      "assertion": "x grows by a small step (<3 px), then by ≥5x that step; then width grows while x stays (≤1 px).",
+      "capabilities": ["keyboard"]
+    },
+    {
+      "id": "B-001",
+      "demo": "gallery: pointer interactions",
+      "title": "Outside edit mode, hovering near an item edge activates that resize handle for items with resize allowed.",
+      "setup": "View mode; item with resize allowed.",
+      "action": "Move pointer to 2 px inside the east edge.",
+      "assertion": "Exactly one active east resize handle for that item.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-002",
+      "demo": "gallery: pointer interactions",
+      "title": "The move handle stays invisible while hovering the bottom of an item and only appears near the top-centre.",
+      "setup": "View mode; one item.",
+      "action": "Hover 8 px above the item bottom; then hover 2 px below its top-centre.",
+      "assertion": "Handle opacity <0.2 at the bottom, >0.9 at the top-centre.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-005",
+      "demo": "gallery: push/swap comparison",
+      "title": "While dragging over a sibling, a drop preview is shown at the swap target position.",
+      "setup": "Two side-by-side items.",
+      "action": "Drag the left item over the right one and hold.",
+      "assertion": "A drop preview exists and its x ≈ right item x (<8 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-006",
+      "demo": "studio: edit-mode overrides",
+      "title": "An item whose end-user movement is locked can still be dragged to the adjacent slot in edit mode.",
+      "setup": "Header with a movement-locked title and an action item to its right; edit mode on.",
+      "action": "Drag the title right to the slot beside the action item.",
+      "assertion": "Title x moved by at least half the distance to the action item.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-007",
+      "demo": "studio: nested groups",
+      "title": "Clicking a child inside a group in edit mode selects the child, not the group.",
+      "setup": "Group with two children; edit mode on.",
+      "action": "Click a child.",
+      "assertion": "Child selected; group not selected.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-008",
+      "demo": "gallery: pointer interactions",
+      "title": "During a drag the active item has a higher z-index than the drop preview.",
+      "setup": "Two side-by-side items.",
+      "action": "Drag one over the other and hold.",
+      "assertion": "computed z-index(active) > z-index(preview).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-010",
+      "demo": "studio: nested groups",
+      "title": "Dragging a group south handle 800 px below the page clamps the group at the canvas bottom instead of snapping back to its initial size when the pointer leaves.",
+      "setup": "Group with room below it; select the group; edit mode.",
+      "action": "Drag its south handle to y = bottom + 800 and release.",
+      "assertion": "Group bottom == canvas inner bottom (±2 px); height grew.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-013",
+      "demo": "gallery: pointer interactions",
+      "title": "After pointer-down, a 4 px pointer move already translates the item by 4 px (no drag threshold lag).",
+      "setup": "One item; edit mode.",
+      "action": "Pointer-down on the drag surface, move +4,+4 in one step, hold.",
+      "assertion": "Item x/y == before + 4 (<2 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-016",
+      "demo": "studio: edit-mode overrides",
+      "title": "In edit mode a resize-locked group below a header can be shrunk from its north handle.",
+      "setup": "Header + resize-locked body group; edit mode on.",
+      "action": "Hover the body top edge, drag the north handle down 80 px.",
+      "assertion": "Group y increased ≥40 and height decreased ≥40.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-017",
+      "demo": "studio: nested groups",
+      "title": "While a group is being resized from the north (before release), its children have already shrunk.",
+      "setup": "Group with two children; edit mode.",
+      "action": "Drag the group north handle down 100 px and hold.",
+      "assertion": "Child height already decreased ≥40 px mid-drag.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-023",
+      "demo": "studio: nested groups",
+      "title": "Pointer-down on empty space inside a group drags the group; clicks on children still target the child.",
+      "setup": "Group with two children and empty space between them; edit mode.",
+      "action": "Pointer-down in the empty space, drag 60 px down, release.",
+      "assertion": "Group y increased ≥30; children moved with it.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-030",
+      "demo": "studio: nested groups",
+      "title": "While a header is resized south (before release), the neighbour group shrinks and its children visibly move with it.",
+      "setup": "Header group above a body group with children; edit mode.",
+      "action": "Drag the header south handle down 80 px and hold.",
+      "assertion": "Body child y increased ≥40 mid-drag.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-032",
+      "demo": "gallery: pointer interactions",
+      "title": "Dragging a north handle far past a blocking header leaves the live rect at the last valid position (header.bottom + gap), not at the pointer.",
+      "setup": "Header (locked) above a body group; edit mode.",
+      "action": "Drag the body north handle to viewport y=4 and hold.",
+      "assertion": "Body y stays > header.bottom (well above 4).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-033",
+      "demo": "gallery: pointer interactions",
+      "title": "Pointer capture keeps a resize alive when the pointer leaves the canvas; returning and releasing commits the final position.",
+      "setup": "Group with a north handle; edit mode.",
+      "action": "Drag down 40, move to x=2000 (outside canvas), move back to +60, release.",
+      "assertion": "Group y increased ≈60 (≥40).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-035",
+      "demo": "gallery: pointer interactions",
+      "title": "Two consecutive north resizes (release between them) both commit.",
+      "setup": "Group with north handle; edit mode.",
+      "action": "Resize north +80, release; resize north +60, release.",
+      "assertion": "Second resize moved y ≥30 and shrank height ≥30 relative to the first result.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-037",
+      "demo": "gallery: pointer interactions",
+      "title": "Releasing a resize while the pointer is in invalid territory commits the last valid preview, never the pre-drag size.",
+      "setup": "Locked header above a body group; edit mode; first shrink body north by 100 and release.",
+      "action": "Start a new north resize and release at viewport y=4 (over the header).",
+      "assertion": "Body y ≥ shrunk y − small tolerance (not back to the original); height ≤ shrunk height.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-038",
+      "demo": "studio: edit-mode overrides",
+      "title": "In edit mode a resize-locked group still paints an active north handle on proximity and can be shrunk from it.",
+      "setup": "Resize-locked body group; edit mode on.",
+      "action": "Hover its top edge; drag the north handle down 80 px.",
+      "assertion": "Active north handle count is 1; group y increased and height decreased ≥40.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-040",
+      "demo": "gallery: custom chrome and selection",
+      "title": "Pointer-down on item B while A is selected switches selection to B before release.",
+      "setup": "Two items; A selected.",
+      "action": "Pointer-down on B and move 10 px without releasing.",
+      "assertion": "B selected and A not selected mid-drag.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-041",
+      "demo": "gallery: push/swap comparison",
+      "title": "During an east resize the neighbour shrinks live; retreating the handle below its origin restores the neighbour to its original width.",
+      "setup": "Two side-by-side items; shrink policy.",
+      "action": "Drag the left item east handle +120 and hold; then move to −30 and hold.",
+      "assertion": "Neighbour width < original − 60 mid-expand; |neighbour width − original| ≤ 4 after retreat.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-044",
+      "demo": "studio: nested groups",
+      "title": "During a cross-group drag the active item visual and the drop preview share the same rect (≤2 px on every axis).",
+      "setup": "Header group + body group.",
+      "action": "Drag a header child into the body group and hold.",
+      "assertion": "active rect == preview rect within 2 px (x, y, w, h).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-047",
+      "demo": "studio: nested groups",
+      "title": "When a root-level drag pushes a sibling group during preview, that group children move with it (no stale child rects until release).",
+      "setup": "Root with a header group (with a child) and a body item below.",
+      "action": "Drag the body item up into the header and hold.",
+      "assertion": "Header child y moved by ≈ the header displacement mid-drag.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-048",
+      "demo": "studio: nested groups",
+      "title": "Dragging a child south handle never resizes the parent group, even when the child fills the parent on that axis.",
+      "setup": "Group with a child that fills the group height; edit mode; select the child.",
+      "action": "Drag the child south handle +120 and release.",
+      "assertion": "Group height unchanged (±2 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-049",
+      "demo": "studio: actions and keyboard",
+      "title": "A selected non-root group exposes a delete action that removes the group and its children.",
+      "setup": "Root with a header group.",
+      "action": "Select the group (via a child then the parent crumb); click its delete action.",
+      "assertion": "Group element count becomes 0.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-050",
+      "demo": "studio: palette insertion",
+      "title": "Dragging a palette entry over a fully packed group shows a drop preview inside that group.",
+      "setup": "Packed group (two children filling it); palette open.",
+      "action": "dragstart on a palette entry; dragenter/dragover at the group centre.",
+      "assertion": "Exactly one drop preview and its x-span lies inside the group rect (±4 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-051",
+      "demo": "studio: palette insertion",
+      "title": "While a palette entry hovers a packed group, the existing children shrink or move live before drop.",
+      "setup": "Packed group; palette open.",
+      "action": "dragstart palette entry; dragover the group; measure a child; dragleave.",
+      "assertion": "Child width, height, or position changed by >4 px during hover.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-054",
+      "demo": "studio: nested groups",
+      "title": "Dropping an item into the gap between two groups shrinks the lower group during preview and its children stay inside the shrunken rect.",
+      "setup": "Header group with a child; body group with children below; gap between.",
+      "action": "Drag the header child into the inter-group gap and hold.",
+      "assertion": "Body child rect ⊆ body group live rect (±4 px).",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-060",
+      "demo": "studio: actions and keyboard",
+      "title": "Pressing Delete removes the selected item.",
+      "setup": "Two items; edit mode.",
+      "action": "Click the second item; press Delete.",
+      "assertion": "Item selected after click; element count 0 after Delete.",
+      "capabilities": ["pointer", "keyboard"]
+    },
+    {
+      "id": "B-065",
+      "demo": "studio: palette insertion",
+      "title": "Click-to-add into a selected, fully packed group grows the group rather than overflowing.",
+      "setup": "Packed group selected; palette open.",
+      "action": "Click a palette entry.",
+      "assertion": "Group height after ≥ height before − 4.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-066",
+      "demo": "studio: palette insertion",
+      "title": "Click-to-add places the new item fully inside the canvas bounds.",
+      "setup": "Layout with existing items; palette open.",
+      "action": "Click a palette entry.",
+      "assertion": "Item count +1 and the new item rect ⊆ canvas rect.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-073",
+      "demo": "studio: edit-mode overrides",
+      "title": "In edit mode a fixed-size item can be resized from its south-east handle and the new size becomes its fixed size.",
+      "setup": "Fixed-size item; edit mode; select it.",
+      "action": "Drag the south-east handle +60,+60; release.",
+      "assertion": "Width and height grew ≈60; inspector fixed width/height reflect the new values.",
+      "capabilities": ["pointer"]
+    },
+    {
+      "id": "B-074",
+      "demo": "studio: edit-mode overrides",
+      "title": "A fixed 121x36 child keeps its size while its fixed-height parent group is grown then shrunk in edit mode; the child itself can then be resized directly.",
+      "setup": "Fixed-height header group containing a fixed 121x36 child; edit mode.",
+      "action": "Resize the group south +100, then back; then drag the child north-east handle +30,−30.",
+      "assertion": "Child stays 121x36 through the group resizes; group shrinks back ≥40; child then changes size during its own resize.",
+      "capabilities": ["pointer"]
+    }
+  ]
+}

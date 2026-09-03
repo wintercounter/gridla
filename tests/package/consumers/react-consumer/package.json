@@ -1,8 +1,8 @@
 {
   "name": "gridla-consumer-react",
   "private": true,
-  "type": "module",
   "description": "Package-contract fixture: React SSR consumer of the packed gridla tarball. Installed by scripts/verify-package.ts; node_modules is ignored.",
+  "type": "module",
   "scripts": {
     "test": "bun main.tsx",
     "typecheck": "tsc -p tsconfig.json"

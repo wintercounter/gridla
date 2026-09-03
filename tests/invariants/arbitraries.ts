@@ -1,5 +1,7 @@
 import fc from 'fast-check'
 
+import { renderLayoutForRect } from 'gridla'
+
 import type {
   GridCanvas,
   GridItem,
@@ -10,6 +12,7 @@ import type {
   GridRect,
   GridResizeEdge,
   GridSizeMode,
+  ProjectionStrategy,
 } from 'gridla'
 
 /**
@@ -188,8 +191,8 @@ export function layoutArbFor(gap: number, canvas: fc.Arbitrary<GridCanvas> = can
 export const gapArb: fc.Arbitrary<Gap> = fc.constantFrom(...GAPS)
 
 /** A gap plus a layout that honours it. */
-export const gappedLayoutArb: fc.Arbitrary<{ gap: Gap; layout: GridLayout }> = gapArb.chain(
-  (gap) => layoutArbFor(gap).map((layout) => ({ gap, layout })),
+export const gappedLayoutArb: fc.Arbitrary<{ gap: Gap; layout: GridLayout }> = gapArb.chain((gap) =>
+  layoutArbFor(gap).map((layout) => ({ gap, layout })),
 )
 
 // ---------------------------------------------------------------------------
@@ -273,6 +276,75 @@ export function pickItem<T>(items: readonly GridItem<T>[], index: number): GridI
 }
 
 // ---------------------------------------------------------------------------
+// Fitting targets
+// ---------------------------------------------------------------------------
+
+function hasFixedWidth(layout: GridLayout): boolean {
+  return layout.items.some((item) => item.sizeMode === 'fixed-w' || item.sizeMode === 'fixed')
+}
+
+function hasFixedHeight(layout: GridLayout): boolean {
+  return layout.items.some((item) => item.sizeMode === 'fixed-h' || item.sizeMode === 'fixed')
+}
+
+/**
+ * Minimum inner size a tiled layout needs: the widest row of `minW` sums and
+ * the stack of per-row `minH` maxima. Rows are the tile bands (shared `y`).
+ */
+function minimumInner(layout: GridLayout): { w: number; h: number } {
+  const rows = new Map<number, { w: number; h: number }>()
+  for (const item of layout.items) {
+    const row = rows.get(item.y) ?? { w: 0, h: 0 }
+    row.w += item.minW ?? 1
+    row.h = Math.max(row.h, item.minH ?? 1)
+    rows.set(item.y, row)
+  }
+  let w = 0
+  let h = 0
+  for (const row of rows.values()) {
+    w = Math.max(w, row.w)
+    h += row.h
+  }
+  return { w, h }
+}
+
+/**
+ * Grow `target` so `layout` can be projected into it without an impossible
+ * request: an axis with fixed-size items keeps at least the source inner
+ * size, and every axis can hold the authored minimums. Scrollable heights are
+ * treated like bounded ones so the precondition stays conservative.
+ */
+export function fitTarget(layout: GridLayout, target: GridCanvas): GridCanvas {
+  const need = minimumInner(layout)
+  const padX = target.padding.left + target.padding.right
+  const padY = target.padding.top + target.padding.bottom
+  const needW = hasFixedWidth(layout) || need.w > innerWidth(target)
+  const needH = hasFixedHeight(layout) || need.h > innerHeight(target)
+  const width = needW ? Math.max(target.width, padX + innerWidth(layout.canvas)) : target.width
+  const height = needH ? Math.max(target.height, padY + innerHeight(layout.canvas)) : target.height
+  return { ...target, width, height }
+}
+
+export type ProjectionCase = {
+  gap: Gap
+  layout: GridLayout
+  target: GridCanvas
+  strategy: ProjectionStrategy
+}
+
+export const strategyArb: fc.Arbitrary<ProjectionStrategy> = fc.constantFrom('chain', 'segments')
+
+/** A layout plus a random target canvas that can hold its fixed content. */
+export const projectionCaseArb: fc.Arbitrary<ProjectionCase> = fc
+  .tuple(gappedLayoutArb, canvasArb, strategyArb)
+  .map(([{ gap, layout }, target, strategy]) => ({
+    gap,
+    layout,
+    target: fitTarget(layout, target),
+    strategy,
+  }))
+
+// ---------------------------------------------------------------------------
 // Nested trees
 // ---------------------------------------------------------------------------
 
@@ -296,9 +368,45 @@ export type TreeCase = {
 }
 
 /**
+ * Authored canvas for a container rendered into `rect`. When the authored
+ * layout cannot fit the rect (fixed content or minimums larger than the
+ * rendered inner size) the canvas is rebased to the rect so the projection is
+ * an identity; otherwise the random canvas stays and gets projected.
+ */
+function fitContainer(
+  spec: ContainerSpec,
+  items: GridItem[],
+  rect: GridRect,
+): { canvas: GridCanvas; padding: GridPadding | undefined; items: GridItem[] } {
+  const padding = spec.padding ?? spec.canvas.padding
+  const inner = {
+    w: rect.w - padding.left - padding.right,
+    h: rect.h - padding.top - padding.bottom,
+  }
+  const layout = { canvas: spec.canvas, items }
+  const need = minimumInner(layout)
+  const fitsW = (!hasFixedWidth(layout) || inner.w >= innerWidth(spec.canvas)) && need.w <= inner.w
+  const fitsH =
+    (!hasFixedHeight(layout) || inner.h >= innerHeight(spec.canvas)) && need.h <= inner.h
+  if (fitsW && fitsH) return { canvas: spec.canvas, padding: spec.padding, items }
+  const canvas: GridCanvas = {
+    width: Math.max(1, Math.round(rect.w)),
+    height: Math.max(1, Math.round(rect.h)),
+    padding: spec.canvas.padding,
+    heightMode: 'bounded',
+  }
+  return {
+    canvas,
+    padding: undefined,
+    items: tileItems(canvas, spec.spec, spec.gap, items[0]!.id.replace(/-\d+$/, '')),
+  }
+}
+
+/**
  * A two- or three-level tree: a root container whose children are leaves or
  * containers of leaves. Every container's layout is a tiled, non-overlapping
- * item set on its own bounded canvas.
+ * item set on its own bounded canvas, sized so its content can fit the rect
+ * it renders into.
  */
 export const treeArb: fc.Arbitrary<TreeCase> = fc
   .record({
@@ -315,27 +423,39 @@ export const treeArb: fc.Arbitrary<TreeCase> = fc
     }),
   })
   .map(({ root, children, rootRect }) => {
-    const rootItems = tileItems(root.canvas, root.spec, root.gap, 'panel')
-    const nodes: GridNode[] = rootItems.map((item, index) => {
+    const rootFit = fitContainer(
+      root,
+      tileItems(root.canvas, root.spec, root.gap, 'panel'),
+      rootRect,
+    )
+    const rootLayout: GridLayout = { canvas: rootFit.canvas, items: rootFit.items }
+    const rendered = renderLayoutForRect(rootLayout, rootRect, rootFit.padding, root.gap)
+    const nodes: GridNode[] = rootFit.items.map((item, index) => {
       const child = children[index]
       if (!child) return { id: item.id }
-      const grandItems = tileItems(child.canvas, child.spec, child.gap, `${item.id}-card`)
+      const projected = rendered.items.find((entry) => entry.id === item.id) ?? item
+      const rect = { x: projected.x, y: projected.y, w: projected.w, h: projected.h }
+      const fit = fitContainer(
+        child,
+        tileItems(child.canvas, child.spec, child.gap, `${item.id}-card`),
+        rect,
+      )
       const node: GridNode = {
         id: item.id,
-        layout: { canvas: child.canvas, items: grandItems },
-        children: grandItems.map((grand) => ({ id: grand.id })),
+        layout: { canvas: fit.canvas, items: fit.items },
+        children: fit.items.map((grand) => ({ id: grand.id })),
         gap: child.gap,
       }
-      if (child.padding) node.padding = child.padding
+      if (fit.padding) node.padding = fit.padding
       return node
     })
     const rootNode: GridNode = {
       id: 'root',
-      layout: { canvas: root.canvas, items: rootItems },
+      layout: rootLayout,
       children: nodes,
       gap: root.gap,
     }
-    if (root.padding) rootNode.padding = root.padding
+    if (rootFit.padding) rootNode.padding = rootFit.padding
     return { root: rootNode, rootRect }
   })
 

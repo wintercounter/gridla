@@ -1,4 +1,5 @@
 {
+  "// why": "Bun applies the nearest tsconfig's `paths` when resolving imports; without this file the root tsconfig would map `gridla` to packages/gridla/src instead of the installed tarball. scripts/verify-package.ts also typechecks this fixture with it.",
   "compilerOptions": {
     "module": "nodenext",
     "moduleResolution": "nodenext",

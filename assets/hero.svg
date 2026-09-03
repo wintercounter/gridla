@@ -1,0 +1,102 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" width="960" height="420" role="img" aria-labelledby="t d">
+  <title id="t">Gridla reflow preview</title>
+  <desc id="d">A nested layout with a header, three cards, and a group. The canvas narrows and the items reflow while the fixed header keeps its height, then a card is dragged into the group and its siblings slide out of the way.</desc>
+  <defs>
+    <pattern id="grid" width="24" height="24" patternUnits="userSpaceOnUse">
+      <path d="M24 0H0V24" fill="none" stroke="#E8E1D6" stroke-width="1"/>
+    </pattern>
+    <style>
+      .paper { fill: #FAF6F0; }
+      .card { fill: #FFFDFA; stroke: #B9AE9E; stroke-width: 1.5; }
+      .label { font: 600 14px 'Avenir Next','Segoe UI Variable',system-ui,sans-serif; fill: #262A3F; }
+      .coord { font: 500 11px ui-monospace,Menlo,monospace; fill: #8B8FA3; }
+      .accent { fill: #E0562F; }
+      .ghost { fill: rgba(224,86,47,0.14); stroke: #E0562F; stroke-width: 2; stroke-dasharray: 6 4; }
+      @media (prefers-color-scheme: dark) {
+        .paper { fill: #1C2032; }
+        .card { fill: #23283C; stroke: #4A5068; }
+        .label { fill: #F1EEE8; }
+        .coord { fill: #8E93AA; }
+        #grid path { stroke: #2B3047; }
+      }
+    </style>
+  </defs>
+  <rect class="paper" width="960" height="420" rx="14"/>
+  <rect width="960" height="420" fill="url(#grid)" rx="14"/>
+
+  <!-- Canvas frame that narrows -->
+  <rect x="40" y="30" width="880" height="360" rx="8" fill="none" stroke="#B9AE9E" stroke-width="1.5" stroke-dasharray="4 4">
+    <animate attributeName="width" values="880;880;620;620;620;880" keyTimes="0;0.15;0.35;0.7;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+  </rect>
+
+  <!-- Header: fixed height, flexes horizontally -->
+  <g>
+    <rect class="card" x="52" y="42" height="56" rx="6" width="856">
+      <animate attributeName="width" values="856;856;596;596;596;856" keyTimes="0;0.15;0.35;0.7;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <text class="label" x="66" y="76">Header</text>
+    <text class="coord" x="66" y="92">fixed-h · flexes</text>
+  </g>
+
+  <!-- Card A -->
+  <g>
+    <rect class="card" x="52" y="112" width="274" height="120" rx="6">
+      <animate attributeName="width" values="274;274;187;187;187;274" keyTimes="0;0.15;0.35;0.7;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <text class="label" x="66" y="140">Chart</text>
+  </g>
+
+  <!-- Card B: this one gets dragged into the group -->
+  <g>
+    <rect class="card" x="340" y="112" width="274" height="120" rx="6">
+      <animate attributeName="x" values="340;340;253;253;80;80;340" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="y" values="112;112;112;112;270;270;112" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="width" values="274;274;187;187;170;170;274" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite"/>
+      <animate attributeName="height" values="120;120;120;120;94;94;120" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite"/>
+      <animate attributeName="stroke" values="#B9AE9E;#B9AE9E;#B9AE9E;#E0562F;#E0562F;#B9AE9E;#B9AE9E" keyTimes="0;0.15;0.35;0.45;0.62;0.7;1" dur="9s" repeatCount="indefinite"/>
+    </rect>
+    <text class="label" x="354" y="140">Stats
+      <animate attributeName="x" values="354;354;267;267;94;94;354" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="y" values="140;140;140;140;298;298;140" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </text>
+  </g>
+
+  <!-- Card C -->
+  <g>
+    <rect class="card" x="628" y="112" width="280" height="120" rx="6">
+      <animate attributeName="x" values="628;628;454;454;253;253;628" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="width" values="280;280;194;194;395;395;280" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <text class="label" x="642" y="140">Activity
+      <animate attributeName="x" values="642;642;468;468;267;267;642" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </text>
+  </g>
+
+  <!-- Group: a nested canvas with two children -->
+  <g>
+    <rect x="52" y="246" width="856" height="132" rx="6" fill="none" stroke="#B9AE9E" stroke-width="1.5">
+      <animate attributeName="width" values="856;856;596;596;596;856" keyTimes="0;0.15;0.35;0.7;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <text class="coord" x="66" y="264">group · nested canvas</text>
+    <!-- child 1 -->
+    <rect class="card" x="66" y="272" width="410" height="92" rx="6">
+      <animate attributeName="x" values="66;66;66;66;262;262;66" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="width" values="410;410;280;280;154;154;410" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <!-- child 2 -->
+    <rect class="card" x="490" y="272" width="404" height="92" rx="6">
+      <animate attributeName="x" values="490;490;360;360;428;428;490" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+      <animate attributeName="width" values="404;404;274;274;206;206;404" keyTimes="0;0.15;0.35;0.45;0.62;0.85;1" dur="9s" repeatCount="indefinite" calcMode="spline" keySplines="0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1;0.22 1 0.36 1"/>
+    </rect>
+    <!-- drop preview -->
+    <rect class="ghost" x="80" y="270" width="170" height="94" rx="6" opacity="0">
+      <animate attributeName="opacity" values="0;0;0;1;1;0;0" keyTimes="0;0.15;0.35;0.5;0.6;0.66;1" dur="9s" repeatCount="indefinite"/>
+    </rect>
+  </g>
+
+  <!-- Caption -->
+  <text class="coord" x="52" y="404">projectLayout · moveItem · transferItem</text>
+  <text class="coord" x="908" y="404" text-anchor="end">
+    <tspan>880 → 620 → 880</tspan>
+  </text>
+</svg>

@@ -13,7 +13,10 @@ import { deepFreeze, snapshot, treeArb, type TreeCase } from './arbitraries'
 
 const TOL = 1
 
-const pointArb = fc.record({ px: fc.integer({ min: -10, max: 110 }), py: fc.integer({ min: -10, max: 110 }) })
+const pointArb = fc.record({
+  px: fc.integer({ min: -10, max: 110 }),
+  py: fc.integer({ min: -10, max: 110 }),
+})
 
 function flatten(tree: TreeCase): FlatLayout {
   const frozen = deepFreeze(structuredClone(tree))
@@ -142,8 +145,14 @@ describe('nested invariants', () => {
         const first = flattenLayout(frozen.root, frozen.rootRect)
         const second = flattenLayout(frozen.root, frozen.rootRect)
         expect(snapshot(frozen)).toBe(before)
-        expect(snapshot(second.items.map(({ id, parentId, depth, rect }) => ({ id, parentId, depth, rect })))).toBe(
-          snapshot(first.items.map(({ id, parentId, depth, rect }) => ({ id, parentId, depth, rect }))),
+        expect(
+          snapshot(
+            second.items.map(({ id, parentId, depth, rect }) => ({ id, parentId, depth, rect })),
+          ),
+        ).toBe(
+          snapshot(
+            first.items.map(({ id, parentId, depth, rect }) => ({ id, parentId, depth, rect })),
+          ),
         )
       }),
       { numRuns: 200 },
