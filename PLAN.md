@@ -1,5 +1,13 @@
 # Gridla Extraction Plan
 
+## Working agreements
+
+- Use `bun` for every install, script, and test run. No npm, yarn, or pnpm commands in docs or scripts (the release workflow uses `npm publish` only because trusted publishing requires it).
+- Public-facing repository: consistent, professional coding style enforced by Oxfmt and Oxlint; APIs are named by intent and optimized for developer experience.
+- Nothing published (git, npm, Pages) may contain wording that identifies the source product. The private word list and the working notes live in `docs/` (git-ignored); `scripts/check-wording.ts` guards commits.
+- Progress and decisions are kept current in `docs/PROGRESS.md` and `docs/decisions/` so work survives context resets. Subagents are used for parallel, well-bounded tasks.
+- The repository stays private until the launch checklist passes, then flips to public together with GitHub Pages and the first npm release.
+
 ## Goal
 
 Create a standalone, open-source pixel-based grid and nested-layout library
