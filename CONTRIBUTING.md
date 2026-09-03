@@ -11,7 +11,9 @@ bun run check
 ```
 
 `check` runs formatting (`oxfmt`), linting (`oxlint`), type checks (`tsc`),
-and every unit, compatibility, and property test. Browser tests run with
+every unit, compatibility, and property test, the library build, the package
+size budget (`size-budget.json`), and the public API snapshot (`api-surface.txt`;
+run `bun run check:api --update` after an intentional API change). Browser tests run with
 `bun run test:e2e` after `bunx playwright install`.
 
 ## Layout of the repository

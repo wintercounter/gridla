@@ -121,7 +121,7 @@ function Dashboard({ layout, setLayout }) {
 | Touches the DOM      | never                        | measurement and pointer events only               |
 | Owns state           | never                        | transient gesture state; layout state stays yours |
 | Works in             | browsers, Node, workers, SSR | browsers, SSR-safe imports                        |
-| Size (min + gzip)    | see badge                    | ~10 kB                                            |
+| Size (min + gzip)    | about 23 kB                  | about 1 kB more than the core                     |
 
 The React adapter puts a tiny store in context and reads it with
 `useSyncExternalStore`, so a pointer move rerenders only the items whose
