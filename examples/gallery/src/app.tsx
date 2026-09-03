@@ -1,9 +1,15 @@
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useRef, type ReactNode } from 'react'
 
 import { ThemeSwitch } from '@gridla/demo-kit/react'
 
 import { demos, type DemoEntry } from './demos'
 import { demoHref, useHashRoute, useMediaQuery } from './lib/route'
+
+/** Docs home: the site root when deployed under `/gridla/`, else `/`. */
+function docsHome(): string {
+  if (typeof location === 'undefined') return '/'
+  return location.pathname.startsWith('/gridla/') ? '/gridla/' : '/'
+}
 
 function Wordmark() {
   return (
@@ -43,30 +49,65 @@ function NavGroup({
   entries: DemoEntry[]
   activeId: string
 }) {
+  const headingId = `nav-${title.toLowerCase()}`
   return (
-    <section className="gl-nav-group" aria-labelledby={`nav-${title}`}>
-      <h2 id={`nav-${title}`}>{title}</h2>
-      <ol>
-        {entries.map((demo) => (
-          <li key={demo.id}>
-            <a
-              href={demoHref(demo.id)}
-              aria-current={demo.id === activeId ? 'page' : undefined}
-              data-number={String(demo.number).padStart(2, '0')}
-            >
-              <span className="gl-nav-title">{demo.title}</span>
-              <span className="gl-nav-goal">{demo.goal}</span>
-            </a>
-          </li>
-        ))}
+    <details className="gl-nav-group" open>
+      <summary>
+        <h2 id={headingId}>{title}</h2>
+        <span className="gl-nav-count" aria-hidden="true">
+          {entries.length}
+        </span>
+      </summary>
+      <ol aria-labelledby={headingId}>
+        {entries.map((demo) => {
+          const active = demo.id === activeId
+          return (
+            <li key={demo.id}>
+              <a
+                href={demoHref(demo.id)}
+                aria-current={active ? 'page' : undefined}
+                data-number={String(demo.number).padStart(2, '0')}
+                title={active ? undefined : demo.goal}
+              >
+                <span className="gl-nav-title">{demo.title}</span>
+                {active ? <span className="gl-nav-goal">{demo.goal}</span> : null}
+              </a>
+            </li>
+          )
+        })}
       </ol>
-    </section>
+    </details>
   )
 }
 
+/** Arrow keys move between demo links; Home/End jump to the ends. */
+function onNavKeyDown(nav: HTMLElement, event: KeyboardEvent) {
+  const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End']
+  if (!keys.includes(event.key)) return
+  const links = Array.from(nav.querySelectorAll<HTMLAnchorElement>('a[href]'))
+  const visible = links.filter((link) => link.offsetParent !== null)
+  if (visible.length === 0) return
+  const index = visible.indexOf(document.activeElement as HTMLAnchorElement)
+  let next = index
+  if (event.key === 'ArrowDown') next = index < 0 ? 0 : Math.min(visible.length - 1, index + 1)
+  if (event.key === 'ArrowUp') next = index < 0 ? 0 : Math.max(0, index - 1)
+  if (event.key === 'Home') next = 0
+  if (event.key === 'End') next = visible.length - 1
+  event.preventDefault()
+  visible[next]?.focus()
+}
+
 function Nav({ activeId }: { activeId: string }) {
+  const ref = useRef<HTMLElement | null>(null)
+  useEffect(() => {
+    const nav = ref.current
+    if (!nav) return
+    const handler = (event: KeyboardEvent) => onNavKeyDown(nav, event)
+    nav.addEventListener('keydown', handler)
+    return () => nav.removeEventListener('keydown', handler)
+  }, [])
   return (
-    <nav className="gl-nav" aria-label="Demos">
+    <nav ref={ref} className="gl-nav" aria-label="Demos">
       <NavGroup
         title="Core"
         entries={demos.filter((d) => d.group === 'core')}
@@ -100,9 +141,10 @@ export function App() {
   const routeId = useHashRoute()
   const demo = demos.find((entry) => entry.id === routeId) ?? demos[0]
   const Component = demo.component
+  const docs = docsHome()
 
   useEffect(() => {
-    document.title = `${demo.title} · Gridla gallery`
+    document.title = `${demo.title} · Gridla examples`
   }, [demo.title])
 
   return (
@@ -111,10 +153,19 @@ export function App() {
         Skip to demo
       </a>
       <header className="gl-top">
-        <a className="gl-brand" href={demoHref(demos[0].id)}>
-          <Wordmark />
-          <span className="gl-brand-sub">demo gallery</span>
-        </a>
+        <div className="gl-top-brand">
+          <a className="gl-brand" href={docs} aria-label="Gridla documentation home">
+            <Wordmark />
+          </a>
+          <span className="gl-top-sep" aria-hidden="true" />
+          <a className="gl-top-title" href={demoHref(demos[0].id)}>
+            Examples
+          </a>
+        </div>
+        <nav className="gl-top-nav" aria-label="Site">
+          <a href={docs}>Docs</a>
+          <a href={`${docs}studio/`}>Sample studio</a>
+        </nav>
         <ThemeSwitch />
       </header>
       <NavDrawer activeId={demo.id}>

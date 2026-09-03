@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 
-import { projectLayout, type GridLayout, type ProjectionStrategy } from 'gridla'
+import { applyGap, projectLayout, type GridLayout, type ProjectionStrategy } from 'gridla'
 import { dashboardLayout } from '@gridla/demo-kit'
 import {
   Button,
@@ -17,7 +17,7 @@ import { CoreInspector } from '../lib/core-inspector'
 import { CoreStage, RectOutline } from '../lib/core-stage'
 import { useHashState } from '../lib/hash-state'
 
-const SNIPPET = `import { createItem, projectLayout } from 'gridla'
+const SNIPPET = `import { applyGap, createItem, projectLayout } from 'gridla'
 
 // A layout is a plain object: a canvas and absolutely positioned items.
 const layout = {
@@ -29,8 +29,10 @@ const layout = {
   ],
 }
 
-// Project it onto another canvas. Rows and columns keep their relationships.
-const projected = projectLayout(layout, { width: 640, height: 480 }, { strategy: 'chain', gap: 12 })
+// Re-space the authored rows and columns, then project onto another canvas.
+// Rows and columns keep their relationships at both steps.
+const spaced = applyGap(layout, 20)
+const projected = projectLayout(spaced, { width: 640, height: 480 }, { strategy: 'chain', gap: 20 })
 projected.items.map(({ id, x, y, w, h }) => ({ id, x, y, w, h }))`
 
 const DEFAULTS = { width: 960, height: 600, strategy: 'chain', gap: 12, authored: false }
@@ -43,14 +45,17 @@ const STRATEGIES = [
 export function StaticLayoutDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
   const source = useMemo(() => dashboardLayout(DEFAULTS.gap), [])
+  // The gap is applied to the authored layout first, so the slider visibly
+  // re-spaces the rows and columns before they are projected.
+  const spaced = useMemo(() => applyGap(source, state.gap), [source, state.gap])
   const projected = useMemo<GridLayout>(
     () =>
       projectLayout(
-        source,
-        { ...source.canvas, width: state.width, height: state.height },
+        spaced,
+        { ...spaced.canvas, width: state.width, height: state.height },
         { strategy: state.strategy as ProjectionStrategy, gap: state.gap },
       ),
-    [source, state.width, state.height, state.strategy, state.gap],
+    [spaced, state.width, state.height, state.strategy, state.gap],
   )
   const changed = useMemo(() => {
     const ids = new Set<string>()
@@ -112,7 +117,7 @@ export function StaticLayoutDemo() {
               onChange={(strategy) => update({ strategy })}
             />
             <RangeField
-              label="Gap kept at"
+              label="Gap"
               value={state.gap}
               min={0}
               max={32}

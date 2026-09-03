@@ -112,6 +112,9 @@
     },
     "website": {
       "name": "gridla-website",
+      "dependencies": {
+        "gridla": "workspace:*",
+      },
       "devDependencies": {
         "@rspress/core": "2.0.21",
         "@rspress/plugin-llms": "2.0.21",

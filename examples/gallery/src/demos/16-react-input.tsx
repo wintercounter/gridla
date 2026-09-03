@@ -62,10 +62,10 @@ function DeleteWiring({
       style={{ minHeight: '100%' }}
       onDeleteKey={(id) => {
         actions.remove(id)
-        onInput({ source: 'keyboard', detail: `Delete → removed ${id}`, modifiers: 'none' })
+        onInput({ source: 'keyboard', detail: `Delete to removed ${id}`, modifiers: 'none' })
       }}
       onItemClick={(id) =>
-        onInput({ source: 'pointer', detail: `click → selected ${id}`, modifiers: 'none' })
+        onInput({ source: 'pointer', detail: `click to selected ${id}`, modifiers: 'none' })
       }
     >
       {children}
@@ -106,7 +106,7 @@ export function ReactInputDemo() {
           : name === 'Tab'
             ? 'focus'
             : 'no binding'
-    setLast({ source: 'keyboard', detail: `${name} → ${meaning}`, modifiers: modifiers(event) })
+    setLast({ source: 'keyboard', detail: `${name} to ${meaning}`, modifiers: modifiers(event) })
   }
 
   return (
@@ -170,7 +170,7 @@ export function ReactInputDemo() {
                   <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + drag: bypass snapping
                 </li>
                 <li>
-                  <kbd>←↑→↓</kbd> nudge selected by {state.keyboardStep}px
+                  <kbd>Arrows</kbd> nudge selected by {state.keyboardStep}px
                 </li>
                 <li>
                   <kbd>Shift</kbd> + arrows: nudge ×4

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 
 import {
+  applyGap,
   applyPreset,
   findLayoutViolations,
   normalizeLayout,
@@ -167,12 +168,15 @@ export function ReactPresetsDemo() {
                 ))}
               </ul>
               <RangeField
-                label="Preset gap"
+                label="Gap"
                 value={state.gap}
                 min={0}
                 max={32}
                 step={2}
-                onChange={(gap) => update({ gap })}
+                onChange={(gap) => {
+                  setLayout((current) => applyGap(current, gap))
+                  update({ gap })
+                }}
               />
               <RangeField
                 label="Grid columns"

@@ -1,11 +1,12 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
-import type { GridLayout } from 'gridla'
+import { applyGap, type GridLayout } from 'gridla'
 import {
   GridCanvas,
   GridProvider,
   useGridActions,
   useGridLayout,
+  useGridSourceLayout,
   type GridChangeDetail,
 } from 'gridla/react'
 import { dashboardLayout } from '@gridla/demo-kit'
@@ -90,6 +91,26 @@ function Items() {
   )
 }
 
+/**
+ * The provider owns the layout here, so a gap change re-spaces it through
+ * `actions.setLayout` (reported as a `set` change) instead of local state.
+ */
+function GapSync({ gap }: { gap: number }) {
+  const actions = useGridActions<Data>()
+  const source = useGridSourceLayout<Data>()
+  const sourceRef = useRef(source)
+  const applied = useRef(gap)
+  useEffect(() => {
+    sourceRef.current = source
+  }, [source])
+  useEffect(() => {
+    if (applied.current === gap) return
+    applied.current = gap
+    actions.setLayout(applyGap(sourceRef.current, gap))
+  }, [gap, actions])
+  return null
+}
+
 function useLayoutIds() {
   const layout = useGridLayout<Data>()
   return layout.items.map((item) => ({ id: item.id, label: item.data?.label }))
@@ -122,6 +143,7 @@ export function ReactUncontrolledDemo() {
       responsive={state.responsive}
       onLayoutChange={record}
     >
+      <GapSync gap={state.gap} />
       <DemoFrame
         stageLabel="uncontrolled · defaultLayout"
         stageStyle={{ height: 480 }}

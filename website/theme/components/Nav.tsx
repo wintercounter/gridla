@@ -11,27 +11,44 @@ export function NavTitle() {
   )
 }
 
-function ArrowIcon() {
+/** External-link glyph used after links that leave the docs router. */
+export function ExternalIcon() {
   return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" fill="none" stroke="currentColor" strokeWidth="1.6">
-      <path d="M4 12 12 4M6 4h6v6" />
+    <svg
+      className="g-external"
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M4.5 11.5 11.5 4.5M6.5 4.5h5v5" />
     </svg>
   )
 }
 
 /**
- * Links to the gallery and the studio. These are separate apps deployed under
- * the site base path, so they are plain anchors and not router links.
+ * Links to the examples app and the sample studio. Both are separate apps
+ * deployed under the site base path, so they are plain anchors (full
+ * navigation) styled to sit on the same baseline as the Rspress nav items.
  */
 export function NavApps() {
   return (
-    <nav className="g-nav-apps" aria-label="Companion apps">
-      <a className="g-nav-app" href={appHref('gallery')}>
-        Gallery <ArrowIcon />
-      </a>
-      <a className="g-nav-app" href={appHref('studio')} data-primary="">
-        Studio <ArrowIcon />
-      </a>
-    </nav>
+    <ul className="g-nav-apps" aria-label="Companion apps">
+      <li>
+        <a className="g-nav-app" href={appHref('gallery')}>
+          Examples
+          <ExternalIcon />
+        </a>
+      </li>
+      <li>
+        <a className="g-nav-app" href={appHref('studio')}>
+          Sample studio
+          <ExternalIcon />
+        </a>
+      </li>
+    </ul>
   )
 }

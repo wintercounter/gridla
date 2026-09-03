@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 
-import { findLayoutViolations, normalizeLayout, type GridLayout } from 'gridla'
+import { applyGap, findLayoutViolations, normalizeLayout, type GridLayout } from 'gridla'
 import { GridCanvas, GridProvider, type GridChangeDetail } from 'gridla/react'
 import { dashboardLayout } from '@gridla/demo-kit'
 import {
@@ -167,7 +167,14 @@ export function ReactPersistenceDemo() {
                 min={0}
                 max={32}
                 step={2}
-                onChange={(gap) => update({ gap })}
+                onChange={(gap) => {
+                  // Re-space the layout so the new gap is visible; it counts as
+                  // an unsaved change like any other edit.
+                  setLayout((current) => applyGap(current, gap))
+                  setLastReason('set · applyGap')
+                  setDirty(true)
+                  update({ gap })
+                }}
               />
               <dl className="gl-readout">
                 <dt>last change</dt>

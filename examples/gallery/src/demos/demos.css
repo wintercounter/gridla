@@ -1,0 +1,173 @@
+/*
+ * Styles owned by individual demos (nested groups, cross-container transfer).
+ * Depends on tokens.css and demo.css. Class prefix: `gx-`.
+ */
+
+/* Nested groups: a group is a grid item hosting its own canvas. */
+
+/* Fill the item box regardless of the kit's `.gd-item` display mode, so the
+   body has a real height for the nested canvas to measure. */
+.gx-group {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.gx-group-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--g-space-2);
+  padding: var(--g-space-1) var(--g-space-2);
+  border-bottom: var(--g-border-w) solid var(--g-line);
+  font: 600 var(--g-text-xs) / 1.3 var(--g-font-display);
+  cursor: grab;
+  user-select: none;
+}
+
+.gx-group-head[data-static] {
+  cursor: default;
+}
+
+.gd-item[data-gridla-active] > .gx-group > .gx-group-head {
+  cursor: grabbing;
+}
+
+.gx-group-meta {
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  color: var(--g-fg-faint);
+}
+
+.gx-group-body {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-radius: 0 0 var(--g-radius-2) var(--g-radius-2);
+  background-color: var(--g-bg-sunken);
+  background-image:
+    linear-gradient(var(--g-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--g-grid-line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  transition: box-shadow var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gx-group[data-locked] .gx-group-body {
+  background-image:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 6px,
+      color-mix(in oklch, var(--g-fg) 6%, transparent) 6px 7px
+    ),
+    linear-gradient(var(--g-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--g-grid-line) 1px, transparent 1px);
+}
+
+.gx-group[data-refused] .gx-group-body {
+  box-shadow: inset 0 0 0 2px var(--g-warn);
+}
+
+.gx-group[data-refused] .gx-group-head {
+  color: var(--g-warn);
+}
+
+/*
+ * The kit lights up resize handles for any hovered `.gd-item` descendant, so a
+ * hovered group would light every nested tile. Only the tile's own hover or
+ * selection counts inside a group.
+ */
+
+.gx-group .gx-group-body .gd-item .gd-handle::after {
+  opacity: 0;
+}
+
+.gx-group .gx-group-body .gd-item:hover > .gd-handle::after,
+.gx-group .gx-group-body .gd-item[data-gridla-selected] > .gd-handle::after {
+  opacity: 0.85;
+}
+
+/* Lock badge shown on locked groups and locked tiles. */
+
+.gx-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--g-radius-1);
+  background: color-mix(in oklch, var(--g-fg) 8%, transparent);
+  color: var(--g-fg-muted);
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.gx-lock svg {
+  width: 10px;
+  height: 10px;
+}
+
+.gx-lock[data-tone='warn'] {
+  background: color-mix(in oklch, var(--g-warn) 16%, transparent);
+  color: var(--g-warn);
+}
+
+/* Tiles keep the kit chrome; inside a group the coordinates are the group's. */
+
+.gx-tile-body {
+  font: 400 var(--g-text-xs) / 1.4 var(--g-font-body);
+  color: var(--g-fg-muted);
+}
+
+/* Transfer demo: the two canvases side by side with a hint underneath. */
+
+.gx-transfer {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  gap: var(--g-space-3);
+  align-items: stretch;
+}
+
+@container (max-width: 44rem) {
+  .gx-transfer {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.gx-transfer .gd-stage {
+  height: 360px;
+}
+
+.gx-transfer-hint {
+  display: flex;
+  align-items: center;
+  gap: var(--g-space-2);
+  margin: var(--g-space-3) 0 0;
+  font-size: var(--g-text-xs);
+  color: var(--g-fg-muted);
+}
+
+.gx-transfer-hint::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: var(--g-border-w) solid var(--g-line-strong);
+  background: var(--g-bg-raised);
+  background-image: radial-gradient(circle, var(--g-accent) 0 3px, transparent 3.5px);
+}
+
+.gx-flash {
+  animation: gx-flash var(--g-duration-slow) var(--g-ease-out);
+}
+
+@keyframes gx-flash {
+  from {
+    box-shadow: inset 0 0 0 3px var(--g-warn);
+  }
+  to {
+    box-shadow: inset 0 0 0 0 transparent;
+  }
+}

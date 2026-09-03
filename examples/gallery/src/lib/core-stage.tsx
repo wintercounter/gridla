@@ -16,6 +16,7 @@ import {
   type GridRect,
 } from 'gridla'
 import { renderLayout } from '@gridla/demo-kit'
+import { StageCaption } from '@gridla/demo-kit/react'
 
 export type StagePointer = {
   /** Pointer position in canvas coordinates. */
@@ -27,7 +28,10 @@ export type StagePointer = {
 
 export type CoreStageProps = {
   layout: GridLayout
+  /** Caption rendered under the stage. */
   label?: string
+  /** Mark items as draggable (grab cursor). Default: only when down and move handlers are set. */
+  draggable?: boolean | ((item: GridItem) => boolean)
   /** `scale` (default) shrinks the authored canvas to fit; `none` paints 1:1. */
   fit?: 'scale' | 'none'
   ariaLabel: string
@@ -57,6 +61,7 @@ export function CoreStage({
   layout,
   label,
   fit = 'scale',
+  draggable,
   ariaLabel,
   itemLabel,
   children,
@@ -80,9 +85,15 @@ export function CoreStage({
     return () => observer.disconnect()
   }, [])
 
+  const interactive = draggable ?? Boolean(onPointerDown && onPointerMove)
   useLayoutEffect(() => {
-    if (items.current) renderLayout(items.current, layout, itemLabel ? { label: itemLabel } : {})
-  }, [layout, itemLabel])
+    if (items.current) {
+      renderLayout(items.current, layout, {
+        ...(itemLabel ? { label: itemLabel } : {}),
+        draggable: interactive,
+      })
+    }
+  }, [layout, itemLabel, interactive])
 
   const extent = canvasExtent(layout)
   const scale = fit === 'scale' && width > 0 ? Math.min(1, width / layout.canvas.width) : 1
@@ -98,29 +109,31 @@ export function CoreStage({
   }
 
   return (
-    <section
-      ref={outer}
-      className="gl-stage"
-      aria-label={ariaLabel}
-      style={{ height: Math.round(extent * scale), ...style }}
-      onPointerDown={onPointerDown ? (event) => onPointerDown(toPointer(event)) : undefined}
-      onPointerMove={onPointerMove ? (event) => onPointerMove(toPointer(event)) : undefined}
-      onPointerUp={onPointerUp ? (event) => onPointerUp(toPointer(event)) : undefined}
-      onPointerLeave={onPointerLeave}
-    >
-      <div
-        className="gl-canvas"
-        style={{
-          width: layout.canvas.width,
-          height: extent,
-          transform: `scale(${scale})`,
-        }}
+    <div className="gl-stage-wrap">
+      <section
+        ref={outer}
+        className="gl-stage"
+        aria-label={ariaLabel}
+        style={{ height: Math.round(extent * scale), ...style }}
+        onPointerDown={onPointerDown ? (event) => onPointerDown(toPointer(event)) : undefined}
+        onPointerMove={onPointerMove ? (event) => onPointerMove(toPointer(event)) : undefined}
+        onPointerUp={onPointerUp ? (event) => onPointerUp(toPointer(event)) : undefined}
+        onPointerLeave={onPointerLeave}
       >
-        <div ref={items} className="gl-items" />
-        {children}
-      </div>
-      {label ? <span className="gd-stage-label">{label}</span> : null}
-    </section>
+        <div
+          className="gl-canvas"
+          style={{
+            width: layout.canvas.width,
+            height: extent,
+            transform: `scale(${scale})`,
+          }}
+        >
+          <div ref={items} className="gl-items" />
+          {children}
+        </div>
+      </section>
+      {label ? <StageCaption>{label}</StageCaption> : null}
+    </div>
   )
 }
 

@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react'
 
-import { projectLayout, type GridLayout, type ProjectionStrategy } from 'gridla'
+import { applyGap, projectLayout, type GridLayout, type ProjectionStrategy } from 'gridla'
 import { dashboardLayout } from '@gridla/demo-kit'
 import {
   Button,
@@ -18,7 +18,10 @@ import { CoreStage } from '../lib/core-stage'
 import { useHashState } from '../lib/hash-state'
 import { useElementWidth } from '../lib/measure'
 
-const SNIPPET = `import { projectLayout } from 'gridla'
+const SNIPPET = `import { applyGap, projectLayout } from 'gridla'
+
+// Space the authored layout once; projection keeps that gap at every size.
+const source = applyGap(authored, 12)
 
 // Measure the container yourself (ResizeObserver, a layout effect, anything).
 const observer = new ResizeObserver(([entry]) => {
@@ -40,7 +43,10 @@ export function ResponsiveProjectionDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
   const wrapper = useRef<HTMLDivElement | null>(null)
   const available = useElementWidth(wrapper)
-  const source = useMemo(() => dashboardLayout(12), [])
+  const authored = useMemo(() => dashboardLayout(12), [])
+  // Re-space the authored layout with the slider gap so the change is visible
+  // even when the container matches the authored size.
+  const source = useMemo(() => applyGap(authored, state.gap), [authored, state.gap])
   const width = Math.max(120, Math.round((available * state.fill) / 100))
 
   const rendered = useMemo<GridLayout>(

@@ -4,8 +4,9 @@ title: Gridla
 description: Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and an optional React adapter.
 ---
 
-import { Tab, Tabs } from '@rspress/core/theme'
+import { CodeTab, CodeTabs } from '../theme/components/CodeTabs'
 import { CodeSection, Features, Hero, HomeLinks, HomePage } from '../theme/components/Home'
+import { HomeDemos } from '../theme/components/HomeDemos'
 
 <HomePage>
 
@@ -13,8 +14,8 @@ import { CodeSection, Features, Hero, HomeLinks, HomePage } from '../theme/compo
 
 <CodeSection>
 
-<Tabs groupId="flavor" values={[{ label: 'Vanilla', value: 'vanilla' }, { label: 'React', value: 'react' }]}>
-<Tab value="vanilla">
+<CodeTabs>
+<CodeTab kind="js" label="Vanilla">
 
 ```ts
 import { moveItem, type GridLayout } from 'gridla'
@@ -37,8 +38,8 @@ result.strategy // 'push-x' — chart slid right to make room
 result.layout.items[0] // { id: 'chart', x: 312, ... } — note sits at x=0; the input layout is untouched
 ```
 
-</Tab>
-<Tab value="react">
+</CodeTab>
+<CodeTab kind="react" label="React">
 
 ```tsx
 import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
@@ -65,10 +66,12 @@ export function Dashboard({
 }
 ```
 
-</Tab>
-</Tabs>
+</CodeTab>
+</CodeTabs>
 
 </CodeSection>
+
+<HomeDemos />
 
 <Features />
 

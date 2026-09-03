@@ -84,8 +84,8 @@ function Dashboard({ layout, setLayout }) {
 }
 ```
 
-[Open the gallery](https://wintercounter.github.io/gridla/gallery/) ·
-[Try the studio](https://wintercounter.github.io/gridla/studio/) ·
+[Browse the examples](https://wintercounter.github.io/gridla/gallery/) ·
+[Open the sample studio](https://wintercounter.github.io/gridla/studio/) ·
 [Read the docs](https://wintercounter.github.io/gridla/)
 
 ## What it does
@@ -160,8 +160,8 @@ bun run check        # format, lint, typecheck, unit + compatibility + invariant
 bun run build        # library
 bun run bench        # solver and projection benchmarks
 bun run test:e2e     # Playwright (Chromium, Firefox, WebKit) plus an Obscura CDP lane
-bun run dev:gallery  # demo gallery
-bun run dev:studio   # layout studio
+bun run dev:gallery  # examples app
+bun run dev:studio   # sample studio
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the workflow, [SECURITY.md](SECURITY.md)

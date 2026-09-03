@@ -114,15 +114,15 @@ test.describe('gallery: keyboard interactions', () => {
       await expect(page.locator(item('chart'))).toHaveAttribute('data-gridla-selected', '')
 
       await page.keyboard.press('ArrowRight')
-      await expect(readout).toContainText('ArrowRight → nudge')
+      await expect(readout).toContainText('ArrowRight to nudge')
       await page.keyboard.press('Shift+ArrowRight')
       await expect(readout).toContainText('nudge ×4')
       await expect(readout).toContainText('Shift')
       await page.keyboard.press('Alt+ArrowRight')
-      await expect(readout).toContainText('ArrowRight → resize')
+      await expect(readout).toContainText('ArrowRight to resize')
       await expect(readout).toContainText('Alt')
       await page.keyboard.press('Escape')
-      await expect(readout).toContainText('Escape → cancel gesture')
+      await expect(readout).toContainText('Escape to cancel gesture')
     })
 
     test('Delete removes the selected item through onDeleteKey', async ({ page }) => {

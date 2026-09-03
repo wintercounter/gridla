@@ -36,66 +36,73 @@ const locked = (item: GridLayout<Data>['items'][number]) => ({
 })
 
 // Each canvas is shaped so that only one strategy can succeed. Verified
-// against the solver at every step of the scripted move.
+// against the solver at every step of the scripted move. `PAD` is canvas
+// padding: it keeps tiles off the stage edges without changing the inner geometry.
+const PAD = 12
+
 const SCENARIOS: Scenario[] = [
   {
     id: 'push',
     title: 'Push',
     hint: 'Room below and none beside: the sibling is pushed down.',
     layout: {
-      canvas: canvas(200, 336, 0),
+      canvas: canvas(200 + PAD * 2, 336 + PAD * 2, PAD),
       items: [
-        createItem('card', { w: 200, h: 100, minH: 40 }, 0, 0, { label: 'Card' }),
-        createItem('panel', { w: 200, h: 100, minH: 40 }, 0, 108, { label: 'Panel' }),
+        createItem('card', { w: 200, h: 100, minH: 40 }, PAD, PAD, { label: 'Card' }),
+        createItem('panel', { w: 200, h: 100, minH: 40 }, PAD, PAD + 108, { label: 'Panel' }),
       ],
     },
     itemId: 'card',
-    to: { x: 0, y: 108 },
+    to: { x: PAD, y: PAD + 108 },
   },
   {
     id: 'swap',
     title: 'Swap',
     hint: 'A locked footer leaves no room to push: the two trade places.',
     layout: {
-      canvas: canvas(200, 336, 0),
+      canvas: canvas(200 + PAD * 2, 336 + PAD * 2, PAD),
       items: [
-        createItem('card', { w: 200, h: 100, minH: 40 }, 0, 0, { label: 'Card' }),
-        createItem('panel', { w: 200, h: 100, minH: 40 }, 0, 108, { label: 'Panel' }),
-        locked(createItem('footer', { w: 200, h: 120 }, 0, 216, { label: 'Footer · locked' })),
+        createItem('card', { w: 200, h: 100, minH: 40 }, PAD, PAD, { label: 'Card' }),
+        createItem('panel', { w: 200, h: 100, minH: 40 }, PAD, PAD + 108, { label: 'Panel' }),
+        locked(
+          createItem('footer', { w: 200, h: 120 }, PAD, PAD + 216, { label: 'Footer · locked' }),
+        ),
       ],
     },
     itemId: 'card',
-    to: { x: 0, y: 100 },
+    to: { x: PAD, y: PAD + 100 },
   },
   {
     id: 'reorder',
     title: 'Reorder',
     hint: 'Equal tiles in a full row: the row reorders around the card.',
     layout: {
-      canvas: canvas(376, 336, 0),
+      canvas: canvas(376 + PAD * 2, 336 + PAD * 2, PAD),
       items: [
-        createItem('card', { w: 120, h: 100, minH: 40 }, 0, 0, { label: 'Card' }),
-        createItem('tile-2', { w: 120, h: 100, minH: 40 }, 128, 0, { label: 'Tile 2' }),
-        createItem('tile-3', { w: 120, h: 100, minH: 40 }, 256, 0, { label: 'Tile 3' }),
-        locked(createItem('footer', { w: 376, h: 216 }, 0, 120, { label: 'Footer · locked' })),
+        createItem('card', { w: 120, h: 100, minH: 40 }, PAD, PAD, { label: 'Card' }),
+        createItem('tile-2', { w: 120, h: 100, minH: 40 }, PAD + 128, PAD, { label: 'Tile 2' }),
+        createItem('tile-3', { w: 120, h: 100, minH: 40 }, PAD + 256, PAD, { label: 'Tile 3' }),
+        locked(
+          createItem('footer', { w: 376, h: 216 }, PAD, PAD + 120, { label: 'Footer · locked' }),
+        ),
       ],
     },
     itemId: 'card',
-    to: { x: 196, y: 0 },
+    to: { x: PAD + 196, y: PAD },
   },
   {
     id: 'shrink',
     title: 'Shrink',
     hint: 'Nowhere to push and no swap fits: the neighbor shrinks toward minH.',
     layout: {
-      canvas: canvas(200, 336, 0),
+      canvas: canvas(200 + PAD * 2, 336 + PAD * 2, PAD),
       items: [
-        createItem('panel', { w: 200, h: 100, minH: 40 }, 0, 0, { label: 'Panel · minH 40' }),
-        createItem('card', { w: 200, h: 220, minH: 60 }, 0, 108, { label: 'Card' }),
+        createItem('panel', { w: 200, h: 100, minH: 40 }, PAD, PAD, { label: 'Panel · minH 40' }),
+        createItem('card', { w: 200, h: 220, minH: 60 }, PAD, PAD + 108, { label: 'Card' }),
       ],
     },
     itemId: 'card',
-    to: { x: 0, y: 52 },
+    to: { x: PAD, y: PAD + 52 },
   },
 ]
 
