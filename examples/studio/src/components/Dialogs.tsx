@@ -75,8 +75,9 @@ export function WelcomeDialog({
           room. Put blocks into a group and resize the group to reflow them together.
         </li>
         <li>
-          <strong>Keep it.</strong> The page saves itself in this browser. Export JSON to share, and
-          switch between desktop, tablet and mobile widths at any time.
+          <strong>Keep it.</strong> Edits stay in this browser as a draft and come back when you
+          return. Save keeps a copy you can go back to with Load. Export JSON to share, and switch
+          between desktop, tablet and mobile widths at any time.
         </li>
       </ol>
       <div className="st-button-row">

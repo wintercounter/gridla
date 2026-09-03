@@ -204,9 +204,17 @@ test.describe('studio: nested groups', () => {
 
     await expect(page.locator(previewIn('root'))).toBeVisible()
     await expect.poll(() => itemBox(page, 'body').then((r) => r.y)).toBeGreaterThan(body.y + 20)
-    const bodyNow = await itemBox(page, 'body')
-    expect(contains(bodyNow, await itemBox(page, 'left'), 4)).toBe(true)
-    expect(contains(bodyNow, await itemBox(page, 'right'), 4)).toBe(true)
+    // The pushed group and its children animate to their new rects; poll so
+    // the containment check reads a settled frame.
+    await expect
+      .poll(async () => {
+        const bodyNow = await itemBox(page, 'body')
+        return (
+          contains(bodyNow, await itemBox(page, 'left'), 4) &&
+          contains(bodyNow, await itemBox(page, 'right'), 4)
+        )
+      })
+      .toBe(true)
     await page.mouse.up()
   })
 
