@@ -13,7 +13,7 @@ const VERSION: string = JSON.parse(
   fs.readFileSync(path.join(__dirname, '../packages/gridla/package.json'), 'utf8'),
 ).version
 const DESCRIPTION =
-  'Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and an optional React adapter.'
+  'Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and adapters for React, Vue, Svelte, Solid, Angular, Qwik, Web Components, and the DOM.'
 
 export default defineConfig({
   root: path.join(__dirname, 'docs'),
@@ -111,6 +111,67 @@ export default defineConfig({
             { text: 'Types', link: '/api/react/types' },
           ],
         },
+        {
+          text: 'Svelte',
+          items: [
+            { text: 'Components', link: '/api/svelte/components' },
+            { text: 'Runes', link: '/api/svelte/runes' },
+            { text: 'Types', link: '/api/svelte/types' },
+          ],
+        },
+        {
+          text: 'DOM',
+          items: [
+            { text: 'Mount', link: '/api/dom/mount' },
+            { text: 'Types', link: '/api/dom/types' },
+          ],
+        },
+        {
+          text: 'Web Components',
+          items: [
+            { text: 'Elements', link: '/api/elements/elements' },
+            { text: 'Types', link: '/api/elements/types' },
+          ],
+        },
+        {
+          text: 'Solid',
+          items: [
+            { text: 'Provider', link: '/api/solid/provider' },
+            { text: 'Components', link: '/api/solid/components' },
+            { text: 'Primitives', link: '/api/solid/primitives' },
+            { text: 'Transfer scope', link: '/api/solid/transfer' },
+            { text: 'Types', link: '/api/solid/types' },
+          ],
+        },
+        {
+          text: 'Angular',
+          items: [
+            { text: 'Provider', link: '/api/angular/provider' },
+            { text: 'Components', link: '/api/angular/components' },
+            { text: 'Signals', link: '/api/angular/signals' },
+            { text: 'Types', link: '/api/angular/types' },
+          ],
+        },
+        {
+          text: 'Vue',
+          items: [
+            { text: 'Provider', link: '/api/vue/provider' },
+            { text: 'Components', link: '/api/vue/components' },
+            { text: 'Composables', link: '/api/vue/composables' },
+            { text: 'Transfer scope', link: '/api/vue/transfer' },
+            { text: 'Types', link: '/api/vue/types' },
+          ],
+        },
+        {
+          text: 'Qwik',
+          items: [
+            { text: 'Provider', link: '/api/qwik/provider' },
+            { text: 'Components', link: '/api/qwik/components' },
+            { text: 'Hooks', link: '/api/qwik/hooks' },
+            { text: 'Transfer scope', link: '/api/qwik/transfer' },
+            { text: 'Types', link: '/api/qwik/types' },
+          ],
+        },
       ],
       '/': [
         {
@@ -123,7 +184,17 @@ export default defineConfig({
         },
         {
           text: 'Adapters',
-          items: [{ text: 'Overview', link: '/adapters/' }],
+          items: [
+            { text: 'Overview', link: '/adapters/' },
+            { text: 'DOM', link: '/adapters/dom' },
+            { text: 'Web Components', link: '/adapters/web-components' },
+            { text: 'Vue', link: '/adapters/vue' },
+            { text: 'Svelte', link: '/adapters/svelte' },
+            { text: 'Solid', link: '/adapters/solid' },
+            { text: 'Angular', link: '/adapters/angular' },
+            { text: 'Qwik', link: '/adapters/qwik' },
+            { text: 'Preact', link: '/adapters/preact' },
+          ],
         },
         {
           text: 'Concepts',

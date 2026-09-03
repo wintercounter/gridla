@@ -2,6 +2,7 @@ import {
   Children,
   isValidElement,
   useCallback,
+  useEffect,
   useId,
   useRef,
   useState,
@@ -193,6 +194,32 @@ export function CodeTabs({ children }: { children?: ReactNode }) {
   const [active, setActive] = useState(0)
   const baseId = useId()
   const buttons = useRef<(HTMLButtonElement | null)[]>([])
+  const strip = useRef<HTMLDivElement | null>(null)
+
+  // The strip scrolls horizontally on narrow viewports. Fade edges show only
+  // on the side that has more tabs hidden, so they never mask the last tab.
+  useEffect(() => {
+    const node = strip.current
+    if (!node) return
+    const update = () => {
+      const max = node.scrollWidth - node.clientWidth
+      node.toggleAttribute('data-overflow-start', node.scrollLeft > 1)
+      node.toggleAttribute('data-overflow-end', max - node.scrollLeft > 1)
+    }
+    update()
+    node.addEventListener('scroll', update, { passive: true })
+    const observer =
+      typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(() => update())
+    observer?.observe(node)
+    return () => {
+      node.removeEventListener('scroll', update)
+      observer?.disconnect()
+    }
+  }, [])
+
+  useEffect(() => {
+    buttons.current[active]?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  }, [active])
 
   const onKeyDown = useCallback(
     (event: KeyboardEvent<HTMLDivElement>) => {
@@ -212,36 +239,40 @@ export function CodeTabs({ children }: { children?: ReactNode }) {
 
   return (
     <div className="g-tabs">
-      <div
-        className="g-tabs-bar"
-        role="tablist"
-        aria-label="Code sample flavor"
-        tabIndex={-1}
-        onKeyDown={onKeyDown}
-      >
-        {tabs.map((tab, index) => {
-          const Icon = ICONS[tab.props.kind]
-          const selected = index === active
-          return (
-            <button
-              key={tab.props.kind}
-              ref={(node) => {
-                buttons.current[index] = node
-              }}
-              type="button"
-              role="tab"
-              id={`${baseId}-tab-${index}`}
-              aria-selected={selected}
-              aria-controls={`${baseId}-panel-${index}`}
-              tabIndex={selected ? 0 : -1}
-              data-kind={tab.props.kind}
-              onClick={() => setActive(index)}
-            >
-              <Icon />
-              <span>{tab.props.label}</span>
-            </button>
-          )
-        })}
+      <div className="g-tabs-strip">
+        <div className="g-tabs-scroll" ref={strip}>
+          <div
+            className="g-tabs-bar"
+            role="tablist"
+            aria-label="Code sample flavor"
+            tabIndex={-1}
+            onKeyDown={onKeyDown}
+          >
+            {tabs.map((tab, index) => {
+              const Icon = ICONS[tab.props.kind]
+              const selected = index === active
+              return (
+                <button
+                  key={tab.props.kind}
+                  ref={(node) => {
+                    buttons.current[index] = node
+                  }}
+                  type="button"
+                  role="tab"
+                  id={`${baseId}-tab-${index}`}
+                  aria-selected={selected}
+                  aria-controls={`${baseId}-panel-${index}`}
+                  tabIndex={selected ? 0 : -1}
+                  data-kind={tab.props.kind}
+                  onClick={() => setActive(index)}
+                >
+                  <Icon />
+                  <span>{tab.props.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
       </div>
       {tabs.map((tab, index) => (
         <div

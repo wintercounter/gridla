@@ -1288,14 +1288,72 @@ kbd {
   min-width: 0;
 }
 
+/* The strip scrolls sideways when the tabs do not fit (ten adapters at 360px).
+   Fade edges appear only on the side that still has tabs hidden. */
+.g-tabs-strip {
+  position: relative;
+  margin-bottom: var(--g-space-3);
+}
+
+.g-tabs-scroll {
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  /* Room for the focus ring, which would otherwise be clipped by the scroller. */
+  padding: 3px;
+  margin: -3px;
+}
+
+.g-tabs-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.g-tabs-strip::before,
+.g-tabs-strip::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: var(--g-space-6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-tabs-strip::before {
+  left: 0;
+  background: linear-gradient(to right, var(--g-bg), transparent);
+}
+
+.g-tabs-strip::after {
+  right: 0;
+  background: linear-gradient(to left, var(--g-bg), transparent);
+}
+
+.g-tabs-strip:has([data-overflow-start])::before,
+.g-tabs-strip:has([data-overflow-end])::after {
+  opacity: 1;
+}
+
 .g-tabs-bar {
   display: inline-flex;
   gap: var(--g-space-1);
   padding: var(--g-space-1);
-  margin-bottom: var(--g-space-3);
   border: var(--g-border-w) solid var(--g-line-strong);
   border-radius: var(--g-radius-2);
   background: var(--g-bg-raised);
+}
+
+.g-tabs-bar button span {
+  white-space: nowrap;
+}
+
+/* With room to spare, the strip wraps instead of scrolling. */
+@media (min-width: 48rem) {
+  .g-tabs-bar {
+    display: flex;
+    flex-wrap: wrap;
+  }
 }
 
 .g-tabs-bar button {
@@ -1771,7 +1829,7 @@ kbd {
  * Links block
  * ------------------------------------------------------------------------- */
 
-.g-home-links ul {
+.g-home-links > ul {
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1780,7 +1838,7 @@ kbd {
   grid-template-columns: repeat(auto-fit, minmax(min(14rem, 100%), 1fr));
 }
 
-.g-home-links a {
+.g-home-links > ul a {
   display: grid;
   gap: var(--g-space-2);
   height: 100%;
@@ -1796,20 +1854,20 @@ kbd {
     box-shadow var(--g-duration) var(--g-ease-out);
 }
 
-.g-home-links a:hover {
+.g-home-links > ul a:hover {
   transform: translateY(-3px);
   border-color: var(--g-accent);
   box-shadow: var(--g-shadow-2);
 }
 
-.g-home-links a b {
+.g-home-links > ul a b {
   display: flex;
   align-items: center;
   gap: 0.4em;
   font: 600 var(--g-text-md) / 1.2 var(--g-font-display);
 }
 
-.g-home-links a b svg {
+.g-home-links > ul a b svg {
   width: 1em;
   height: 1em;
   color: var(--g-fg-faint);
@@ -1818,14 +1876,103 @@ kbd {
     transform var(--g-duration) var(--g-ease-out);
 }
 
-.g-home-links a:hover b svg {
+.g-home-links > ul a:hover b svg {
   color: var(--g-accent);
   transform: translateX(2px);
 }
 
-.g-home-links a span {
+.g-home-links > ul a span {
   font-size: var(--g-text-sm);
   color: var(--g-fg-muted);
+}
+
+/* Adapter strip: one row of framework icons with labels, not a card grid. */
+
+.g-adapters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--g-space-3) var(--g-space-5);
+  padding-block: var(--g-space-4);
+  border-block: var(--g-border-w) solid var(--g-line);
+}
+
+.g-adapters-head {
+  display: grid;
+  gap: var(--g-space-1);
+  flex: 0 1 15rem;
+  min-width: 12rem;
+  color: var(--g-fg);
+  text-decoration: none;
+}
+
+.g-adapters-head b {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  font: 600 var(--g-text-md) / 1.2 var(--g-font-display);
+}
+
+.g-adapters-head b svg {
+  width: 1em;
+  height: 1em;
+  color: var(--g-fg-faint);
+  transition:
+    color var(--g-duration-fast) var(--g-ease-out),
+    transform var(--g-duration) var(--g-ease-out);
+}
+
+.g-adapters-head:hover b svg {
+  color: var(--g-accent);
+  transform: translateX(2px);
+}
+
+.g-adapters-head span {
+  font-size: var(--g-text-sm);
+  color: var(--g-fg-muted);
+}
+
+.g-adapters ul {
+  display: flex;
+  flex: 1 1 24rem;
+  flex-wrap: wrap;
+  gap: var(--g-space-1) var(--g-space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.g-adapters li a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.4em 0.7em;
+  border-radius: var(--g-radius-1);
+  color: var(--g-fg-muted);
+  font: 500 var(--g-text-sm) / 1 var(--g-font-body);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    color var(--g-duration-fast) var(--g-ease-out),
+    background var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-adapters li a:hover {
+  color: var(--g-fg);
+  background: var(--g-bg-sunken);
+}
+
+.g-adapters li a:focus-visible {
+  outline: none;
+  box-shadow: var(--g-focus);
+}
+
+.g-adapters li a .g-tab-icon {
+  opacity: 0.85;
+}
+
+.g-adapters li a:hover .g-tab-icon {
+  opacity: 1;
 }
 
 /* ---------------------------------------------------------------------------

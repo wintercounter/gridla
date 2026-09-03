@@ -1,0 +1,30 @@
+{
+  "extends": "../../../../tsconfig.base.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "../../dist/angular/out-tsc",
+    "types": [],
+    "jsx": "preserve",
+    "declaration": true,
+    "declarationMap": false,
+    "sourceMap": true,
+    "inlineSources": true,
+    "importHelpers": false,
+    "experimentalDecorators": false,
+    "useDefineForClassFields": false,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "paths": {
+      "gridla": ["../../dist/index.d.ts"],
+      "gridla/interaction": ["../../dist/interaction.d.ts"]
+    }
+  },
+  "files": ["index.ts"],
+  "angularCompilerOptions": {
+    "compilationMode": "partial",
+    "strictTemplates": true,
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "enableResourceInlining": true
+  }
+}

@@ -70,6 +70,30 @@ const program = ts.createProgram(files, {
   paths: {
     gridla: [path.join(SRC_DIR, 'index.ts')],
     'gridla/react': [path.join(SRC_DIR, 'react.ts')],
+    'gridla/dom': [path.join(SRC_DIR, 'dom.ts')],
+    'gridla/elements': [path.join(SRC_DIR, 'elements.ts')],
+    'gridla/solid': [path.join(SRC_DIR, 'solid.ts')],
+    'solid-js': [path.join(REPO_DIR, 'packages/gridla/node_modules/solid-js')],
+    'solid-js/*': [path.join(REPO_DIR, 'packages/gridla/node_modules/solid-js/*')],
+    'gridla/vue': [path.join(SRC_DIR, 'vue.ts')],
+    'gridla/svelte': [path.join(SRC_DIR, 'svelte/index.ts')],
+    svelte: [path.join(REPO_DIR, 'packages/gridla/node_modules/svelte')],
+    'svelte/elements': [path.join(REPO_DIR, 'packages/gridla/node_modules/svelte/elements.d.ts')],
+    'gridla/interaction': [path.join(SRC_DIR, 'interaction.ts')],
+    'gridla/qwik': [path.join(SRC_DIR, 'qwik.ts')],
+    '@builder.io/qwik': [
+      path.join(REPO_DIR, 'packages/gridla/node_modules/@builder.io/qwik/dist/core.d.ts'),
+    ],
+    '@builder.io/qwik/jsx-runtime': [
+      path.join(REPO_DIR, 'packages/gridla/node_modules/@builder.io/qwik/dist/jsx-runtime.d.ts'),
+    ],
+    '@builder.io/qwik/server': [
+      path.join(REPO_DIR, 'packages/gridla/node_modules/@builder.io/qwik/dist/server.d.ts'),
+    ],
+    'gridla/angular': [path.join(SRC_DIR, 'angular/index.ts')],
+    '@angular/*': [path.join(REPO_DIR, 'packages/gridla/node_modules/@angular/*')],
+    vue: [path.join(REPO_DIR, 'packages/gridla/node_modules/vue')],
+    'vue/*': [path.join(REPO_DIR, 'packages/gridla/node_modules/vue/*')],
     react: [path.join(REPO_DIR, 'node_modules/@types/react/index.d.ts')],
     'react-dom/server': [path.join(REPO_DIR, 'node_modules/@types/react-dom/server.d.ts')],
     'bun:test': [

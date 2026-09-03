@@ -1,0 +1,158 @@
+---
+title: Web Components
+description: Declare a canvas in HTML with gridla-canvas, gridla-item, gridla-preview, and gridla-transfer-scope from gridla/elements.
+---
+
+# Web Components
+
+`gridla/elements` wraps the [DOM adapter](./dom) in four custom elements. Declare the canvas and its items in HTML, assign the `layout` property, and listen for `layout-change`. There is no shadow DOM: the item content is light DOM, and your stylesheet applies to everything.
+
+## Install
+
+```bash
+bun add gridla
+```
+
+Register the elements once, before the markup is parsed or after (already connected elements upgrade in place):
+
+```ts
+import { defineGridlaElements } from 'gridla/elements'
+
+defineGridlaElements()
+```
+
+`defineGridlaElements(prefix)` registers `<prefix-canvas>`, `<prefix-item>`, `<prefix-preview>`, and `<prefix-transfer-scope>` (default prefix `gridla`). Calling it twice, or with several prefixes, is safe.
+
+## Minimal example
+
+```html
+<gridla-canvas id="dashboard" gap="12" snap-distance="24" resize-edges="e s se">
+  <gridla-item item-id="chart">Chart</gridla-item>
+  <gridla-item item-id="note">Note</gridla-item>
+  <gridla-item item-id="feed">Feed</gridla-item>
+  <gridla-preview></gridla-preview>
+</gridla-canvas>
+```
+
+```ts
+import type { GridLayout } from 'gridla'
+import { defineGridlaElements, type GridlaCanvasElement } from 'gridla/elements'
+
+defineGridlaElements()
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+const canvas = document.getElementById('dashboard') as GridlaCanvasElement<{ label: string }>
+canvas.style.height = '480px'
+canvas.layout = initial
+```
+
+Each `<gridla-item>` whose `item-id` matches a layout item is positioned and receives `data-gridla-item`, `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring`. A layout item without a declared element gets one created; a declared element without a layout item is hidden. Items that connect later (for example rendered by a framework) are picked up when they connect.
+
+### Attributes
+
+| Attribute             | Meaning                                                                  |
+| --------------------- | ------------------------------------------------------------------------ |
+| `responsive`          | `"false"` sizes the element to the layout instead of projecting onto it. |
+| `gap`                 | Minimum distance between items, in layout units.                         |
+| `snap-distance`       | Alignment snapping distance during gestures.                             |
+| `drag-threshold`      | Pointer travel before a press becomes a drag (default 4).                |
+| `keyboard-step`       | Pixels per arrow key press (default 8; Shift multiplies by 4).           |
+| `resize-edges`        | Built-in resize handles for every item, for example `"e s se"`.          |
+| `resize-handle-class` | Class name for the built-in handles.                                     |
+| `positioning`         | `transform` (default) or `absolute`.                                     |
+| `selected-id`         | Controlled selection.                                                    |
+
+Attributes can change at any time; the canvas re-renders once.
+
+### Events
+
+All events are `CustomEvent`s dispatched on the canvas and do not bubble.
+
+| Event           | `detail`                                                                             |
+| --------------- | ------------------------------------------------------------------------------------ |
+| `layout-change` | `{ layout, change }` after every accepted change (`change` is a `GridChangeDetail`). |
+| `commit`        | `GridChangeDetail` after every interactive commit, with the solver `strategy`.       |
+| `select`        | `{ itemId }` when the selection changes (`null` when cleared).                       |
+| `item-click`    | `{ itemId }` when a press ends without a drag.                                       |
+| `transfer-out`  | `{ itemId, targetId }` when an item left for another canvas.                         |
+| `transfer-in`   | `{ item, sourceId }` when an item arrived from another canvas.                       |
+
+## Controlled and uncontrolled
+
+The `layout` property is both input and output. Read it any time for the layout in effect; set it to replace the layout. For controlled use keep your own copy in step:
+
+```ts
+import type { GridLayout } from 'gridla'
+import type { GridlaCanvasElement, GridlaLayoutChangeDetail } from 'gridla/elements'
+
+declare const canvas: GridlaCanvasElement
+declare let layout: GridLayout
+
+canvas.layout = layout
+canvas.addEventListener('layout-change', (event) => {
+  const { layout: next, change } = (event as CustomEvent<GridlaLayoutChangeDetail>).detail
+  layout = next
+  console.log(change.reason, change.itemId, change.strategy)
+})
+```
+
+To take a canvas apart (for example to swap the layout wholesale), set `layout = null` or remove the element; it mounts again when it reconnects with a layout.
+
+## Nested layouts and transfers
+
+A nested layout is a `<gridla-canvas>` inside a `<gridla-item>`. Wrap everything in a `<gridla-transfer-scope>` and items move between the canvases; the deepest canvas under the pointer that accepts the item previews the drop.
+
+```html
+<gridla-transfer-scope>
+  <gridla-canvas id="dashboard">
+    <gridla-item item-id="header">Header</gridla-item>
+    <gridla-item item-id="group">
+      <gridla-canvas id="group">
+        <gridla-item item-id="note">Note</gridla-item>
+        <gridla-item item-id="todo">To-do</gridla-item>
+      </gridla-canvas>
+    </gridla-item>
+  </gridla-canvas>
+</gridla-transfer-scope>
+```
+
+```ts
+import type { GridlaCanvasElement } from 'gridla/elements'
+
+const group = document.getElementById('group') as GridlaCanvasElement
+// The group must not be dropped into itself.
+group.acceptTransfers = (item) => item.id !== 'group'
+group.addEventListener('transfer-in', (event) => {
+  const { item, sourceId } = (event as CustomEvent<{ item: { id: string }; sourceId: string }>)
+    .detail
+  console.log(`${item.id} arrived from ${sourceId}`)
+})
+```
+
+The nearest `<gridla-transfer-scope>` ancestor is used by default; set the canvas `scope` property before it connects to share a `TransferScope` created with `createTransferScope` instead. After a transfer, the source canvas hides the item's element and the target canvas creates a new `<gridla-item>`; fill it from the target's `layout-change` event if it needs content.
+
+## Server rendering
+
+Importing `gridla/elements` does not touch `customElements`, `window`, or `document`; the classes extend an inert base when `HTMLElement` is missing. Server-rendered `<gridla-canvas>` markup is plain HTML until `defineGridlaElements()` runs in the browser, at which point connected elements upgrade and mount as soon as a layout is assigned. Give the canvas a height in CSS so the first paint reserves space.
+
+## API
+
+- [`defineGridlaElements`](../api/elements/elements#definegridlaelements)
+- [`GridlaCanvasElement`](../api/elements/elements#gridlacanvaselement), [`GridlaItemElement`](../api/elements/elements#gridlaitemelement), [`GridlaPreviewElement`](../api/elements/elements#gridlapreviewelement), [`GridlaTransferScopeElement`](../api/elements/elements#gridlatransferscopeelement)
+- [`GridlaCanvasEventMap`](../api/elements/elements#gridlacanvaseventmap), [`GridlaLayoutChangeDetail`](../api/elements/elements#gridlalayoutchangedetail), [`createTransferScope`](../api/elements/elements#createtransferscope)
+- [Types](../api/elements/types): `GridChangeDetail`, `GridChangeReason`
+
+Try it: the [Web Components demo app](https://wintercounter.github.io/gridla/adapters/elements/) drives the shared adapter e2e suite.

@@ -29,12 +29,87 @@
         "typescript": "7.0.2",
       },
     },
+    "examples/adapters/angular": {
+      "name": "gridla-adapter-angular",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+      },
+    },
+    "examples/adapters/elements": {
+      "name": "gridla-adapter-elements",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+      },
+    },
+    "examples/adapters/preact": {
+      "name": "gridla-adapter-preact",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+      },
+      "devDependencies": {
+        "preact": "10.29.8",
+      },
+    },
+    "examples/adapters/qwik": {
+      "name": "gridla-adapter-qwik",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+      },
+      "devDependencies": {
+        "@builder.io/qwik": "1.20.0",
+      },
+    },
+    "examples/adapters/solid": {
+      "name": "gridla-adapter-solid",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+        "solid-js": "^1.9",
+      },
+      "devDependencies": {
+        "@rsbuild/plugin-babel": "^2.1.0",
+        "@rsbuild/plugin-solid": "^1.2.2",
+      },
+    },
+    "examples/adapters/svelte": {
+      "name": "gridla-adapter-svelte",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+        "svelte": "^5",
+      },
+      "devDependencies": {
+        "@rsbuild/plugin-svelte": "^2.0.1",
+      },
+    },
     "examples/adapters/vanilla-dom": {
       "name": "gridla-adapter-vanilla-dom",
       "version": "0.0.0",
       "dependencies": {
         "@gridla/demo-kit": "workspace:*",
         "gridla": "workspace:*",
+      },
+    },
+    "examples/adapters/vue": {
+      "name": "gridla-adapter-vue",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+        "vue": "^3.5",
+      },
+      "devDependencies": {
+        "@rsbuild/plugin-vue": "^2.0.1",
       },
     },
     "examples/gallery": {
@@ -112,13 +187,22 @@
         "solid-js": "^1.9",
         "svelte": "^5",
         "svelte-check": "^4.7.6",
+        "typescript": "5.9.3",
         "vue": "^3.5",
       },
       "peerDependencies": {
+        "@angular/core": ">=20.0.0",
+        "@builder.io/qwik": ">=1.14.0",
         "react": ">=18.0.0",
+        "svelte": ">=5.0.0",
+        "vue": ">=3.5.0",
       },
       "optionalPeers": [
+        "@angular/core",
+        "@builder.io/qwik",
         "react",
+        "svelte",
+        "vue",
       ],
     },
     "tests/package/consumers/preact-consumer": {
@@ -930,7 +1014,7 @@
 
     "dataloader": ["dataloader@2.2.3", "", {}, "sha512-y2krtASINtPFS1rSDjacrFgn1dcUuoREVabwlOGOe4SdxenREqwjwjElAdwvbGM7kgZz9a3KVicWR7vcz8rnzA=="],
 
-    "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" } }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
+    "debug": ["debug@4.4.3", "", { "dependencies": { "ms": "^2.1.3" }, "peerDependencies": { "supports-color": "*" }, "optionalPeers": ["supports-color"] }, "sha512-RGwwWnwQvkVfavKVt22FGLw+xYSdzARwm0ru6DhTVA3umU5hZc28V3kO4stgYryrTlLpuvgI9GiijltAjNbcqA=="],
 
     "decode-named-character-reference": ["decode-named-character-reference@1.3.0", "", { "dependencies": { "character-entities": "^2.0.0" } }, "sha512-GtpQYB283KrPp6nRw50q3U9/VfOutZOe103qlN7BPP6Ad27xYnOIWv4lPzo8HCAL+mMZofJ9KEy30fq6MfaK6Q=="],
 
@@ -1036,7 +1120,21 @@
 
     "gridla": ["gridla@workspace:packages/gridla"],
 
+    "gridla-adapter-angular": ["gridla-adapter-angular@workspace:examples/adapters/angular"],
+
+    "gridla-adapter-elements": ["gridla-adapter-elements@workspace:examples/adapters/elements"],
+
+    "gridla-adapter-preact": ["gridla-adapter-preact@workspace:examples/adapters/preact"],
+
+    "gridla-adapter-qwik": ["gridla-adapter-qwik@workspace:examples/adapters/qwik"],
+
+    "gridla-adapter-solid": ["gridla-adapter-solid@workspace:examples/adapters/solid"],
+
+    "gridla-adapter-svelte": ["gridla-adapter-svelte@workspace:examples/adapters/svelte"],
+
     "gridla-adapter-vanilla-dom": ["gridla-adapter-vanilla-dom@workspace:examples/adapters/vanilla-dom"],
+
+    "gridla-adapter-vue": ["gridla-adapter-vue@workspace:examples/adapters/vue"],
 
     "gridla-consumer-preact": ["gridla-consumer-preact@workspace:tests/package/consumers/preact-consumer"],
 
@@ -1368,7 +1466,7 @@
 
     "playwright-core": ["playwright-core@1.62.1", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw=="],
 
-    "postcss": ["postcss@8.5.27", "", { "dependencies": { "nanoid": "^3.3.18", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-79Iho8QeYyooJ8e9lCRyTVlyTAkS/kXBYKff6TMzS3kEWGQ8Ds5UEtXpGrSUDLUWok6QTvxeYy0GO8fopHnaSA=="],
+    "postcss": ["postcss@8.5.28", "", { "dependencies": { "nanoid": "^3.3.18", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-RRuzqDtt5Y9h3quz5hWhK+TPnsmVs6WwSU6LkJMeY4HstUEDuYTG8UJSdawMRzmzAtV+KEoG8N3Qg2qLy5vM/A=="],
 
     "preact": ["preact@10.29.8", "", { "peerDependencies": { "preact-render-to-string": ">=5" }, "optionalPeers": ["preact-render-to-string"] }, "sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q=="],
 
@@ -1546,7 +1644,7 @@
 
     "thenify-all": ["thenify-all@1.6.0", "", { "dependencies": { "thenify": ">= 3.1.0 < 4" } }, "sha512-RNxQH/qI8/t3thXJDwcstUO4zeqo64+Uy/+sNVRBx4Xn2OX+OZ9oP+iJnNFqplFra2ZUVeKCSa2oVWi3T4uVmA=="],
 
-    "tinyexec": ["tinyexec@1.3.0", "", {}, "sha512-QKAl9m8gWWGHV8jZcPeym6j+XULi6tOf1mT83WYJ4Lk2ytW/uwAWkrP0uFsdoYMdueVJ0qs26wZ+23xeB4ibNQ=="],
+    "tinyexec": ["tinyexec@1.3.1", "", {}, "sha512-GCvB3aoys96IuDFBMcTB46JOR6mdMtAToqwiW8JlWhsoh1mhHi/xn9ss/Dg7N555GiJyEt2qzoG/NHCwM6h1EA=="],
 
     "tinyglobby": ["tinyglobby@0.2.17", "", { "dependencies": { "fdir": "^6.5.0", "picomatch": "^4.0.4" } }, "sha512-wXR/dYpcqKmfWpEdZjiKJOwCNFndD0DMnrW/cYjVGttEkBfVgcLFHoNrlj47mjOVic9yyNu65alsgF4NQyTa2g=="],
 
@@ -1646,6 +1744,8 @@
 
     "@microsoft/tsdoc-config/ajv": ["ajv@8.18.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-PlXPeEWMXMZ7sPYOHqmDyCJzcfNrUr3fGNKtezX14ykXOEIvyK81d+qydx89KY5O71FKMPaQ2vBfBFI5NHR63A=="],
 
+    "@rollup/wasm-node/fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
+
     "@rsbuild/plugin-solid/@rsbuild/plugin-babel": ["@rsbuild/plugin-babel@1.2.1", "", { "dependencies": { "@babel/core": "^7.29.0", "@babel/plugin-proposal-decorators": "^7.29.0", "@babel/plugin-transform-class-properties": "^7.29.7", "@babel/preset-typescript": "^7.29.7", "@types/babel__core": "^7.20.5", "reduce-configs": "^1.1.2" }, "peerDependencies": { "@rsbuild/core": "^1.0.0 || ^2.0.0-0" }, "optionalPeers": ["@rsbuild/core"] }, "sha512-6Zad7Ff/RUNc91AtftemJcJ1wcZRGOiwuJy349qlLJl9F++oRYwUhx+MxLSpNnVeIywWx2mKdZZBtD1hLqfj9w=="],
 
     "@rslib/core/@rsbuild/core": ["@rsbuild/core@2.1.13", "", { "dependencies": { "@rspack/core": "~2.1.10", "@swc/helpers": "^0.5.23" }, "peerDependencies": { "core-js": ">= 3.0.0" }, "optionalPeers": ["core-js"], "bin": { "rsbuild": "./bin/rsbuild.js" } }, "sha512-Z+6MzmjOio4+bFZQ24k+7ge/oNCOdXIunAssrswTNE8AIf6mcyXpJZevRXRiOEMZasRPA8VNyh+9JngQLg729Q=="],
@@ -1667,6 +1767,8 @@
     "estree-util-build-jsx/estree-walker": ["estree-walker@3.0.3", "", { "dependencies": { "@types/estree": "^1.0.0" } }, "sha512-7RUKfXgSMMkzt6ZuXmqapOurLGPPfgj6l9uRZ7lRGolvk0y2yocc35LdcxKC5PQZdn2DMqioAQ2NoWcrTKmm6g=="],
 
     "estree-util-to-js/source-map": ["source-map@0.7.6", "", {}, "sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ=="],
+
+    "gridla/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 
     "gridla-consumer-preact/react": ["@preact/compat@18.3.2", "", { "peerDependencies": { "preact": "*" } }, "sha512-5vSl55K5yLMvocT7PBKxDOHGgYPjMrKQqqr6roSNjIXcJOtSgDDMjpiCAF3s7klRdmGrN75b/Przmjw8gmlg/w=="],
 
@@ -1697,6 +1799,8 @@
     "pretty-format/ansi-styles": ["ansi-styles@5.2.0", "", {}, "sha512-Cxwpt2SfTzTtXcfOlzGEee8O+c+MmUgGrNiBcXnuWxuFJHe6a5Hz7qwhwe5OgaSYI0IJvkLqWX1ASG+cJOkEiA=="],
 
     "probe-image-size/needle": ["needle@2.9.1", "", { "dependencies": { "debug": "^3.2.6", "iconv-lite": "^0.4.4", "sax": "^1.2.4" }, "bin": { "needle": "./bin/needle" } }, "sha512-6R9fqJ5Zcmf+uYaFgdIHmLwNldn5HbK8L5ybn7Uz+ylX/rnOsSp1AHcvQSrCaFN+qNM1wpymHqD7mVasEOlHGQ=="],
+
+    "rollup/fsevents": ["fsevents@2.3.3", "", { "os": "darwin" }, "sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw=="],
 
     "rollup-plugin-dts/@babel/code-frame": ["@babel/code-frame@8.0.0", "", { "dependencies": { "@babel/helper-validator-identifier": "^8.0.0", "js-tokens": "^10.0.0" } }, "sha512-dYYg153EyN2Ekbqw2zAsbd6/JR+9N2SEoC7YV2GyyqMM7x9bLDTjBD6XBhSMLH0wtIVyJj03jWNriQhaN+eoCw=="],
 

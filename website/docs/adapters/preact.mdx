@@ -1,0 +1,174 @@
+---
+title: Preact
+description: Run the React adapter on Preact through preact/compat. Alias setup for Vite, Rsbuild, package.json, and TypeScript, server rendering, and what is verified.
+---
+
+# Preact
+
+Preact does not get an adapter of its own. `gridla/react` is written against the React API surface that `preact/compat` implements (`forwardRef`, `useSyncExternalStore`, `useLayoutEffect`, `useId`, context), so a Preact app uses the React adapter unchanged: import from `gridla/react`, point `react` and `react-dom` at `preact/compat`, and everything the [React quickstart](../getting-started/react) describes applies.
+
+## Install
+
+```bash
+bun add gridla preact
+```
+
+`react` is an optional peer dependency of `gridla`. It is never installed when you alias it away; the alias is the only extra step.
+
+## Alias `react` to `preact/compat`
+
+Pick the variant that matches your toolchain. Each one redirects the three module ids the adapter imports: `react`, `react-dom`, and the JSX runtime your compiler emits (`react/jsx-runtime`).
+
+### Vite
+
+```js title="vite.config.js"
+import { defineConfig } from 'vite'
+import preact from '@preact/preset-vite'
+
+export default defineConfig({
+  plugins: [preact()],
+  resolve: {
+    alias: {
+      react: 'preact/compat',
+      'react-dom/client': 'preact/compat/client',
+      'react-dom': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+    },
+  },
+})
+```
+
+`@preact/preset-vite` already adds these aliases; the explicit block is shown so the mapping is visible.
+
+### Rsbuild
+
+```js title="rsbuild.config.js"
+import { defineConfig } from '@rsbuild/core'
+import { pluginReact } from '@rsbuild/plugin-react'
+
+export default defineConfig({
+  plugins: [pluginReact()],
+  resolve: {
+    alias: {
+      'react/jsx-runtime': 'preact/jsx-runtime',
+      'react/jsx-dev-runtime': 'preact/jsx-dev-runtime',
+      'react-dom/client': 'preact/compat/client',
+      'react-dom$': 'preact/compat',
+      react$: 'preact/compat',
+    },
+  },
+})
+```
+
+The `$` suffix makes the alias exact, so `react/jsx-runtime` keeps its own mapping instead of being rewritten to `preact/compat/jsx-runtime`.
+
+### package.json
+
+Without a bundler, or when a bundler should not know about the alias, install `@preact/compat` under the `react` names. Every resolver, including Node and Bun, then lands on Preact:
+
+```json title="package.json"
+{
+  "dependencies": {
+    "gridla": "^0.1.0",
+    "preact": "^10.29.0",
+    "react": "npm:@preact/compat@^18.3.0",
+    "react-dom": "npm:@preact/compat@^18.3.0"
+  }
+}
+```
+
+This is the variant the package contract suite uses (see [Verification](#verification)).
+
+### TypeScript
+
+Type-check against Preact's types rather than `@types/react`:
+
+```json title="tsconfig.json"
+{
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "paths": {
+      "react": ["./node_modules/preact/compat/"],
+      "react-dom": ["./node_modules/preact/compat/"],
+      "react/jsx-runtime": ["./node_modules/preact/jsx-runtime/"]
+    }
+  }
+}
+```
+
+`paths` only affects type resolution. The runtime alias still comes from one of the sections above.
+
+## Minimal example
+
+The component is the React quickstart's; only the mount call is Preact's.
+
+```tsx title="dashboard.tsx"
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/react'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+export function Dashboard() {
+  return (
+    <GridProvider defaultLayout={initial} gap={12} snapDistance={24}>
+      <GridCanvas style={{ height: 480 }}>
+        {initial.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+```jsx title="main.jsx"
+import { render } from 'preact'
+import { Dashboard } from './dashboard'
+
+render(<Dashboard />, document.getElementById('root'))
+```
+
+Controlled mode (`layout` plus `onLayoutChange`), nested providers, and transfers between canvases work as documented for React; see [controlled state](../recipes/controlled-state) and [transfer](../recipes/transfer).
+
+## Server rendering
+
+`gridla/react` touches no browser API at import time and `GridCanvas` measures itself in a layout effect, so `preact-render-to-string` renders the layout at its authored size and the client takes over after hydration. The rendered markup carries every `data-gridla-*` attribute:
+
+```jsx title="server.jsx"
+import { render } from 'preact-render-to-string'
+import { Dashboard } from './dashboard'
+
+const html = render(<Dashboard />)
+// html contains data-gridla-canvas and one data-gridla-item="…" per item
+```
+
+Turn off `responsive` when the server output must match the authored coordinates exactly; otherwise the first client paint projects the layout onto the measured canvas, as in the browser.
+
+## Verification
+
+The package contract suite (`bun run test:package`) packs the `gridla` tarball and installs it into a Preact consumer that has `react` and `react-dom` aliased to `@preact/compat` through `package.json`. The fixture asserts that the adapter's `react` import resolves to `@preact/compat`, then renders `GridProvider`, `GridCanvas`, and `GridItem` with `preact-render-to-string` in a process without `window` or `document` and checks the emitted attributes and children. A demo app built on the Rsbuild alias runs the shared browser contract suite (drag with strategy readout, resize, keyboard nudge) under `/adapters/preact/`.
+
+## Caveats
+
+- **`useSyncExternalStore` comes from compat.** The adapter's store subscription uses it; `preact/compat` implements it on top of Preact's own scheduler, which batches differently from React. Selected slices still update once per store change.
+- **Layout effects run after the DOM is committed.** `GridCanvas` measures itself in `useLayoutEffect`. Preact runs layout effects synchronously after the commit, the same as React, so the first paint is at the measured size; the effect order across siblings can differ from React, which the adapter does not depend on.
+- **Hooks are `preact/hooks`.** `useState`, `useRef`, `useMemo`, `useCallback`, `useId`, and context all come from Preact through compat. The adapter uses no React-only API (no `use`, no server components, no `useInsertionEffect`).
+- **`forwardRef` is supported.** `GridCanvas` and `GridItem` forward their `ref` to the underlying `div`; compat implements `forwardRef`, so refs behave as in React.
+- **No signals integration.** `@preact/signals` is not used by the adapter. Read layout state through the adapter's hooks (`useGridStore`, `useGridItemView`), or through `controller.store.subscribe` if you want to bridge it into a signal yourself.
+- **Alias everything the adapter imports.** A partial alias (for example `react` but not `react/jsx-runtime`) loads a second renderer next to Preact and context lookups fail with `this component must be rendered inside <GridProvider>`. The three variants above map all module ids.

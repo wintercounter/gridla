@@ -1,7 +1,7 @@
 ---
 pageType: custom
 title: Gridla
-description: Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and an optional React adapter.
+description: Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and adapters for React, Vue, Svelte, Solid, Angular, Qwik, Web Components, and the DOM.
 ---
 
 import { CodeTab, CodeTabs } from '../theme/components/CodeTabs'
@@ -45,13 +45,9 @@ result.layout.items[0] // { id: 'chart', x: 312, ... } — note sits at x=0; the
 import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
 import type { GridLayout } from 'gridla'
 
-export function Dashboard({
-  layout,
-  onChange,
-}: {
-  layout: GridLayout
-  onChange: (next: GridLayout) => void
-}) {
+type Props = { layout: GridLayout; onChange: (next: GridLayout) => void }
+
+export function Dashboard({ layout, onChange }: Props) {
   return (
     <GridProvider layout={layout} onLayoutChange={onChange} gap={12}>
       <GridCanvas style={{ height: 480 }}>
@@ -60,6 +56,212 @@ export function Dashboard({
             {item.id}
           </GridItem>
         ))}
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+</CodeTab>
+<CodeTab kind="vue" label="Vue">
+
+```vue
+<script setup lang="ts">
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/vue'
+
+const layout = defineModel<GridLayout>('layout', { required: true })
+</script>
+
+<template>
+  <GridProvider v-model:layout="layout" :gap="12">
+    <GridCanvas style="height: 480px">
+      <GridItem
+        v-for="item in layout.items"
+        :key="item.id"
+        :id="item.id"
+        :resize-edges="['e', 's', 'se']"
+      >
+        {{ item.id }}
+      </GridItem>
+      <GridPreviewOutline />
+    </GridCanvas>
+  </GridProvider>
+</template>
+```
+
+</CodeTab>
+<CodeTab kind="svelte" label="Svelte">
+
+```svelte
+<script lang="ts">
+  import type { GridLayout } from 'gridla'
+  import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/svelte'
+
+  let { layout = $bindable() }: { layout: GridLayout } = $props()
+</script>
+
+<GridProvider bind:layout gap={12}>
+  <GridCanvas style="height: 480px">
+    {#each layout.items as item (item.id)}
+      <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>{item.id}</GridItem>
+    {/each}
+    <GridPreviewOutline />
+  </GridCanvas>
+</GridProvider>
+```
+
+</CodeTab>
+<CodeTab kind="solid" label="Solid">
+
+```tsx
+/** @jsxImportSource solid-js */
+import { For, createSignal } from 'solid-js'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/solid'
+
+export function Dashboard(props: { initial: GridLayout }) {
+  const [layout, setLayout] = createSignal(props.initial)
+  return (
+    <GridProvider layout={layout()} onLayoutChange={setLayout} gap={12}>
+      <GridCanvas style={{ height: '480px' }}>
+        <For each={layout().items}>
+          {(item) => (
+            <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>
+              {item.id}
+            </GridItem>
+          )}
+        </For>
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+</CodeTab>
+<CodeTab kind="angular" label="Angular">
+
+```ts
+import { Component, model } from '@angular/core'
+import type { GridLayout } from 'gridla'
+import { GridCanvasComponent, GridItemDirective, GridProviderComponent } from 'gridla/angular'
+
+@Component({
+  selector: 'app-dashboard',
+  imports: [GridProviderComponent, GridCanvasComponent, GridItemDirective],
+  template: `
+    <gridla-provider [(layout)]="layout" [gap]="12">
+      <gridla-canvas style="height: 480px">
+        @for (item of layout().items; track item.id) {
+          <div [gridlaItem]="item.id" [resizeEdges]="['e', 's', 'se']">{{ item.id }}</div>
+        }
+      </gridla-canvas>
+    </gridla-provider>
+  `,
+})
+export class DashboardComponent {
+  readonly layout = model.required<GridLayout>()
+}
+```
+
+</CodeTab>
+<CodeTab kind="elements" label="Web Components">
+
+```ts
+import type { GridLayout } from 'gridla'
+import {
+  defineGridlaElements,
+  type GridlaCanvasElement,
+  type GridlaLayoutChangeDetail,
+} from 'gridla/elements'
+
+defineGridlaElements()
+
+document.body.innerHTML = `
+  <gridla-canvas id="dashboard" gap="12" resize-edges="e s se" style="height: 480px">
+    <gridla-item item-id="chart">Chart</gridla-item>
+    <gridla-item item-id="note">Note</gridla-item>
+    <gridla-preview></gridla-preview>
+  </gridla-canvas>`
+
+declare const layout: GridLayout
+const canvas = document.getElementById('dashboard') as GridlaCanvasElement
+canvas.layout = layout
+canvas.addEventListener('layout-change', (event) => {
+  const { change } = (event as CustomEvent<GridlaLayoutChangeDetail>).detail
+  console.log(change.reason, change.strategy)
+})
+```
+
+</CodeTab>
+<CodeTab kind="dom" label="DOM">
+
+```ts
+import type { GridLayout } from 'gridla'
+import { mountGrid } from 'gridla/dom'
+
+declare const layout: GridLayout
+const element = document.getElementById('dashboard') as HTMLElement
+
+const grid = mountGrid(element, {
+  defaultLayout: layout,
+  gap: 12,
+  resizeEdges: ['e', 's', 'se'],
+  preview: true,
+  renderItem: (item, node) => {
+    node.textContent = item.id
+  },
+  onLayoutChange: (next, detail) => console.log(detail.reason, detail.strategy, next),
+})
+
+// grid.getLayout() reads the layout in effect; grid.destroy() unmounts.
+```
+
+</CodeTab>
+<CodeTab kind="qwik" label="Qwik">
+
+```tsx
+/** @jsxImportSource @builder.io/qwik */
+import { component$, useSignal } from '@builder.io/qwik'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/qwik'
+
+export const Dashboard = component$((props: { initial: GridLayout }) => {
+  const layout = useSignal(props.initial)
+  return (
+    <GridProvider layout={layout.value} gap={12} onLayoutChange$={(next) => (layout.value = next)}>
+      <GridCanvas style={{ height: '480px' }}>
+        {layout.value.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.id}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+})
+```
+
+</CodeTab>
+<CodeTab kind="preact" label="Preact">
+
+```tsx
+// Alias react and react-dom to preact/compat (see the Preact guide); the React adapter is unchanged.
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/react'
+import type { GridLayout } from 'gridla'
+
+export function Dashboard({ initial }: { initial: GridLayout }) {
+  return (
+    <GridProvider defaultLayout={initial} gap={12}>
+      <GridCanvas style={{ height: 480 }}>
+        {initial.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.id}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
       </GridCanvas>
     </GridProvider>
   )

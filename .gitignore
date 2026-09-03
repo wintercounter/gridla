@@ -18,3 +18,4 @@ tests/package/consumers/*/node_modules
 .tools/
 site-dist/
 PLAN.md
+.svelte-kit/

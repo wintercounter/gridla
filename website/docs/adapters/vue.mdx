@@ -1,0 +1,328 @@
+---
+title: Vue
+description: A draggable, resizable canvas in Vue 3 with GridProvider, GridCanvas, and GridItem from gridla/vue, bound with v-model:layout.
+---
+
+# Vue
+
+`gridla/vue` is the Vue 3 adapter: a `GridProvider` component that owns layout and gesture state, headless `GridCanvas`, `GridItem`, and `GridPreviewOutline` components, a `GridTransferScope` for moves between canvases, and composables over the store. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters. The components are written with `defineComponent` and `h`; there is no SFC and no compiler step, and they work the same from templates and from render functions.
+
+## Install
+
+```bash
+bun add gridla vue
+```
+
+The adapter ships inside the `gridla` package as the `gridla/vue` subpath. `vue` (3.5 or later) is an optional peer dependency; nothing else is pulled in.
+
+## Minimal example
+
+Give `GridProvider` a `default-layout` and it keeps the state for you. With a template:
+
+```vue
+<script setup lang="ts">
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/vue'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+</script>
+
+<template>
+  <GridProvider :default-layout="initial" :gap="12" :snap-distance="24">
+    <GridCanvas style="height: 480px">
+      <GridItem
+        v-for="item in initial.items"
+        :key="item.id"
+        :id="item.id"
+        :resize-edges="['e', 's', 'se']"
+      >
+        {{ item.data?.label }}
+      </GridItem>
+      <GridPreviewOutline />
+    </GridCanvas>
+  </GridProvider>
+</template>
+```
+
+The same tree as a render function, which is also how the adapter itself is written:
+
+```ts
+import { defineComponent, h } from 'vue'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/vue'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+export const Dashboard = defineComponent({
+  setup() {
+    return () =>
+      h(GridProvider, { defaultLayout: initial, gap: 12, snapDistance: 24 }, () =>
+        h(GridCanvas, { style: { height: '480px' } }, () => [
+          ...initial.items.map((item) =>
+            h(GridItem, { key: item.id, id: item.id, resizeEdges: ['e', 's', 'se'] }, () => [
+              item.data?.label,
+            ]),
+          ),
+          h(GridPreviewOutline),
+        ]),
+      )
+  },
+})
+```
+
+What each piece does:
+
+- `GridProvider` holds the source layout, projects it onto the measured canvas size (`responsive` is `true` by default), and runs the solvers during gestures. `gap`, `snap-distance`, `snap`, and `on-trace` are the same `SolveOptions` the core takes; `config` accepts them as one object.
+- `GridCanvas` renders a `div` with `position: relative`, measures itself with `ResizeObserver` in `onMounted`, and attaches the pointer and keyboard handlers. Give it a height. It emits `item-click` for a press that did not become a drag and `delete-key` when Delete is pressed with a selection.
+- `GridItem` renders a `div` positioned with `transform` and sets `data-gridla-active`, `data-gridla-selected`, and `data-gridla-shifted` attributes for styling. `resize-edges` adds built-in resize handles. Its default slot receives the item's view plus `dragHandleProps` and `getResizeHandleProps(edge)` for custom chrome (`draggable: false` makes the bound handle the only drag surface).
+- `GridPreviewOutline` renders a box where the active item will land when released, and nothing when there is no gesture.
+
+Render the items from a stable list of ids; each `GridItem` subscribes to its own geometry through a shallow ref, so the list itself does not re-render during a drag.
+
+## Controlled and uncontrolled
+
+`default-layout` (above) is the uncontrolled mode: the provider owns the layout and still emits every change. Pass `layout` and listen to `update:layout` (which is what `v-model:layout` does) to keep the state yourself. The provider emits `update:layout` after every accepted change, then `layout-change` with the same layout and a `GridChangeDetail`. `commit` fires with the solver strategy for every accepted pointer gesture. Selection works the same way through `v-model:selected-id`.
+
+```vue
+<script setup lang="ts">
+import { ref } from 'vue'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, type GridChangeDetail } from 'gridla/vue'
+
+const props = defineProps<{ initial: GridLayout<{ label: string }> }>()
+const layout = ref(props.initial)
+const last = ref('idle')
+
+function onChange(_next: GridLayout<{ label: string }>, detail: GridChangeDetail) {
+  last.value = `${detail.reason} · ${detail.strategy ?? 'none'}`
+}
+</script>
+
+<template>
+  <GridProvider v-model:layout="layout" :gap="12" @layout-change="onChange">
+    <GridCanvas style="height: 480px">
+      <GridItem
+        v-for="item in layout.items"
+        :key="item.id"
+        :id="item.id"
+        :resize-edges="['e', 's', 'se']"
+      >
+        {{ item.data?.label }}
+      </GridItem>
+    </GridCanvas>
+  </GridProvider>
+  <p>{{ last }}</p>
+</template>
+```
+
+In a render function the model is the `layout` prop plus an `onUpdate:layout` handler:
+
+```ts
+import { defineComponent, h, ref, type PropType } from 'vue'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, type GridChangeDetail } from 'gridla/vue'
+
+type Data = { label: string }
+
+export const Dashboard = defineComponent({
+  props: { initial: { type: Object as PropType<GridLayout<Data>>, required: true } },
+  setup(props) {
+    const layout = ref(props.initial)
+    const last = ref('idle')
+    return () => [
+      h(
+        GridProvider,
+        {
+          layout: layout.value,
+          'onUpdate:layout': (next: GridLayout<Data>) => {
+            layout.value = next
+          },
+          onLayoutChange: (_next: GridLayout<Data>, detail: GridChangeDetail) => {
+            last.value = `${detail.reason} · ${detail.strategy ?? 'none'}`
+          },
+          gap: 12,
+        },
+        () =>
+          h(GridCanvas, { style: { height: '480px' } }, () =>
+            layout.value.items.map((item) =>
+              h(GridItem, { key: item.id, id: item.id, resizeEdges: ['e', 's', 'se'] }, () => [
+                item.data?.label,
+              ]),
+            ),
+          ),
+      ),
+      h('p', last.value),
+    ]
+  },
+})
+```
+
+The layout the provider emits is expressed in the canvas size it was rendered at. See [controlled state](../recipes/controlled-state) and [persistence](../recipes/persistence) for what to store.
+
+## Nested layouts and transfers
+
+A nested layout is an item that hosts its own `GridProvider` and `GridCanvas`. Wrap the tree in `GridTransferScope` and items move between every canvas inside it: the pointer decides the target, the target previews the drop, and releasing commits it. The source provider emits `transfer-out`, the target emits `transfer-in`, and both emit their new layouts as usual. Make the group's head the drag surface (`draggable: false` plus `dragHandleProps`) and stop `pointerdown` from bubbling out of the inner canvas so the outer canvas does not also react to it.
+
+```ts
+import { defineComponent, h, ref, type PropType } from 'vue'
+import type { GridLayout } from 'gridla'
+import {
+  GridCanvas,
+  GridItem,
+  GridPreviewOutline,
+  GridProvider,
+  GridTransferScope,
+  type GridItemSlotProps,
+} from 'gridla/vue'
+
+type Data = { label: string }
+
+export const Dashboard = defineComponent({
+  props: {
+    root: { type: Object as PropType<GridLayout<Data>>, required: true },
+    group: { type: Object as PropType<GridLayout<Data>>, required: true },
+  },
+  setup(props) {
+    const root = ref(props.root)
+    const group = ref(props.group)
+    const provider = (
+      model: typeof root,
+      children: () => ReturnType<typeof h>[],
+      extra: Record<string, unknown> = {},
+    ) =>
+      h(
+        GridProvider,
+        {
+          layout: model.value,
+          'onUpdate:layout': (next: GridLayout<Data>) => {
+            model.value = next
+          },
+          ...extra,
+        },
+        () => h(GridCanvas, extra.canvas ?? {}, () => [...children(), h(GridPreviewOutline)]),
+      )
+
+    return () =>
+      h(GridTransferScope, null, () =>
+        provider(root, () =>
+          root.value.items.map((item) =>
+            item.id === 'group'
+              ? h(
+                  GridItem,
+                  { key: item.id, id: item.id, draggable: false },
+                  {
+                    default: (view: GridItemSlotProps) => [
+                      h('header', view.dragHandleProps, 'Group'),
+                      provider(
+                        group,
+                        () =>
+                          group.value.items.map((note) =>
+                            h(GridItem, { key: note.id, id: note.id }, () => [note.data?.label]),
+                          ),
+                        {
+                          gap: 8,
+                          canvas: {
+                            onPointerdown: (event: PointerEvent) => event.stopPropagation(),
+                          },
+                        },
+                      ),
+                    ],
+                  },
+                )
+              : h(GridItem, { key: item.id, id: item.id }, () => [item.data?.label]),
+          ),
+        ),
+      )
+  },
+})
+```
+
+`accept-transfers` on a provider takes `false` or a predicate `(item, sourceId) => boolean` to refuse drops. The [Vue demo app](https://wintercounter.github.io/gridla/adapters/vue/) that drives the adapter's browser tests is exactly this tree with the demo-kit styles.
+
+## Composables
+
+Inside a provider, the composables read the store as read-only shallow refs that update only when the selected value changes:
+
+- `useGridStore(selector, isEqual?)`: any slice of `GridState`.
+- `useGridItemView(id)`: rect, base rect, active rect, and flags for one item; `id` may be a ref or getter.
+- `useGridLayout()`, `useGridSourceLayout()`, `useGridVisibleLayout()`, `useGridSelection()`, `useGridPreview()`, `useGridInteractionState()`.
+- `useGridActions()`: `move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, `cancel`, and the incoming-preview trio, all through the same solvers.
+
+```ts
+import { defineComponent, h } from 'vue'
+import { useGridActions, useGridSelection } from 'gridla/vue'
+
+export const Toolbar = defineComponent({
+  setup() {
+    const actions = useGridActions<{ label: string }>()
+    const selected = useGridSelection()
+    return () =>
+      h('div', [
+        h(
+          'button',
+          {
+            type: 'button',
+            onClick: () =>
+              actions.place(
+                {
+                  id: `note-${Date.now()}`,
+                  w: 220,
+                  h: 140,
+                  minW: 80,
+                  minH: 60,
+                  data: { label: 'Note' },
+                },
+                { pointer: { x: 480, y: 300 } },
+              ),
+          },
+          'Add note',
+        ),
+        h(
+          'button',
+          {
+            type: 'button',
+            disabled: selected.value === null,
+            onClick: () => selected.value && actions.remove(selected.value),
+          },
+          'Remove selected',
+        ),
+      ])
+  },
+})
+```
+
+## Server rendering and Nuxt
+
+The module reads no `window` or `document` at import time, and `GridProvider`, `GridCanvas`, and `GridItem` render on the server with the authored layout (the canvas is not measured there, so items appear at their authored coordinates; `GridPreviewOutline` renders nothing). In the browser, `GridCanvas` measures itself in `onMounted`, which runs before the first paint, so the projected layout is what the user sees first. With Nuxt, import the components as usual; no `<ClientOnly>` wrapper is needed. Hydration matches because the server and the client both start from the authored layout, and the projection happens in the same tick as mounting.
+
+## API
+
+- [`GridProvider`](../api/vue/provider#gridprovider), [`GridProviderProps`](../api/vue/provider#gridproviderprops), [`GridProviderEmits`](../api/vue/provider#gridprovideremits), [`useGridContext`](../api/vue/provider#usegridcontext), [`GRID_CONTEXT_KEY`](../api/vue/provider#grid_context_key)
+- [`GridCanvas`](../api/vue/components#gridcanvas), [`GridItem`](../api/vue/components#griditem), [`GridPreviewOutline`](../api/vue/components#gridpreviewoutline), [`GridItemSlotProps`](../api/vue/components#griditemslotprops), [`GRID_DATA`](../api/vue/components#grid_data)
+- [`useGridStore`](../api/vue/composables#usegridstore), [`useGridItemView`](../api/vue/composables#usegriditemview), [`useGridActions`](../api/vue/composables#usegridactions), [`useGridLayout`](../api/vue/composables#usegridlayout), [`useGridSelection`](../api/vue/composables#usegridselection)
+- [`GridTransferScope`](../api/vue/transfer#gridtransferscope), [`useTransferScope`](../api/vue/provider#usetransferscope)
+- [Types](../api/vue/types): `GridItemView`, `GridChangeDetail`, `GridState`, `GridActions`

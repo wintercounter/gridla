@@ -1,0 +1,159 @@
+---
+title: DOM
+description: Mount a draggable, resizable canvas on any element with mountGrid from gridla/dom. No framework, no styles, one function.
+---
+
+# DOM
+
+`gridla/dom` is the vanilla adapter. `mountGrid(element, options)` turns an element into a canvas: it creates and positions one element per item, wires pointer and keyboard input, measures the element with `ResizeObserver`, and reports every committed layout. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters.
+
+## Install
+
+```bash
+bun add gridla
+```
+
+The adapter ships inside the `gridla` package as the `gridla/dom` subpath. It has no dependencies.
+
+## Minimal example
+
+```ts
+import type { GridLayout } from 'gridla'
+import { mountGrid } from 'gridla/dom'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+const element = document.getElementById('dashboard') as HTMLElement
+element.style.height = '480px'
+
+const grid = mountGrid(element, {
+  defaultLayout: initial,
+  gap: 12,
+  snapDistance: 24,
+  resizeEdges: ['e', 's', 'se'],
+  preview: true,
+  renderItem: (item, node) => {
+    node.textContent = item.data?.label ?? item.id
+  },
+})
+
+// Later, when the element goes away:
+grid.destroy()
+```
+
+What happens:
+
+- The element receives `data-gridla-canvas`, `position: relative`, `touch-action: none`, and `tabindex="0"` (unless it already has one) so it can take keyboard focus.
+- Each item becomes a `div` with `data-gridla-item="<id>"`, positioned with `transform` (or `left`/`top` with `positioning: 'absolute'`). The whole element is a drag surface unless `draggable: false`, in which case only descendants you mark with `data-gridla-drag-handle` start a move.
+- `resizeEdges` adds built-in resize handles (`data-gridla-resize-handle` + `data-gridla-edge`). They are children of the item element and are re-attached after every `renderItem` call, so replacing `innerHTML` is safe.
+- `preview: true` renders a `data-gridla-preview` element where the active item will land; pass your own element instead of `true` to use it.
+- `renderItem(item, element, view)` is called when an item's element is created and whenever the item or its `GridItemView` (rect, active, selected, shifted, transferring) changes. Without a renderer each element shows the item id.
+
+The item, canvas, and preview elements carry the same `data-gridla-*` attributes as every adapter, so one stylesheet works everywhere. See the [React quickstart](../getting-started/react#styling) for a minimal one.
+
+## Controlled and uncontrolled
+
+With `defaultLayout` the handle owns the layout. `getLayout()` returns the current one and `onLayoutChange` still fires after every accepted change.
+
+With `layout` you own it: the canvas keeps showing what you passed until you call `setLayout` with the next one. This is the shape to use when the layout lives in your own store.
+
+```ts
+import type { GridLayout } from 'gridla'
+import { mountGrid } from 'gridla/dom'
+
+declare const initial: GridLayout
+declare const element: HTMLElement
+
+let layout = initial
+const grid = mountGrid(element, {
+  layout,
+  onLayoutChange: (next, detail) => {
+    layout = next
+    grid.setLayout(next)
+    console.log(detail.reason, detail.itemId, detail.strategy)
+  },
+})
+```
+
+The second argument is a `GridChangeDetail` with the `reason` (`move`, `resize`, `place`, `remove`, `update`, `transfer`, `set`), the `itemId`, and the solver `strategy`. `onCommit` fires with the same detail after every interactive commit only.
+
+Options can change after mounting with `grid.setOptions({ gap: 16 })`; the canvas re-renders once. The transfer `scope` is fixed at mount time.
+
+## Nested layouts and transfers
+
+A nested layout is a second `mountGrid` inside an item's element. Give both mounts the same scope from `createTransferScope` and items can be dragged between them; the pointer decides the target, the target previews the drop, and releasing commits it.
+
+```ts
+import type { GridLayout } from 'gridla'
+import { createTransferScope, mountGrid, type GridHandle } from 'gridla/dom'
+
+declare const outerLayout: GridLayout
+declare const groupLayout: GridLayout
+declare const element: HTMLElement
+
+const scope = createTransferScope()
+let group: GridHandle | null = null
+
+mountGrid(element, {
+  defaultLayout: outerLayout,
+  scope,
+  renderItem: (item, node) => {
+    if (item.id !== 'group' || group) return
+    const inner = document.createElement('div')
+    inner.style.height = '100%'
+    node.append(inner)
+    group = mountGrid(inner, {
+      defaultLayout: groupLayout,
+      scope,
+      // The group must not be dropped into itself.
+      acceptTransfers: (entry) => entry.id !== 'group',
+      onTransferIn: (entry, sourceId) => console.log(`${entry.id} arrived from ${sourceId}`),
+    })
+  },
+  onTransferOut: (itemId, targetId) => console.log(`${itemId} moved to ${targetId}`),
+})
+```
+
+The item element moves with the item: after a transfer the source mount removes its element and the target mount creates one, calling its own `renderItem`.
+
+## Handle
+
+`mountGrid` returns a `GridHandle`:
+
+| Member                | What it does                                                              |
+| --------------------- | ------------------------------------------------------------------------- |
+| `setLayout(layout)`   | Replace the layout (sync a controlled one, or reset an uncontrolled one). |
+| `getLayout()`         | The layout in effect, in your coordinates.                                |
+| `subscribe(listener)` | Listen to controller state (`GridState`). Returns an unsubscribe.         |
+| `select(id \| null)`  | Select an item or clear the selection.                                    |
+| `setOptions(options)` | Apply changed options and re-render.                                      |
+| `controller`          | The `GridController`: store, imperative `actions`, and gesture API.       |
+| `element`             | The canvas element.                                                       |
+| `destroy()`           | Remove listeners, observers, item elements, and leave the transfer scope. |
+
+`controller.actions` exposes `move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, and `cancel`; every one goes through the same solvers as a gesture.
+
+## Server rendering
+
+Importing `gridla/dom` touches no `window` or `document`. Call `mountGrid` after the element exists in a browser (for example in a `DOMContentLoaded` handler or a framework's mount hook). To avoid a flash of unpositioned content, render the server markup with the item geometry already applied, then mount over it; the adapter reuses nothing from the server markup, so keep the server-rendered items out of the element you mount on (or clear it first).
+
+## API
+
+- [`mountGrid`](../api/dom/mount#mountgrid), [`MountGridOptions`](../api/dom/mount#mountgridoptions), [`GridHandle`](../api/dom/mount#gridhandle)
+- [`GridItemRenderer`](../api/dom/mount#griditemrenderer), [`GridItemView`](../api/dom/mount#griditemview), [`selectItemView`](../api/dom/mount#selectitemview)
+- [`createTransferScope`](../api/dom/mount#createtransferscope), [`GRID_DATA`](../api/dom/mount#grid_data)
+- [Types](../api/dom/types): `GridState`, `GridChangeDetail`, `GridPreview`, `GridInteraction`
+
+Try it: the [DOM demo app](https://wintercounter.github.io/gridla/adapters/vanilla-dom/) drives the shared adapter e2e suite.

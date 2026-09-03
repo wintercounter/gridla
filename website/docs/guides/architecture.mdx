@@ -1,15 +1,34 @@
 ---
 title: Architecture
-description: How the core and the React adapter are layered, and how data flows from a pointer event to the DOM.
+description: How the core, the interaction layer, and the adapters are layered, and how data flows from a pointer event to the DOM.
 ---
 
 import { Figure } from '../../theme/components/Figure'
 
 # Architecture
 
-Gridla is one package with two layers and a hard boundary between them.
+Gridla is one package with three layers and hard boundaries between them: the core solves layouts as plain data, the interaction layer turns gestures into solver calls without knowing any framework, and each adapter binds that layer to one rendering model.
 
-<Figure caption="The core is pure functions over plain objects. The React adapter is one consumer of it; your app is another.">
+## Core, interaction, adapters
+
+```text
+your application       owns the layout data, rendering, persistence, and appearance
+        |
+        v
+adapters               gridla/react   gridla/vue   gridla/svelte   gridla/solid   gridla/angular   gridla/qwik
+                       gridla/dom  ->  gridla/elements (Web Components over the DOM adapter)
+        |              components, hooks or signals, framework lifecycle
+        v
+gridla/interaction     createGridController . createPointerGesture . createTransferScope . observeSize
+        |              store, projection onto the measured size, gesture API, transfer hit-testing
+        v
+gridla                 moveItem . resizeItem . placeItem . transferItem . projectLayout . flattenLayout
+                       pure functions over plain objects: no DOM, no framework, zero dependencies
+```
+
+`gridla/interaction` is a public entry. It holds everything the React adapter used to own that was not React: the store, the controller (controlled and uncontrolled sync, projection, `onLayoutChange` reasons, the gesture API), pointer and keyboard handling over a minimal event shape, the transfer scope with its resting-rect hit-testing, and size observation. Every adapter listed under [Adapters](../adapters/index) is a thin binding over it, so a bug fix or a new gesture lands once and reaches every framework; the [Write your own adapter](../adapters/index#write-your-own-adapter) section shows the four functions a new binding needs. The React sections below describe that adapter specifically; the other adapters map the same pieces onto their framework's idioms.
+
+<Figure caption="The core is pure functions over plain objects. The React adapter is one consumer of it, the other adapters are its siblings, and your app is another.">
   <svg
     viewBox="0 0 640 300"
     role="img"
@@ -68,10 +87,10 @@ Gridla is one package with two layers and a hard boundary between them.
       strokeDasharray="4 4"
     />
     <text className="g-fig-muted" x="432" y="130">
-      any other adapter
+      the other adapters
     </text>
     <text className="g-fig-muted" x="432" y="156">
-      vanilla, Vue, Svelte, workers
+      DOM, Vue, Svelte, Solid, Angular, Qwik
     </text>
     <rect className="g-fig-accent-fill" x="16" y="24" width="608" height="60" rx="6" />
     <text className="g-fig-ink" x="28" y="46">

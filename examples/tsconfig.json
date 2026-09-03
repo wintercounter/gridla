@@ -6,6 +6,18 @@
     "paths": {
       "gridla": ["../packages/gridla/src/index.ts"],
       "gridla/react": ["../packages/gridla/src/react.ts"],
+      "gridla/vue": ["../packages/gridla/src/vue.ts"],
+      "gridla/svelte": ["../packages/gridla/src/svelte/index.ts"],
+      "svelte": ["../packages/gridla/node_modules/svelte"],
+      "gridla/qwik": ["../packages/gridla/src/qwik.ts"],
+      "gridla/dom": ["../packages/gridla/src/dom.ts"],
+      "gridla/elements": ["../packages/gridla/src/elements.ts"],
+      "gridla/solid": ["../packages/gridla/src/solid.ts"],
+      "gridla/angular": ["../packages/gridla/src/angular/index.ts"],
+      "gridla/interaction": ["../packages/gridla/src/interaction.ts"],
+      "@angular/*": ["../packages/gridla/node_modules/@angular/*"],
+      "solid-js": ["../packages/gridla/node_modules/solid-js"],
+      "solid-js/*": ["../packages/gridla/node_modules/solid-js/*"],
       "@gridla/demo-kit": ["./shared/src/index.ts"],
       "@gridla/demo-kit/react": ["./shared/src/react.tsx"]
     }

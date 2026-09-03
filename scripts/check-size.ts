@@ -5,6 +5,8 @@
  * result against `size-budget.json`. Run with `--update` to rewrite the
  * budget from the current sizes (plus headroom).
  */
+import type { BunPlugin } from 'bun'
+import type { compile, compileModule } from 'svelte/compiler'
 import { gzipSync } from 'node:zlib'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
@@ -20,11 +22,65 @@ if (!existsSync(resolve(dist, 'index.js'))) {
   process.exit(1)
 }
 
-type Entry = { name: string; file: string; external: string[] }
+type Entry = { name: string; file: string; external: string[]; plugins?: BunPlugin[] }
+
+// `dist/svelte/` ships uncompiled `.svelte` components and `.svelte.js` rune
+// modules (consumers' bundlers compile them), so the measurement compiles them
+// with the Svelte compiler installed under `packages/gridla`.
+type SvelteCompiler = { compile: typeof compile; compileModule: typeof compileModule }
+const svelteDir = resolve(root, 'packages/gridla/node_modules/svelte')
+const sveltePlugin: BunPlugin = {
+  name: 'svelte',
+  setup(build) {
+    const exportsMap = JSON.parse(readFileSync(join(svelteDir, 'package.json'), 'utf8')).exports
+    const compilerPath = join(svelteDir, exportsMap['./compiler'].default)
+    const compiler = () => import(compilerPath) as Promise<SvelteCompiler>
+    build.onLoad({ filter: /\.svelte$/ }, async (args) => {
+      const { compile } = await compiler()
+      const source = readFileSync(args.path, 'utf8')
+      const { js } = compile(source, { filename: args.path, generate: 'client', css: 'external' })
+      return { contents: js.code, loader: 'js' }
+    })
+    build.onLoad({ filter: /\.svelte\.js$/ }, async (args) => {
+      const { compileModule } = await compiler()
+      const source = readFileSync(args.path, 'utf8')
+      return { contents: compileModule(source, { filename: args.path }).js.code, loader: 'js' }
+    })
+  },
+}
+
 const entries: Entry[] = [
   { name: 'gridla', file: 'index.js', external: [] },
   { name: 'gridla/react', file: 'react.js', external: ['react', 'react/jsx-runtime', 'react-dom'] },
   { name: 'gridla/interaction', file: 'interaction.js', external: [] },
+  { name: 'gridla/dom', file: 'dom.js', external: [] },
+  { name: 'gridla/elements', file: 'elements.js', external: [] },
+  { name: 'gridla/vue', file: 'vue.js', external: ['vue'] },
+  {
+    name: 'gridla/qwik',
+    file: 'qwik.qwik.js',
+    external: ['@builder.io/qwik', '@builder.io/qwik/jsx-runtime'],
+  },
+  {
+    // The adapter imports the package's own interaction layer, so only the
+    // Svelte-specific code is measured.
+    name: 'gridla/svelte',
+    file: 'svelte/index.js',
+    external: ['svelte', 'svelte/*', 'gridla', 'gridla/interaction'],
+    plugins: [sveltePlugin],
+  },
+  {
+    name: 'gridla/solid',
+    file: 'solid.js',
+    external: ['solid-js', 'solid-js/web', 'solid-js/h', 'solid-js/store'],
+  },
+  {
+    // The FESM built by ng-packagr imports the package's own interaction layer,
+    // so only the adapter code is measured.
+    name: 'gridla/angular',
+    file: 'angular/fesm2022/gridla-angular.mjs',
+    external: ['@angular/*', 'gridla', 'gridla/interaction'],
+  },
 ]
 
 // Bundle through a wrapper that re-exports the entry. Bun drops the bodies of
@@ -41,6 +97,7 @@ for (const entry of entries) {
     target: 'browser',
     format: 'esm',
     external: entry.external,
+    plugins: entry.plugins ?? [],
   })
   if (!build.success) {
     console.error(build.logs.map((log) => log.message).join('\n'))

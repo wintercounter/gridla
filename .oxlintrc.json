@@ -65,6 +65,17 @@
         "react/rules-of-hooks": "off",
         "no-empty-pattern": "off"
       }
+    },
+    {
+      "files": [
+        "packages/gridla/src/vue/**",
+        "tests/adapters/vue.test.ts",
+        "examples/adapters/vue/**"
+      ],
+      "rules": {
+        "react-hooks/rules-of-hooks": "off",
+        "react/rules-of-hooks": "off"
+      }
     }
   ],
   "ignorePatterns": [
@@ -72,6 +83,7 @@
     "**/doc_build/**",
     "**/node_modules/**",
     "**/.rspress/**",
+    "**/.svelte-kit/**",
     "tests/e2e/obscura/spike.ts"
   ]
 }

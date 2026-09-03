@@ -40,3 +40,64 @@ Gridla publishes one package with three entry points. `gridla` is the framework-
 | [Interaction](/api/react/interaction) | `GRID_DATA`, `GridPointerHandlers`, `useGridInteraction`, `UseGridInteractionOptions` | Pointer and keyboard orchestration for a canvas element you render yourself. |
 | [Transfer scope](/api/react/transfer) | `GridTransferScope` | Move items between providers. |
 | [Types](/api/react/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridPreview`, +2 more | State, action, and event types shared by the provider, hooks, and components. |
+
+## `gridla/dom`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Mount](/api/dom/mount) | `createTransferScope`, `GRID_DATA`, `GridHandle`, `GridItemRenderer`, `GridItemView`, `GridPositioning`, +5 more | `mountGrid` turns an element into a canvas: it creates and positions one element per item, wires pointer and keyboard input, measures the canvas, and reports committed layouts through a `GridHandle`. |
+| [Types](/api/dom/types) | `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridPreview`, `GridState` | State and change types re-exported from the interaction layer for DOM consumers. |
+
+## `gridla/elements`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Elements](/api/elements/elements) | `createTransferScope`, `defineGridlaElements`, `GridlaCanvasElement`, `GridlaCanvasEventMap`, `GridlaItemElement`, `GridlaLayoutChangeDetail`, +3 more | Custom elements over `gridla/dom`: `\<gridla-canvas\>`, `\<gridla-item\>`, `\<gridla-preview\>`, and `\<gridla-transfer-scope\>`, registered with `defineGridlaElements`. |
+| [Types](/api/elements/types) | `GridChangeDetail`, `GridChangeReason` | Change types re-exported from the interaction layer for custom element consumers. |
+
+## `gridla/vue`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Provider](/api/vue/provider) | `GRID_CONTEXT_KEY`, `GridContextValue`, `GridProvider`, `GridProviderEmits`, `GridProviderProps`, `TRANSFER_SCOPE_KEY`, +2 more | `GridProvider` owns layout and gesture state for one canvas. |
+| [Components](/api/vue/components) | `GRID_DATA`, `GridCanvas`, `GridCanvasEmits`, `GridCanvasProps`, `GridItem`, `GridItemProps`, +3 more | Headless building blocks. |
+| [Composables](/api/vue/composables) | `GridSliceRef`, `selectItemView`, `useGridActions`, `useGridInteractionState`, `useGridItem`, `useGridItemView`, +6 more | Subscribe to slices of provider state as shallow refs, read the rendered or visible layout, and reach the imperative actions. |
+| [Transfer scope](/api/vue/transfer) | `GridTransferScope` | Move items between providers. |
+| [Types](/api/vue/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridItemView`, +3 more | State, action, and event types shared by the provider, composables, and components. |
+
+## `gridla/solid`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Provider](/api/solid/provider) | `GridContextValue`, `GridProvider`, `GridProviderProps`, `useGridContext`, `useTransferScope` | `GridProvider` owns layout and gesture state for one canvas. |
+| [Components](/api/solid/components) | `createElement`, `ElementProps`, `GRID_DATA`, `GridCanvas`, `GridCanvasProps`, `GridItem`, +5 more | Headless building blocks written without a compiler. |
+| [Primitives](/api/solid/primitives) | `GridItemView`, `MaybeAccessor`, `useGridActions`, `useGridInteractionState`, `useGridItem`, `useGridItemView`, +6 more | Accessors over slices of provider state built with `from()` over the controller store, plus the imperative actions. |
+| [Transfer scope](/api/solid/transfer) | `GridTransferScope` | Move items between providers. |
+| [Types](/api/solid/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridPreview`, +2 more | State, action, and event types shared by the provider, primitives, and components. |
+
+## `gridla/angular`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Provider](/api/angular/provider) | `GRID_TRANSFER_SCOPE`, `GridController`, `GRIDLA_OPTIONS`, `GridProviderComponent`, `provideGridla`, `provideGridTransferScope` | `GridProviderComponent` (`\<gridla-provider\>` or `[gridlaProvider]`) owns layout and gesture state for one canvas and provides an injectable `GridController` to its content. |
+| [Components](/api/angular/components) | `GRID_DATA`, `GridCanvasComponent`, `GridDragHandleDirective`, `GridItemDirective`, `GridPreviewOutlineComponent`, `GridResizeHandleDirective`, +1 more | Headless building blocks. |
+| [Signals](/api/angular/signals) | `GridItemView`, `injectGridActions`, `injectGridController`, `injectGridItemView`, `injectGridStore`, `itemViewsEqual`, +1 more | Read provider state as signals from any injection context: a slice of the state, one item as it should be painted, or the imperative actions. |
+| [Types](/api/angular/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridControllerConfig`, `GridInteraction`, `GridInteractionMode`, +6 more | Output payloads, application options, and the state, action, and change types shared with the other adapters. |
+
+## `gridla/svelte`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Components](/api/svelte/components) | `GridCanvas`, `GridItem`, `GridPreviewOutline`, `GridProvider`, `GridTransferScope` | Svelte 5 components over the interaction layer. |
+| [Runes](/api/svelte/runes) | `createGridRunes`, `getGridContext`, `getTransferScopeContext`, `gridActions`, `gridItemView`, `gridLayout`, +11 more | Rune-style readers over the nearest provider, called during component initialization: `gridStore` selects a slice of state, `gridItemView` follows one item, `gridLayout` and `gridSelection` read the rendered layout and the selection, and `gridActions` reaches the imperative API. |
+| [Types](/api/svelte/types) | `GRID_DATA`, `GridActions`, `GridCanvasProps`, `GridChangeDetail`, `GridChangeReason`, `GridControllerConfig`, +10 more | Component props, the item view passed to snippets, and the state, action, and change types shared with the other adapters. |
+
+## `gridla/qwik`
+
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Provider](/api/qwik/provider) | `GridContextId`, `GridContextValue`, `GridProvider`, `GridProviderProps`, `GridRuntime`, `TransferContextValue`, +2 more | `GridProvider` owns layout and gesture state for one canvas. |
+| [Components](/api/qwik/components) | `GRID_DATA`, `GridCanvas`, `GridCanvasProps`, `GridItem`, `GridItemProps`, `GridPreviewOutline`, +1 more | Headless building blocks. |
+| [Hooks](/api/qwik/hooks) | `GridItemView`, `GridPositioning`, `selectItemView`, `useGridItemView`, `useGridRuntime`, `useGridState`, +1 more | Read provider state as signals, derive one item's view, and reach the client-only runtime that holds the controller. |
+| [Transfer scope](/api/qwik/transfer) | `GridTransferScope` | Move items between providers. |
+| [Types](/api/qwik/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridPreview`, +1 more | State and change types re-exported from the interaction layer for Qwik consumers. |

@@ -34,6 +34,8 @@ const REQUIRED_FILES = [
   'dist/react.d.ts',
   'dist/interaction.js',
   'dist/interaction.d.ts',
+  'dist/angular/fesm2022/gridla-angular.mjs',
+  'dist/angular/index.d.ts',
 ]
 const RECOMMENDED_FILES = ['README.md']
 const FORBIDDEN_ENTRY = [
@@ -328,6 +330,10 @@ await check('source maps', () => {
   const maps = tarEntries.filter((name) => name.endsWith('.js.map'))
   if (jsFiles.length === 0) problems.push('no JS files found in dist')
   for (const js of jsFiles) {
+    // `dist/svelte/` is Svelte source packaged by `@sveltejs/package` (TypeScript
+    // stripped, no bundling); the consumer's bundler compiles it, and the
+    // packager emits no maps.
+    if (js.startsWith('dist/svelte/')) continue
     const map = `${js}.map`
     if (!tarEntries.includes(map)) {
       problems.push(`missing source map for ${js}`)

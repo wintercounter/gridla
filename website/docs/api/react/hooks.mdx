@@ -63,7 +63,7 @@ export function useGridActions<TData = unknown>(): GridActions<TData>
 
 <span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L28">react/context.ts:28</a></span>
 
-Read the nearest [`GridProvider`](/api/react/provider#gridprovider) context. Throws when called outside a provider.
+Read the nearest [`GridProvider`](/api/qwik/provider#gridprovider) context. Throws when called outside a provider.
 
 ```ts
 export function useGridContext<TData = unknown>(): GridContextValue<TData>
@@ -169,9 +169,9 @@ export function useGridVisibleLayout<TData = unknown>(): GridLayout<TData>
 
 <span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L13">react/context.ts:13</a></span>
 
-Value provided by [`GridProvider`](/api/react/provider#gridprovider): its id, the state store, the imperative
+Value provided by [`GridProvider`](/api/qwik/provider#gridprovider): its id, the state store, the imperative
 actions, the resolved config, the internal gesture API, and the underlying
-[`GridController`](/api/interaction/controller#gridcontroller) from `gridla/interaction`.
+[`GridController`](/api/angular/provider#gridcontroller) from `gridla/interaction`.
 
 ```ts
 export type GridContextValue<TData = unknown> = {
@@ -202,7 +202,7 @@ export type GridContextValue<TData = unknown> = {
 
 Everything needed to paint one item: its current and pre-gesture rectangles
 plus its active, selected, shifted, and transferring flags. Returned by
-[`useGridItemView`](#usegriditemview).
+[`useGridItemView`](/api/qwik/hooks#usegriditemview).
 
 ```ts
 export type GridItemView = {

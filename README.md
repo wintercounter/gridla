@@ -4,7 +4,7 @@
 
 <p align="center">
   Pixel-precise grids and nested layouts that move, resize, snap, and reflow.<br>
-  A framework-neutral engine with an optional React adapter.
+  A framework-neutral engine with adapters for React, Vue, Svelte, Solid, Angular, Qwik, Web Components, and the DOM.
 </p>
 
 <p align="center">
@@ -129,6 +129,26 @@ rectangles changed. Controlled and uncontrolled modes are both supported.
 Cross-canvas moves are opt-in through `GridTransferScope`; nested layouts are
 just providers inside items.
 
+## Adapters
+
+Every adapter is a subpath of the same package, built on the framework-neutral
+`gridla/interaction` layer, with the framework as an optional peer dependency.
+Same component names, same props, same `data-gridla-*` attributes everywhere.
+
+| Framework      | Import            | Docs                                                                  |
+| -------------- | ----------------- | --------------------------------------------------------------------- |
+| React          | `gridla/react`    | <https://wintercounter.github.io/gridla/getting-started/react.html>   |
+| Vue            | `gridla/vue`      | <https://wintercounter.github.io/gridla/adapters/vue.html>            |
+| Svelte         | `gridla/svelte`   | <https://wintercounter.github.io/gridla/adapters/svelte.html>         |
+| Solid          | `gridla/solid`    | <https://wintercounter.github.io/gridla/adapters/solid.html>          |
+| Angular        | `gridla/angular`  | <https://wintercounter.github.io/gridla/adapters/angular.html>        |
+| Qwik           | `gridla/qwik`     | <https://wintercounter.github.io/gridla/adapters/qwik.html>           |
+| Web Components | `gridla/elements` | <https://wintercounter.github.io/gridla/adapters/web-components.html> |
+| DOM (vanilla)  | `gridla/dom`      | <https://wintercounter.github.io/gridla/adapters/dom.html>            |
+| Preact         | `gridla/react`    | <https://wintercounter.github.io/gridla/adapters/preact.html>         |
+
+Writing one for another framework: <https://wintercounter.github.io/gridla/adapters/#write-your-own-adapter>
+
 ## API surface
 
 Core operations: `moveItem`, `resizeItem`, `placeItem`, `transferItem`,
@@ -145,11 +165,11 @@ Full reference: <https://wintercounter.github.io/gridla/api/>
 ## Compatibility
 
 - Browsers: current Chrome, Edge, Firefox, and Safari. Pointer Events and
-  `ResizeObserver` are required by the React adapter; the core runs anywhere
+  `ResizeObserver` are required by the adapters; the core runs anywhere
   ES2022 does.
 - Node 20.19 or newer. ESM only.
 - TypeScript declarations ship with the package. The public types are the
-  documented contract; anything not exported from the two entry points is
+  documented contract; anything not exported from a package entry point is
   internal.
 
 ## Development
