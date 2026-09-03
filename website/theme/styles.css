@@ -321,21 +321,31 @@ kbd {
 
 .g-home {
   --g-home-max: 72rem;
+  position: relative;
   padding: 0 var(--g-space-5) var(--g-space-9);
+}
+
+/* Drafting grid behind the hero only; fades out before the code section. */
+.g-home::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46rem;
+  pointer-events: none;
   background:
     linear-gradient(var(--g-grid-line) 1px, transparent 1px) 0 0 / 48px 48px,
     linear-gradient(90deg, var(--g-grid-line) 1px, transparent 1px) 0 0 / 48px 48px;
-  background-attachment: local;
-  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 1) 0, rgb(0 0 0 / 1) 40rem, transparent 60rem);
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.9) 0, rgb(0 0 0 / 0.9) 60%, transparent 100%);
   -webkit-mask-image: linear-gradient(
     to bottom,
-    rgb(0 0 0 / 1) 0,
-    rgb(0 0 0 / 1) 40rem,
-    transparent 60rem
+    rgb(0 0 0 / 0.9) 0,
+    rgb(0 0 0 / 0.9) 60%,
+    transparent 100%
   );
 }
 
 .g-home-inner {
+  position: relative;
   max-width: var(--g-home-max);
   margin-inline: auto;
 }

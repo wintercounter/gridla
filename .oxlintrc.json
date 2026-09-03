@@ -66,6 +66,15 @@
         "typescript/no-non-null-assertion": "off",
         "react/globals": "off"
       }
+    },
+    {
+      "files": [
+        "tests/e2e/obscura/spike.ts"
+      ],
+      "rules": {
+        "typescript/no-explicit-any": "off",
+        "no-underscore-dangle": "off"
+      }
     }
   ],
   "ignorePatterns": [

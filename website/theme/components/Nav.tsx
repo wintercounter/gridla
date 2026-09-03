@@ -6,9 +6,7 @@ export function NavTitle() {
   return (
     <a className="g-nav-title" href={SITE_BASE} aria-label="Gridla home">
       <Mark />
-      <span>
-        gridla<sup>0.x</sup>
-      </span>
+      <span>gridla</span>
     </a>
   )
 }
