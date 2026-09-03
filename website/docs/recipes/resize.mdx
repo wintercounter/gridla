@@ -61,7 +61,7 @@ export function Card({ id }: { id: string }) {
 }
 ```
 
-The handles are 10px `div`s straddling each edge or corner, with the matching resize cursor. Custom handles: use the render prop and spread `getResizeHandleProps(edge)` on your own element.
+The handles are 10px `div`s inside the item along each edge or corner, with the matching resize cursor; size them with `--gridla-handle-size` and paint them as shown in the [styling guide](../guides/styling#resize-handles). Custom handles: use the render prop and spread `getResizeHandleProps(edge)` on your own element.
 
 ```tsx
 import type { GridResizeEdge } from 'gridla'

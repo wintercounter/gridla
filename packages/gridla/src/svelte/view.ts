@@ -1,5 +1,10 @@
 import type { GridRect, GridResizeEdge } from 'gridla'
-import type { GridState } from 'gridla/interaction'
+import {
+  rectStyle as baseRectStyle,
+  resizeHandleStyle as baseResizeHandleStyle,
+  styleToText,
+  type GridState,
+} from 'gridla/interaction'
 
 import type { GridItemView } from './types.js'
 
@@ -56,36 +61,17 @@ export function itemViewsEqual(a: GridItemView, b: GridItemView): boolean {
 
 /** Inline style that places an element at `rect` inside a canvas. */
 export function rectStyle(rect: GridRect, positioning: 'transform' | 'absolute'): string {
-  if (positioning === 'absolute') {
-    return `position:absolute;left:${rect.x}px;top:${rect.y}px;width:${rect.w}px;height:${rect.h}px;`
-  }
-  return `position:absolute;left:0;top:0;width:${rect.w}px;height:${rect.h}px;transform:translate(${rect.x}px, ${rect.y}px);`
-}
-
-const EDGE_CURSORS: Record<GridResizeEdge, string> = {
-  n: 'ns-resize',
-  s: 'ns-resize',
-  e: 'ew-resize',
-  w: 'ew-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
+  return styleToText(baseRectStyle(rect, positioning))
 }
 
 /**
  * Inline style of a built-in resize handle. Handles sit fully inside the item
- * so they stay hit-testable when the item clips its overflow.
+ * so they stay hit-testable when the item clips its overflow; the geometry
+ * reads `--gridla-handle-size` and `--gridla-handle-inset` so CSS can resize
+ * them. `size` is the fallback thickness.
  */
 export function resizeHandleStyle(edge: GridResizeEdge, size = 10): string {
-  const base = `position:absolute;cursor:${EDGE_CURSORS[edge]};touch-action:none;`
-  if (edge === 'n' || edge === 's') {
-    return `${base}left:${size}px;right:${size}px;height:${size}px;${edge === 'n' ? 'top' : 'bottom'}:0;`
-  }
-  if (edge === 'e' || edge === 'w') {
-    return `${base}top:${size}px;bottom:${size}px;width:${size}px;${edge === 'w' ? 'left' : 'right'}:0;`
-  }
-  return `${base}width:${size}px;height:${size}px;${edge.includes('n') ? 'top' : 'bottom'}:0;${edge.includes('w') ? 'left' : 'right'}:0;`
+  return styleToText(baseResizeHandleStyle(edge, { size }))
 }
 
 /** Join style fragments, appending a consumer-supplied `style` attribute value. */

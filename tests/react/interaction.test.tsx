@@ -130,6 +130,18 @@ describe('pointer interaction', () => {
     expect(next?.items.find((item) => item.id === 'a')?.h).toBe(260)
   })
 
+  it('sizes built-in handles through custom properties so CSS can restyle them', () => {
+    const { getByTestId } = render(<Canvas />)
+    const handle = getByTestId('item-a').querySelector<HTMLElement>('[data-gridla-edge="se"]')
+    expect(handle).not.toBeNull()
+    const style = handle?.getAttribute('style') ?? ''
+    expect(style).toContain('var(--gridla-handle-size')
+    expect(style).toContain('var(--gridla-handle-cursor-se')
+    expect(
+      getByTestId('item-a').querySelector('[data-gridla-edge="s"]')?.getAttribute('style'),
+    ).toContain('var(--gridla-handle-inset')
+  })
+
   it('cancels with Escape and pointercancel', () => {
     const onLayoutChange = mock(() => {})
     const { getByTestId } = render(<Canvas onLayoutChange={onLayoutChange} />)

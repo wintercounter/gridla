@@ -17,6 +17,14 @@ export {
 export { observeSize } from './measure'
 export { createGridStore, type GridStore, type GridStoreListener } from './store'
 export {
+  rectStyle,
+  resizeHandleStyle,
+  styleToText,
+  type GridRectStyle,
+  type GridResizeHandleStyle,
+  type GridResizeHandleStyleOptions,
+} from './style'
+export {
   createTransferScope,
   measurePreviewShift,
   type TransferRegistration,

@@ -24,6 +24,7 @@ import { ReactMultiGridDemo } from './17-react-multi-grid'
 import { ReactSsrDemo } from './18-react-ssr'
 import { ReactStressDemo } from './19-react-stress'
 import { ReactPresetsDemo } from './20-react-presets'
+import { ReactStylingDemo } from './21-styling'
 
 export type DemoEntry = {
   id: string
@@ -178,6 +179,13 @@ const list: (Omit<DemoEntry, 'number' | 'group'> & { group?: DemoEntry['group'] 
     goal: 'Round-trip a layout through JSON and rebuild it with rows, columns or grid presets from a thumbnail gallery.',
     tags: ['applyPreset', 'JSON', 'setLayout'],
     component: ReactPresetsDemo,
+  },
+  {
+    id: 'styling',
+    title: 'Styling handles, preview, and states',
+    goal: 'Size the built-in resize handles with --gridla-handle-size, reveal grips on hover, color the preview by strategy, and switch motion and theme tokens, all from CSS.',
+    tags: ['data-gridla-*', '--gridla-handle-size', 'resizeHandleClassName', 'GridPreviewOutline'],
+    component: ReactStylingDemo,
   },
 ]
 

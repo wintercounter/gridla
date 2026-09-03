@@ -7,6 +7,8 @@ description: A draggable, resizable canvas in Vue 3 with GridProvider, GridCanva
 
 `gridla/vue` is the Vue 3 adapter: a `GridProvider` component that owns layout and gesture state, headless `GridCanvas`, `GridItem`, and `GridPreviewOutline` components, a `GridTransferScope` for moves between canvases, and composables over the store. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters. The components are written with `defineComponent` and `h`; there is no SFC and no compiler step, and they work the same from templates and from render functions.
 
+Appearance is yours: see the [styling guide](../guides/styling) for every `data-gridla-*` attribute, resize handle sizing, the preview outline, and a starter stylesheet.
+
 ## Install
 
 ```bash

@@ -27,6 +27,7 @@
   },
   "files": [
     "dist",
+    "styles",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
@@ -78,6 +79,7 @@
       "svelte": "./dist/svelte/index.js",
       "default": "./dist/svelte/index.js"
     },
+    "./base.css": "./styles/base.css",
     "./package.json": "./package.json"
   },
   "publishConfig": {

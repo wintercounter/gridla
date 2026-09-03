@@ -157,7 +157,9 @@ export declare function rectStyle(rect: GridRect, positioning: 'transform' | 'ab
 <span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/svelte/view.ts">svelte/view.ts</a></span>
 
 Inline style of a built-in resize handle. Handles sit fully inside the item
-so they stay hit-testable when the item clips its overflow.
+so they stay hit-testable when the item clips its overflow; the geometry
+reads `--gridla-handle-size` and `--gridla-handle-inset` so CSS can resize
+them. `size` is the fallback thickness.
 
 ```ts
 export declare function resizeHandleStyle(edge: GridResizeEdge, size?: number): string;

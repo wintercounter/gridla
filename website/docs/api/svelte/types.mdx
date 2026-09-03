@@ -268,7 +268,7 @@ export type GridItemProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'i
 | `id` | `string` | Id of the item in the layout. |
 | `resizeEdges?` | `ReadonlyArray\<GridResizeEdge\>` | Edges to render built-in resize handles for. Default: none. |
 | `resizeHandleClass?` | `string` | Class for built-in resize handles. |
-| `positioning?` | `"transform" \\| "absolute"` | Position the element with `transform` (default) or with `left`/`top`. Transform keeps layout work off the main thread during gestures. |
+| `positioning?` | `"absolute" \\| "transform"` | Position the element with `transform` (default) or with `left`/`top`. Transform keeps layout work off the main thread during gestures. |
 | `followPointer?` | `boolean` | Render the cursor-tracked rect while dragging instead of the solved preview. Default `true`. |
 | `children?` | `Snippet\<[GridItemRenderProps]\>` | Item content. Receives the item view plus handle attribute objects. |
 
@@ -382,7 +382,7 @@ export type GridPreviewOutlineProps = HTMLAttributes<HTMLDivElement> & {
 
 | Member | Type | Description |
 | --- | --- | --- |
-| `positioning?` | `"transform" \\| "absolute"` |  |
+| `positioning?` | `"absolute" \\| "transform"` |  |
 
 ### GridProviderProps
 

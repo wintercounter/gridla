@@ -9,10 +9,11 @@ import {
   type JSX,
 } from 'solid-js'
 
-import type { GridRect, GridResizeEdge } from '../core'
+import type { GridResizeEdge } from '../core'
 import { GRID_DATA } from '../interaction/attributes'
 import { createPointerGesture, type GridPointerGestureOptions } from '../interaction/gesture'
 import { observeSize } from '../interaction/measure'
+import { rectStyle, resizeHandleStyle } from '../interaction/style'
 import { useGridContext, useTransferScope } from './context'
 import { createElement } from './element'
 import { useGridItemView, useGridStore, type GridItemView } from './hooks'
@@ -188,72 +189,10 @@ export type GridItemProps = Omit<DivAttributes, 'id'> & {
   children?: JSX.Element | ((props: GridItemRenderProps) => JSX.Element)
 }
 
-const EDGE_CURSORS: Record<GridResizeEdge, string> = {
-  n: 'ns-resize',
-  s: 'ns-resize',
-  e: 'ew-resize',
-  w: 'ew-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
-}
-
-function resizeHandleStyle(edge: GridResizeEdge, size = 10): JSX.CSSProperties {
-  // Handles sit fully inside the item so they stay hit-testable when the
-  // item clips its overflow.
-  const base: JSX.CSSProperties = {
-    position: 'absolute',
-    cursor: EDGE_CURSORS[edge],
-    'touch-action': 'none',
-  }
-  const vertical = edge === 'n' || edge === 's'
-  const horizontal = edge === 'e' || edge === 'w'
-  if (vertical) {
-    return {
-      ...base,
-      left: px(size),
-      right: px(size),
-      height: px(size),
-      [edge === 'n' ? 'top' : 'bottom']: '0px',
-    }
-  }
-  if (horizontal) {
-    return {
-      ...base,
-      top: px(size),
-      bottom: px(size),
-      width: px(size),
-      [edge === 'w' ? 'left' : 'right']: '0px',
-    }
-  }
-  return {
-    ...base,
-    width: px(size),
-    height: px(size),
-    [edge.includes('n') ? 'top' : 'bottom']: '0px',
-    [edge.includes('w') ? 'left' : 'right']: '0px',
-  }
-}
-
-function rectStyle(rect: GridRect, positioning: GridPositioning): JSX.CSSProperties {
-  if (positioning === 'absolute') {
-    return {
-      position: 'absolute',
-      left: px(rect.x),
-      top: px(rect.y),
-      width: px(rect.w),
-      height: px(rect.h),
-    }
-  }
-  return {
-    position: 'absolute',
-    left: '0px',
-    top: '0px',
-    width: px(rect.w),
-    height: px(rect.h),
-    transform: `translate(${rect.x}px, ${rect.y}px)`,
-  }
+/** `resizeHandleStyle` with the hyphenated keys Solid's `style` prop expects. */
+function handleStyle(edge: GridResizeEdge): JSX.CSSProperties {
+  const { touchAction, ...rest } = resizeHandleStyle(edge)
+  return { ...rest, 'touch-action': touchAction }
 }
 
 /**
@@ -324,7 +263,7 @@ export function GridItem(props: GridItemProps): JSX.Element {
           createElement('div', {
             class: local.resizeHandleClass,
             ...getResizeHandleProps(edge),
-            style: resizeHandleStyle(edge),
+            style: handleStyle(edge),
           }),
         ),
     ],

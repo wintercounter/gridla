@@ -171,3 +171,27 @@
     box-shadow: inset 0 0 0 0 transparent;
   }
 }
+
+/* 21 · Styling: handle grips, motion, and theme tokens driven by data attributes. */
+
+.gl-styling[data-handles='always'] .gd-handle::after {
+  opacity: 0.85;
+}
+
+.gl-styling[data-motion='off'] .gd-item {
+  transition: none;
+}
+
+.gl-styling[data-tokens='ocean'] {
+  --g-accent: oklch(60% 0.16 220);
+  --g-accent-soft: oklch(60% 0.16 220 / 0.14);
+  --g-select: oklch(55% 0.17 300);
+  --g-select-soft: oklch(55% 0.17 300 / 0.14);
+}
+
+.gl-styling[data-tokens='mono'] {
+  --g-accent: var(--g-fg);
+  --g-accent-soft: color-mix(in oklch, var(--g-fg) 10%, transparent);
+  --g-select: var(--g-fg-muted);
+  --g-select-soft: color-mix(in oklch, var(--g-fg-muted) 14%, transparent);
+}

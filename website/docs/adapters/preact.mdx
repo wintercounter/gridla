@@ -7,6 +7,8 @@ description: Run the React adapter on Preact through preact/compat. Alias setup 
 
 Preact does not get an adapter of its own. `gridla/react` is written against the React API surface that `preact/compat` implements (`forwardRef`, `useSyncExternalStore`, `useLayoutEffect`, `useId`, context), so a Preact app uses the React adapter unchanged: import from `gridla/react`, point `react` and `react-dom` at `preact/compat`, and everything the [React quickstart](../getting-started/react) describes applies.
 
+Appearance is yours: see the [styling guide](../guides/styling) for every `data-gridla-*` attribute, resize handle sizing, the preview outline, and a starter stylesheet.
+
 ## Install
 
 ```bash

@@ -132,6 +132,14 @@ const GROUPS: Group[] = [
     files: ['interaction/transfer.ts'],
   },
   {
+    id: 'interaction/style',
+    title: 'Style helpers',
+    entry: 'interaction',
+    intro:
+      'The inline geometry every adapter puts on items, preview outlines, and built-in resize handles. `resizeHandleStyle` reads the `--gridla-handle-size`, `--gridla-handle-inset`, and `--gridla-handle-cursor` custom properties so stylesheets can restyle handles; see the [styling guide](../../guides/styling).',
+    files: ['interaction/style.ts'],
+  },
+  {
     id: 'interaction/types',
     title: 'Types',
     entry: 'interaction',

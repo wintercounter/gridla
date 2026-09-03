@@ -7,6 +7,8 @@ description: One layout engine, one adapter contract, a subpath export per frame
 
 The core of Gridla is a set of pure functions over plain objects. An adapter binds that core to a rendering model: it measures the canvas, positions items, turns pointer and keyboard input into solver calls, and hands the committed layout back to your state. Every adapter ships from the same `gridla` package as its own subpath export, with the framework as an optional peer dependency and nothing else.
 
+Appearance is always yours: the [styling guide](../guides/styling) lists every `data-gridla-*` attribute and shows how to style items, handles, and the preview outline once for all of them.
+
 ## Overview
 
 | Framework      | Entry             | Status    | Guide                                        |
@@ -33,7 +35,7 @@ Adapters share a contract so that switching frameworks, or mixing them on one pa
 
 - **Same names.** `GridProvider` (or the framework's idiom for it: `mountGrid` in the DOM, `<gridla-canvas>` as a custom element, `[gridlaProvider]` in Angular), `GridCanvas`, `GridItem`, `GridPreviewOutline`, and `GridTransferScope`.
 - **Same props.** Controlled (`layout` plus `onLayoutChange`) and uncontrolled (`defaultLayout`) modes, `responsive`, `config` or the individual `SolveOptions` fields (`gap`, `snapDistance`, `snap`, `onTrace`), `selectedId`, `acceptTransfers`, `onTransferIn`, `onTransferOut`, `onCommit`, and `onItemClick`. Change callbacks receive the next layout and a `GridChangeDetail` (`reason`, `itemId`, solver `strategy`). Frameworks spell the binding their own way (`v-model:layout`, `bind:layout`, `[(layout)]`, `onLayoutChange$`), but the semantics do not change.
-- **Same data attributes.** Every adapter marks the canvas with `data-gridla-canvas`, each item with `data-gridla-item="<id>"`, the active, selected, shifted, and transferring items with `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring`, the landing box with `data-gridla-preview`, and handles with `data-gridla-drag-handle` and `data-gridla-resize-handle="<edge>"`. The root carries `data-gridla-dragging` while a gesture runs. Styles, tests, and tooling written against one adapter work against all of them.
+- **Same data attributes.** Every adapter marks the canvas with `data-gridla-canvas`, each item with `data-gridla-item="<id>"`, the active, selected, shifted, and transferring items with `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring`, the landing box with `data-gridla-preview`, and handles with `data-gridla-drag-handle`, `data-gridla-resize-handle` (the item id), and `data-gridla-edge="<edge>"`. The root carries `data-gridla-dragging` while a gesture runs. Styles, tests, and tooling written against one adapter work against all of them.
 - **Headless.** Adapters position items (`transform` by default, or `left`/`top` with `positioning: 'absolute'`) and nothing more. No stylesheet ships; theming is yours.
 - **Server rendering.** No `window` or `document` access at import time. The server output is the authored layout; on the client the canvas measures itself before the first paint where the framework allows it, so the projected layout is what the user sees first.
 - **Nested layouts and transfer scope.** Nested canvases are nested providers, and items move between canvases through a transfer scope: the pointer decides the target, the target previews the drop, and releasing commits it, exactly as in the [transfer recipe](../recipes/transfer).

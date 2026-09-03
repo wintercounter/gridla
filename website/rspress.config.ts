@@ -97,6 +97,7 @@ export default defineConfig({
             { text: 'Controller', link: '/api/interaction/controller' },
             { text: 'Pointer gesture', link: '/api/interaction/gesture' },
             { text: 'Transfer scope', link: '/api/interaction/transfer' },
+            { text: 'Style helpers', link: '/api/interaction/style' },
             { text: 'Types', link: '/api/interaction/types' },
           ],
         },
@@ -227,6 +228,7 @@ export default defineConfig({
         {
           text: 'Guides',
           items: [
+            { text: 'Styling', link: '/guides/styling' },
             { text: 'Architecture', link: '/guides/architecture' },
             { text: 'Accessibility', link: '/guides/accessibility' },
             { text: 'Performance', link: '/guides/performance' },
