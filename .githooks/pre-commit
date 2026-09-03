@@ -1,0 +1,3 @@
+#!/bin/sh
+# Blocks commits that contain phrases from the private word list.
+bun run scripts/check-wording.ts || exit 1
