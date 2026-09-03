@@ -16,7 +16,12 @@ export {
 } from './gesture'
 export { observeSize } from './measure'
 export { createGridStore, type GridStore, type GridStoreListener } from './store'
-export { createTransferScope, type TransferRegistration, type TransferScope } from './transfer'
+export {
+  createTransferScope,
+  measurePreviewShift,
+  type TransferRegistration,
+  type TransferScope,
+} from './transfer'
 export type {
   GridActions,
   GridChangeDetail,

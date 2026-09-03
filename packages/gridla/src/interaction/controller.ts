@@ -39,7 +39,11 @@ export type GridControllerOptions<TData = unknown> = SolveOptions & {
    * when omitted.
    */
   id?: string
-  /** Controlled layout. Pair with `onLayoutChange` and forward updates with `setOptions`. */
+  /**
+   * Controlled layout. Pair with `onLayoutChange` and forward updates with
+   * `setOptions`. Accepted changes render immediately; passing the emitted
+   * layout back is a no-op, passing a different one overrides it.
+   */
   layout?: GridLayout<TData>
   /** Initial layout for uncontrolled use. */
   defaultLayout?: GridLayout<TData>
@@ -195,7 +199,6 @@ export function createGridController<TData = unknown>(
   const id = options.id ?? `gridla-${(nextId += 1)}`
   let current = options
   let config = resolveControllerConfig(options)
-  let isControlled = options.layout !== undefined
   let element: HTMLElement | null = null
   let incoming: { item: GridItem<TData>; preview: GridPreview<TData> } | null = null
   let lastSnap: boolean | undefined
@@ -218,9 +221,12 @@ export function createGridController<TData = unknown>(
 
   const emitChange = (next: GridLayout<TData>, detail: GridChangeDetail, commitDetail = false) => {
     const state = store.getSnapshot()
-    if (!isControlled) {
-      store.set({ ...state, source: next, layout: renderLayout(next, state.size, config) })
-    }
+    // Applied right away in both modes. A controlled owner that passes the
+    // same layout back is a no-op (`setLayout` compares by reference); one that
+    // passes something else overrides it. Waiting for the owner would leave a
+    // stale layout behind for the next event when the framework applies props
+    // asynchronously (a second key press within one change-detection tick).
+    store.set({ ...state, source: next, layout: renderLayout(next, state.size, config) })
     current.onLayoutChange?.(next, detail)
     if (commitDetail) current.onCommit?.(detail)
   }
@@ -515,7 +521,6 @@ export function createGridController<TData = unknown>(
 
   const setOptions = (options: GridControllerOptions<TData>) => {
     current = options
-    isControlled = options.layout !== undefined
     if (options.layout !== undefined) setLayout(options.layout)
     setConfig(resolveControllerConfig(options))
     if (options.selectedId !== undefined) {

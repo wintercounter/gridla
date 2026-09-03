@@ -151,26 +151,31 @@ describe('createGridController (uncontrolled)', () => {
 })
 
 describe('createGridController (controlled)', () => {
-  it('reports changes without mutating state and follows setOptions({ layout })', () => {
+  it('applies changes at once in controlled mode; the owner confirms or overrides', () => {
     const fixed = layoutFixture()
     const onLayoutChange = mock((_layout: GridLayout, _detail: GridChangeDetail) => {})
     const controller = createGridController({ layout: fixed, responsive: false, onLayoutChange })
     expect(controller.actions.move('a', { x: 500, y: 0 })).toBe(true)
     expect(onLayoutChange).toHaveBeenCalledTimes(1)
-    // Not adopted: the store still shows the controlled layout.
-    expect(itemOf(controller.store.getSnapshot().layout, 'a')?.x).toBe(0)
-    expect(controller.store.getSnapshot().source).toBe(fixed)
-
-    // Adopted: the parent forwards the next layout.
+    // Applied right away so a second event before the owner re-renders sees it.
     const next = onLayoutChange.mock.calls[0]![0]
+    expect(itemOf(controller.store.getSnapshot().layout, 'a')?.x).toBe(500)
+    expect(controller.store.getSnapshot().source).toBe(next)
+
+    // The owner forwards the same reference: a no-op.
+    const rendered = controller.store.getSnapshot().layout
+    controller.setOptions({ layout: next, responsive: false, onLayoutChange })
+    expect(controller.store.getSnapshot().layout).toBe(rendered)
+
+    // A second change in the same tick builds on the first.
+    expect(controller.actions.move('a', { x: 0, y: 0 })).toBe(true)
+    expect(itemOf(controller.store.getSnapshot().layout, 'a')?.x).toBe(0)
+    expect(itemOf(controller.store.getSnapshot().layout, 'b')?.x).toBe(500)
+
+    // The owner can reject by passing another layout.
     controller.setOptions({ layout: next, responsive: false, onLayoutChange })
     expect(controller.store.getSnapshot().source).toBe(next)
     expect(itemOf(controller.store.getSnapshot().layout, 'a')?.x).toBe(500)
-
-    // Same reference again is a no-op.
-    const rendered = controller.store.getSnapshot().layout
-    controller.setLayout(next)
-    expect(controller.store.getSnapshot().layout).toBe(rendered)
   })
 
   it('re-renders when the config changes and syncs controlled selection', () => {

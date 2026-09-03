@@ -96,7 +96,7 @@ export function Palette({ onTemplate }: { onTemplate: (id: TemplateId) => void }
       drag.pending = createNode(drag.kind)
       document.documentElement.setAttribute('data-gridla-dragging', '')
     }
-    const target = registry.findAt(client)
+    const target = registry.findAt(client, drag.target)
     if (drag.target && drag.target !== target) drag.target.gesture.clearIncoming()
     drag.target = target
     let over = false
