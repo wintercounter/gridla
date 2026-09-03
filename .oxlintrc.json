@@ -1,13 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "react",
-    "jsx-a11y",
-    "import",
-    "unicorn",
-    "oxc"
-  ],
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "oxc"],
   "categories": {
     "correctness": "error",
     "suspicious": "warn",
@@ -38,10 +31,7 @@
     "no-console": [
       "warn",
       {
-        "allow": [
-          "warn",
-          "error"
-        ]
+        "allow": ["warn", "error"]
       }
     ],
     "unicorn/no-array-sort": "off",
@@ -54,13 +44,7 @@
   },
   "overrides": [
     {
-      "files": [
-        "**/*.test.ts",
-        "**/*.test.tsx",
-        "tests/**",
-        "benchmarks/**",
-        "scripts/**"
-      ],
+      "files": ["**/*.test.ts", "**/*.test.tsx", "tests/**", "benchmarks/**", "scripts/**"],
       "rules": {
         "no-console": "off",
         "typescript/no-non-null-assertion": "off",
@@ -68,18 +52,14 @@
       }
     },
     {
-      "files": [
-        "tests/e2e/obscura/spike.ts"
-      ],
+      "files": ["tests/e2e/obscura/spike.ts"],
       "rules": {
         "typescript/no-explicit-any": "off",
         "no-underscore-dangle": "off"
       }
     },
     {
-      "files": [
-        "tests/e2e/**"
-      ],
+      "files": ["tests/e2e/**"],
       "rules": {
         "react-hooks/rules-of-hooks": "off",
         "react/rules-of-hooks": "off",

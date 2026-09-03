@@ -1,18 +1,13 @@
 {
   "name": "gridla-monorepo",
   "private": true,
-  "type": "module",
-  "packageManager": "bun@1.3.14",
   "workspaces": [
     "packages/*",
     "examples/*",
     "website",
     "tests/package/consumers/*"
   ],
-  "engines": {
-    "node": ">=20.19",
-    "bun": ">=1.2"
-  },
+  "type": "module",
   "scripts": {
     "build": "bun run --filter gridla build",
     "build:examples": "bun run --filter './examples/*' build",
@@ -59,5 +54,10 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "typescript": "7.0.2"
-  }
+  },
+  "engines": {
+    "bun": ">=1.2",
+    "node": ">=20.19"
+  },
+  "packageManager": "bun@1.3.14"
 }

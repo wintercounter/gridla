@@ -5,5 +5,12 @@
   "singleQuote": true,
   "trailingComma": "all",
   "arrowParens": "always",
-  "ignorePatterns": ["**/dist/**", "**/doc_build/**", "**/node_modules/**", "**/.rspress/**", "CHANGELOG.md", "**/CHANGELOG.md"]
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/doc_build/**",
+    "**/node_modules/**",
+    "**/.rspress/**",
+    "CHANGELOG.md",
+    "**/CHANGELOG.md"
+  ]
 }

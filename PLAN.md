@@ -175,18 +175,18 @@ Prefer fast Rust- and Go-based tooling where it is mature and correct. Do not
 add a legacy JavaScript tool by habit when the selected native tool covers the
 required behavior.
 
-| Concern | Selected direction |
-| --- | --- |
-| Library builds | [Rslib](https://rslib.rs/) for core and React outputs, declarations, source maps, and export formats |
-| Demo applications | [Rsbuild](https://rsbuild.rs/) powered by Rspack |
-| Documentation site | [Rspress](https://rspress.dev/) with MDX and static GitHub Pages output |
-| Linting | [Oxlint](https://oxc.rs/docs/guide/usage/linter/quickstart) with native TypeScript, React, accessibility, import, and correctness rules |
-| Formatting | [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) for TypeScript, TSX, JSON, CSS, Markdown, and MDX |
-| Type-aware checks | Oxlint plus its Go-powered `tsgolint` integration when compatible with the selected TypeScript version |
-| Unit and compatibility tests | A fast TypeScript test runner selected for faithful porting and deterministic snapshots; benchmark alternatives before locking it |
-| Browser tests | [Playwright](https://playwright.dev/) with standard browser projects and an [Obscura](https://github.com/h4ckf0r0day/obscura) CDP project |
-| CI and hosting | GitHub Actions and GitHub Pages |
-| npm publishing | npm trusted publishing through GitHub Actions OIDC with provenance |
+| Concern                      | Selected direction                                                                                                                        |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Library builds               | [Rslib](https://rslib.rs/) for core and React outputs, declarations, source maps, and export formats                                      |
+| Demo applications            | [Rsbuild](https://rsbuild.rs/) powered by Rspack                                                                                          |
+| Documentation site           | [Rspress](https://rspress.dev/) with MDX and static GitHub Pages output                                                                   |
+| Linting                      | [Oxlint](https://oxc.rs/docs/guide/usage/linter/quickstart) with native TypeScript, React, accessibility, import, and correctness rules   |
+| Formatting                   | [Oxfmt](https://oxc.rs/docs/guide/usage/formatter) for TypeScript, TSX, JSON, CSS, Markdown, and MDX                                      |
+| Type-aware checks            | Oxlint plus its Go-powered `tsgolint` integration when compatible with the selected TypeScript version                                    |
+| Unit and compatibility tests | A fast TypeScript test runner selected for faithful porting and deterministic snapshots; benchmark alternatives before locking it         |
+| Browser tests                | [Playwright](https://playwright.dev/) with standard browser projects and an [Obscura](https://github.com/h4ckf0r0day/obscura) CDP project |
+| CI and hosting               | GitHub Actions and GitHub Pages                                                                                                           |
+| npm publishing               | npm trusted publishing through GitHub Actions OIDC with provenance                                                                        |
 
 Tool selection rules:
 
@@ -207,17 +207,17 @@ Tool selection rules:
 Use framework-neutral names rather than exposing current interaction-oriented
 implementation names:
 
-| Current name | Public direction |
-| --- | --- |
-| `FrameCanvas` / `Canvas` | `GridCanvas` |
-| `FrameItem` / `CanvasItem` | `GridItem` |
-| `FrameLayout` | `GridLayout` |
-| `solveCanvasDrag` | `moveItem` |
-| `solveCanvasResize` | `resizeItem` |
-| `solveCanvasExternalDrop` | `placeItem` |
-| `solveCanvasCrossGroupDrop` | `transferItem` |
-| `projectFrameLayout` | `projectLayout` |
-| `buildFlatLayout` | `flattenLayout` |
+| Current name                | Public direction |
+| --------------------------- | ---------------- |
+| `FrameCanvas` / `Canvas`    | `GridCanvas`     |
+| `FrameItem` / `CanvasItem`  | `GridItem`       |
+| `FrameLayout`               | `GridLayout`     |
+| `solveCanvasDrag`           | `moveItem`       |
+| `solveCanvasResize`         | `resizeItem`     |
+| `solveCanvasExternalDrop`   | `placeItem`      |
+| `solveCanvasCrossGroupDrop` | `transferItem`   |
+| `projectFrameLayout`        | `projectLayout`  |
+| `buildFlatLayout`           | `flattenLayout`  |
 
 A tentative functional API:
 
