@@ -1,0 +1,13 @@
+{
+  "name": "gridla-consumer-vanilla-esm",
+  "private": true,
+  "type": "module",
+  "description": "Package-contract fixture: plain ESM consumer of the packed gridla tarball. Installed by scripts/verify-package.ts; node_modules is ignored.",
+  "scripts": {
+    "test": "node main.mjs && bun main.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "26.4.1"
+  }
+}

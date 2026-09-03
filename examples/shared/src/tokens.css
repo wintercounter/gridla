@@ -1,0 +1,153 @@
+/*
+ * Gridla design tokens.
+ *
+ * Warm paper in light mode, deep ink in dark mode, one vermilion accent for
+ * whatever is happening right now. Everything is tinted toward hue 70 (paper)
+ * or hue 260 (ink) so the two themes read as one system.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Familjen+Grotesk:ital,wght@0,400..700;1,400..700&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+:root {
+  color-scheme: light dark;
+
+  /* Type */
+  --g-font-display: 'Familjen Grotesk', 'Avenir Next', 'Segoe UI Variable', system-ui, sans-serif;
+  --g-font-body: 'Instrument Sans', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --g-font-mono: 'JetBrains Mono', 'SFMono-Regular', ui-monospace, Menlo, monospace;
+
+  --g-text-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+  --g-text-sm: clamp(0.82rem, 0.8rem + 0.12vw, 0.9rem);
+  --g-text-md: clamp(0.95rem, 0.92rem + 0.2vw, 1.05rem);
+  --g-text-lg: clamp(1.15rem, 1.05rem + 0.5vw, 1.4rem);
+  --g-text-xl: clamp(1.6rem, 1.3rem + 1.4vw, 2.4rem);
+  --g-text-2xl: clamp(2.2rem, 1.6rem + 3vw, 4rem);
+  --g-leading-tight: 1.15;
+  --g-leading-body: 1.55;
+  --g-tracking-display: -0.02em;
+
+  /* Space (4px base, varied rhythm) */
+  --g-space-1: 0.25rem;
+  --g-space-2: 0.5rem;
+  --g-space-3: 0.75rem;
+  --g-space-4: 1rem;
+  --g-space-5: 1.5rem;
+  --g-space-6: 2rem;
+  --g-space-7: 3rem;
+  --g-space-8: 4.5rem;
+  --g-space-9: clamp(4rem, 3rem + 5vw, 8rem);
+
+  /* Shape */
+  --g-radius-1: 3px;
+  --g-radius-2: 6px;
+  --g-radius-3: 10px;
+  --g-border-w: 1px;
+
+  /* Motion */
+  --g-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --g-ease-in-out: cubic-bezier(0.83, 0, 0.17, 1);
+  --g-duration-fast: 120ms;
+  --g-duration: 180ms;
+  --g-duration-slow: 260ms;
+
+  /* Light palette: paper */
+  --g-hue-paper: 75;
+  --g-hue-ink: 262;
+  --g-bg: oklch(97.5% 0.012 var(--g-hue-paper));
+  --g-bg-sunken: oklch(95% 0.016 var(--g-hue-paper));
+  --g-bg-raised: oklch(99% 0.008 var(--g-hue-paper));
+  --g-bg-inverse: oklch(20% 0.03 var(--g-hue-ink));
+  --g-fg: oklch(22% 0.03 var(--g-hue-ink));
+  --g-fg-muted: oklch(45% 0.025 var(--g-hue-ink));
+  --g-fg-faint: oklch(62% 0.02 var(--g-hue-ink));
+  --g-fg-inverse: oklch(96% 0.012 var(--g-hue-paper));
+  --g-line: oklch(84% 0.02 var(--g-hue-paper));
+  --g-line-strong: oklch(70% 0.03 var(--g-hue-paper));
+  --g-grid-line: oklch(88% 0.018 var(--g-hue-paper));
+
+  --g-accent: oklch(62% 0.2 35);
+  --g-accent-strong: oklch(54% 0.21 35);
+  --g-accent-soft: oklch(62% 0.2 35 / 0.14);
+  --g-accent-fg: oklch(98% 0.01 35);
+  --g-select: oklch(58% 0.14 240);
+  --g-select-soft: oklch(58% 0.14 240 / 0.14);
+  --g-ok: oklch(60% 0.14 150);
+  --g-warn: oklch(72% 0.16 80);
+
+  --g-shadow-1: 0 1px 2px oklch(20% 0.03 var(--g-hue-ink) / 0.08);
+  --g-shadow-2: 0 4px 16px oklch(20% 0.03 var(--g-hue-ink) / 0.12);
+  --g-focus: 0 0 0 2px var(--g-bg), 0 0 0 4px var(--g-select);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --g-bg: oklch(17% 0.025 var(--g-hue-ink));
+    --g-bg-sunken: oklch(14% 0.022 var(--g-hue-ink));
+    --g-bg-raised: oklch(21% 0.028 var(--g-hue-ink));
+    --g-bg-inverse: oklch(96% 0.012 var(--g-hue-paper));
+    --g-fg: oklch(94% 0.014 var(--g-hue-paper));
+    --g-fg-muted: oklch(74% 0.018 var(--g-hue-paper));
+    --g-fg-faint: oklch(56% 0.02 var(--g-hue-ink));
+    --g-fg-inverse: oklch(22% 0.03 var(--g-hue-ink));
+    --g-line: oklch(30% 0.03 var(--g-hue-ink));
+    --g-line-strong: oklch(42% 0.035 var(--g-hue-ink));
+    --g-grid-line: oklch(24% 0.028 var(--g-hue-ink));
+    --g-accent: oklch(70% 0.19 38);
+    --g-accent-strong: oklch(76% 0.18 40);
+    --g-accent-soft: oklch(70% 0.19 38 / 0.18);
+    --g-accent-fg: oklch(16% 0.03 35);
+    --g-select: oklch(72% 0.13 235);
+    --g-select-soft: oklch(72% 0.13 235 / 0.18);
+    --g-shadow-1: 0 1px 2px oklch(5% 0.02 var(--g-hue-ink) / 0.5);
+    --g-shadow-2: 0 6px 24px oklch(5% 0.02 var(--g-hue-ink) / 0.55);
+  }
+}
+
+:root[data-theme='dark'] {
+  --g-bg: oklch(17% 0.025 var(--g-hue-ink));
+  --g-bg-sunken: oklch(14% 0.022 var(--g-hue-ink));
+  --g-bg-raised: oklch(21% 0.028 var(--g-hue-ink));
+  --g-bg-inverse: oklch(96% 0.012 var(--g-hue-paper));
+  --g-fg: oklch(94% 0.014 var(--g-hue-paper));
+  --g-fg-muted: oklch(74% 0.018 var(--g-hue-paper));
+  --g-fg-faint: oklch(56% 0.02 var(--g-hue-ink));
+  --g-fg-inverse: oklch(22% 0.03 var(--g-hue-ink));
+  --g-line: oklch(30% 0.03 var(--g-hue-ink));
+  --g-line-strong: oklch(42% 0.035 var(--g-hue-ink));
+  --g-grid-line: oklch(24% 0.028 var(--g-hue-ink));
+  --g-accent: oklch(70% 0.19 38);
+  --g-accent-strong: oklch(76% 0.18 40);
+  --g-accent-soft: oklch(70% 0.19 38 / 0.18);
+  --g-accent-fg: oklch(16% 0.03 35);
+  --g-select: oklch(72% 0.13 235);
+  --g-select-soft: oklch(72% 0.13 235 / 0.18);
+  --g-shadow-1: 0 1px 2px oklch(5% 0.02 var(--g-hue-ink) / 0.5);
+  --g-shadow-2: 0 6px 24px oklch(5% 0.02 var(--g-hue-ink) / 0.55);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --g-duration-fast: 0ms;
+    --g-duration: 0ms;
+    --g-duration-slow: 0ms;
+  }
+}
+
+html {
+  background: var(--g-bg);
+  color: var(--g-fg);
+  font-family: var(--g-font-body);
+  font-size: 16px;
+  line-height: var(--g-leading-body);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+:focus-visible {
+  outline: none;
+  box-shadow: var(--g-focus);
+}
+
+::selection {
+  background: var(--g-select-soft);
+}

@@ -1,0 +1,50 @@
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--g-space-6) var(--g-space-4) var(--g-space-8);
+}
+
+.page-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  gap: var(--g-space-5);
+  margin-bottom: var(--g-space-6);
+}
+
+.page-head > div {
+  max-width: 44rem;
+}
+
+.page-head h1 {
+  font: 600 var(--g-text-xl) / var(--g-leading-tight) var(--g-font-display);
+  letter-spacing: var(--g-tracking-display);
+  margin: 0 0 var(--g-space-3);
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--g-fg-muted);
+}
+
+code {
+  font-family: var(--g-font-mono);
+  font-size: 0.92em;
+  color: var(--g-fg);
+}
+
+.page-code h2 {
+  font: 600 var(--g-text-lg) / var(--g-leading-tight) var(--g-font-display);
+  letter-spacing: var(--g-tracking-display);
+  margin: var(--g-space-7) 0 var(--g-space-3);
+}
+
+.page-code pre {
+  margin: 0;
+  padding: var(--g-space-4);
+  border-radius: var(--g-radius-3);
+  border: var(--g-border-w) solid var(--g-line);
+  background: var(--g-bg-raised);
+  font: 400 var(--g-text-sm) / 1.6 var(--g-font-mono);
+  overflow-x: auto;
+}

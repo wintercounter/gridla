@@ -1,0 +1,39 @@
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--g-space-6) var(--g-space-4) var(--g-space-8);
+}
+
+.page-head {
+  max-width: 44rem;
+  margin-bottom: var(--g-space-6);
+}
+
+.page-head h1 {
+  font: 600 var(--g-text-xl) / var(--g-leading-tight) var(--g-font-display);
+  letter-spacing: var(--g-tracking-display);
+  margin: 0 0 var(--g-space-3);
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--g-fg-muted);
+}
+
+.page-head code {
+  font-family: var(--g-font-mono);
+  font-size: 0.92em;
+  color: var(--g-fg);
+}
+
+.canvas {
+  position: absolute;
+  inset: 0;
+}
+
+.gd-preview {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+}
