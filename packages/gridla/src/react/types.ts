@@ -119,4 +119,14 @@ export type GridActions<TData = unknown> = {
   select: (itemId: string | null) => void
   /** Cancel the gesture in progress without committing. */
   cancel: () => void
+  /**
+   * Preview a new item (for example one dragged from a palette) centered on a
+   * pointer position in canvas pixels. Returns the preview, or `null` when it
+   * cannot be placed. Follow up with `commitIncoming` or `clearIncoming`.
+   */
+  previewIncoming: (item: GridItem<TData>, pointer: GridPoint) => GridPreview<TData> | null
+  /** Commit the incoming preview into the layout. Returns whether one was committed. */
+  commitIncoming: () => boolean
+  /** Drop the incoming preview without committing. */
+  clearIncoming: () => void
 }

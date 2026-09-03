@@ -1,4 +1,5 @@
 import '@gridla/demo-kit/tokens.css'
+import '@gridla/demo-kit/demo.css'
 import './studio.css'
 
 import { StrictMode } from 'react'

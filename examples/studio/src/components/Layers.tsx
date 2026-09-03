@@ -43,8 +43,11 @@ function flattenRows(root: StudioNode, collapsed: ReadonlySet<string>): Row[] {
 }
 
 function label(node: StudioNode): string {
-  const text = node.props.title ?? node.props.text ?? node.props.label
-  if (typeof text === 'string' && text.trim()) return text
+  const text = node.props.title ?? node.props.text ?? node.props.label ?? node.props.body
+  if (typeof text === 'string' && text.trim()) {
+    const line = text.trim().split('\n')[0]
+    return line.length > 32 ? `${line.slice(0, 31)}…` : line
+  }
   return getKind(node.kind).label
 }
 

@@ -1146,7 +1146,11 @@ function tryFitToOpenSlot<T>({
   const activeCy = active.y + active.h / 2
   let best: Slot | null = null
   let bestDistance = Number.POSITIVE_INFINITY
+  // Only pockets close to the item's own size count as "its" hole; a much
+  // larger opening would turn a small nudge into an unrequested resize.
+  const FIT_MAX_RATIO = 1.5
   for (const slot of candidates) {
+    if (slot.w > active.w * FIT_MAX_RATIO || slot.h > active.h * FIT_MAX_RATIO) continue
     if (
       activeCx < slot.x ||
       activeCx > slot.x + slot.w ||
