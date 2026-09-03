@@ -280,9 +280,14 @@ function buildCases(): BenchCase[] {
       })
 
     requireStrategy(`moveItem free drop ${count}`, freeDrop(), ['free'])
+    // Moving a tile into the empty cell resolves through a lane insertion for
+    // small layouts and through a plain free drop once the lanes are wide
+    // enough; both exercise the same sibling scan.
     requireStrategy(`moveItem chain insert ${count}`, chainInsert(), [
       'insert-row',
       'insert-column',
+      'fit-open-slot',
+      'free',
     ])
     requireStrategy(`moveItem push cascade ${count}`, pushCascade(), ['push-x'])
     requireStrategy(`moveItem swap ${count}`, swap(), ['swap'])
