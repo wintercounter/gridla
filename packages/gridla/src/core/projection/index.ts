@@ -3,8 +3,13 @@ import type { GridCanvas, GridLayout } from '../model'
 import { projectItemsByChain } from './chain'
 import { projectLayoutBySegments } from './segments'
 
+/**
+ * Engine used by `projectLayout`: `chain` (default) or `segments`. See
+ * `ProjectOptions.strategy` for how they differ.
+ */
 export type ProjectionStrategy = 'chain' | 'segments'
 
+/** Options for `projectLayout`. */
 export type ProjectOptions = {
   /**
    * `chain` (default): rows and columns of items are treated as flex chains.

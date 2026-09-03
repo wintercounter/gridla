@@ -16,3 +16,4 @@ blob-report/
 !.env.example
 tests/package/consumers/*/node_modules
 .tools/
+site-dist/

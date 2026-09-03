@@ -1172,6 +1172,10 @@ function tryFitToOpenSlot<T>({
 // Public solver
 // ---------------------------------------------------------------------------
 
+/**
+ * Input for `moveItem`.
+ * @example moveItem({ layout, itemId: 'chart', position: { x: 240, y: 0 }, options: { gap: 8 } })
+ */
 export type MoveItemInput<T = unknown> = {
   layout: GridLayout<T>
   itemId: string

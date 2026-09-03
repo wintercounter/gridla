@@ -10,75 +10,45 @@ description: Model exports of gridla. Generated from the source declarations.
 The public data model. Every type is a plain, serializable object; the core never reads or writes anything else. Constants and predicates here are shared by every solver.
 
 ```ts
-import {
-  DEFAULT_CANVAS,
-  DEFAULT_SNAP_DISTANCE,
-  EMPTY_PADDING,
-  isFixedHeight,
-  isFixedOnAxis,
-  isFixedWidth,
-  isGhost,
-  isLocked,
-  MIN_ITEM_SIZE,
-} from 'gridla'
-import type {
-  GridAxis,
-  GridBounds,
-  GridCanvas,
-  GridEdges,
-  GridHeightMode,
-  GridItem,
-  GridItemConstraints,
-  GridItemPolicy,
-  GridItemSize,
-  GridLayout,
-  GridPadding,
-  GridPoint,
-  GridRect,
-  GridResizeEdge,
-  GridSize,
-  GridSizeMode,
-} from 'gridla'
+import { DEFAULT_CANVAS, DEFAULT_SNAP_DISTANCE, EMPTY_PADDING, isFixedHeight, isFixedOnAxis, isFixedWidth, isGhost, isLocked, MIN_ITEM_SIZE } from 'gridla'
+import type { GridAxis, GridBounds, GridCanvas, GridEdges, GridHeightMode, GridItem, GridItemConstraints, GridItemPolicy, GridItemSize, GridLayout, GridPadding, GridPoint, GridRect, GridResizeEdge, GridSize, GridSizeMode } from 'gridla'
 ```
 
-| Export                                            | Kind     | Summary                                                                               |
-| ------------------------------------------------- | -------- | ------------------------------------------------------------------------------------- |
-| [`DEFAULT_CANVAS`](#default_canvas)               | const    |                                                                                       |
-| [`DEFAULT_SNAP_DISTANCE`](#default_snap_distance) | const    | Default distance in pixels within which edges attract each other.                     |
-| [`EMPTY_PADDING`](#empty_padding)                 | const    |                                                                                       |
-| [`GridAxis`](#gridaxis)                           | type     |                                                                                       |
-| [`GridBounds`](#gridbounds)                       | type     | Bounds a solver operates against.                                                     |
-| [`GridCanvas`](#gridcanvas)                       | type     | The rectangle items are laid out in.                                                  |
-| [`GridEdges`](#gridedges)                         | type     | Edge-based rectangle used for hit testing and viewport math.                          |
-| [`GridHeightMode`](#gridheightmode)               | type     | How the canvas treats its vertical extent.                                            |
-| [`GridItem`](#griditem)                           | type     | A laid-out item.                                                                      |
-| [`GridItemConstraints`](#griditemconstraints)     | type     | Size constraints an item may carry.                                                   |
-| [`GridItemPolicy`](#griditempolicy)               | type     | Solver participation policy for one item.                                             |
-| [`GridItemSize`](#griditemsize)                   | type     | Size information used when creating or placing an item.                               |
-| [`GridLayout`](#gridlayout)                       | type     | A canvas and the items positioned inside it.                                          |
-| [`GridPadding`](#gridpadding)                     | type     | Per-side inset in pixels.                                                             |
-| [`GridPoint`](#gridpoint)                         | type     |                                                                                       |
-| [`GridRect`](#gridrect)                           | type     | A positioned rectangle.                                                               |
-| [`GridResizeEdge`](#gridresizeedge)               | type     | Compass edge or corner used to resize an item.                                        |
-| [`GridSize`](#gridsize)                           | type     |                                                                                       |
-| [`GridSizeMode`](#gridsizemode)                   | type     | Which axes keep their pixel size when the layout is projected to another canvas size. |
-| [`isFixedHeight`](#isfixedheight)                 | function |                                                                                       |
-| [`isFixedOnAxis`](#isfixedonaxis)                 | function |                                                                                       |
-| [`isFixedWidth`](#isfixedwidth)                   | function |                                                                                       |
-| [`isGhost`](#isghost)                             | function |                                                                                       |
-| [`isLocked`](#islocked)                           | function |                                                                                       |
-| [`MIN_ITEM_SIZE`](#min_item_size)                 | const    | Smallest width or height an item may have.                                            |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`DEFAULT_CANVAS`](#default_canvas) | const | Canvas used when none is given: 1200 x 720 pixels, no padding, `bounded` height mode. |
+| [`DEFAULT_SNAP_DISTANCE`](#default_snap_distance) | const | Default distance in pixels within which edges attract each other. |
+| [`EMPTY_PADDING`](#empty_padding) | const | Zero padding on every side. |
+| [`GridAxis`](#gridaxis) | type | Horizontal (`x`) or vertical (`y`) axis. |
+| [`GridBounds`](#gridbounds) | type | Bounds a solver operates against. |
+| [`GridCanvas`](#gridcanvas) | type | The rectangle items are laid out in. |
+| [`GridEdges`](#gridedges) | type | Edge-based rectangle used for hit testing and viewport math. |
+| [`GridHeightMode`](#gridheightmode) | type | How the canvas treats its vertical extent. |
+| [`GridItem`](#griditem) | type | A laid-out item. |
+| [`GridItemConstraints`](#griditemconstraints) | type | Size constraints an item may carry. |
+| [`GridItemPolicy`](#griditempolicy) | type | Solver participation policy for one item. |
+| [`GridItemSize`](#griditemsize) | type | Size information used when creating or placing an item. |
+| [`GridLayout`](#gridlayout) | type | A canvas and the items positioned inside it. |
+| [`GridPadding`](#gridpadding) | type | Per-side inset in pixels. |
+| [`GridPoint`](#gridpoint) | type | A point in canvas pixel coordinates. |
+| [`GridRect`](#gridrect) | type | A positioned rectangle. |
+| [`GridResizeEdge`](#gridresizeedge) | type | Compass edge or corner used to resize an item. |
+| [`GridSize`](#gridsize) | type | A width and height in pixels. |
+| [`GridSizeMode`](#gridsizemode) | type | Which axes keep their pixel size when the layout is projected to another canvas size. |
+| [`isFixedHeight`](#isfixedheight) | function | True when `sizeMode` pins the height (`fixed-h` or `fixed`). |
+| [`isFixedOnAxis`](#isfixedonaxis) | function | True when `sizeMode` pins the given axis: the width for `x`, the height for `y`. |
+| [`isFixedWidth`](#isfixedwidth) | function | True when `sizeMode` pins the width (`fixed-w` or `fixed`). |
+| [`isGhost`](#isghost) | function | True when the item's collision policy is `ignore`, so solvers move, resize, and place other items straight through it. |
+| [`isLocked`](#islocked) | function | True when the item's movement policy is `locked`: it still blocks, but never moves or resizes as a side effect of another item's operation. |
+| [`MIN_ITEM_SIZE`](#min_item_size) | const | Smallest width or height an item may have. |
 
 ## Functions
 
 ### isFixedHeight
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L155">
-    core/model.ts:155
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L173">core/model.ts:173</a></span>
+
+True when `sizeMode` pins the height (`fixed-h` or `fixed`).
 
 ```ts
 export function isFixedHeight(item: Pick<GridItem, 'sizeMode'>): boolean
@@ -86,12 +56,9 @@ export function isFixedHeight(item: Pick<GridItem, 'sizeMode'>): boolean
 
 ### isFixedOnAxis
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L159">
-    core/model.ts:159
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L178">core/model.ts:178</a></span>
+
+True when `sizeMode` pins the given axis: the width for `x`, the height for `y`.
 
 ```ts
 export function isFixedOnAxis(item: Pick<GridItem, 'sizeMode'>, axis: GridAxis): boolean
@@ -99,12 +66,9 @@ export function isFixedOnAxis(item: Pick<GridItem, 'sizeMode'>, axis: GridAxis):
 
 ### isFixedWidth
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L151">
-    core/model.ts:151
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L168">core/model.ts:168</a></span>
+
+True when `sizeMode` pins the width (`fixed-w` or `fixed`).
 
 ```ts
 export function isFixedWidth(item: Pick<GridItem, 'sizeMode'>): boolean
@@ -112,12 +76,10 @@ export function isFixedWidth(item: Pick<GridItem, 'sizeMode'>): boolean
 
 ### isGhost
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L143">
-    core/model.ts:143
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L155">core/model.ts:155</a></span>
+
+True when the item's collision policy is `ignore`, so solvers move, resize,
+and place other items straight through it.
 
 ```ts
 export function isGhost(item: Pick<GridItem, 'policy'>): boolean
@@ -125,12 +87,10 @@ export function isGhost(item: Pick<GridItem, 'policy'>): boolean
 
 ### isLocked
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L147">
-    core/model.ts:147
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L163">core/model.ts:163</a></span>
+
+True when the item's movement policy is `locked`: it still blocks, but never
+moves or resizes as a side effect of another item's operation.
 
 ```ts
 export function isLocked(item: Pick<GridItem, 'policy'>): boolean
@@ -140,12 +100,10 @@ export function isLocked(item: Pick<GridItem, 'policy'>): boolean
 
 ### DEFAULT_CANVAS
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L130">
-    core/model.ts:130
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L138">core/model.ts:138</a></span>
+
+Canvas used when none is given: 1200 x 720 pixels, no padding, `bounded`
+height mode. Frozen.
 
 ```ts
 export const DEFAULT_CANVAS: Readonly<GridCanvas>
@@ -153,12 +111,7 @@ export const DEFAULT_CANVAS: Readonly<GridCanvas>
 
 ### DEFAULT_SNAP_DISTANCE
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L138">
-    core/model.ts:138
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L146">core/model.ts:146</a></span>
 
 Default distance in pixels within which edges attract each other.
 
@@ -168,12 +121,9 @@ export const DEFAULT_SNAP_DISTANCE: 24
 
 ### EMPTY_PADDING
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L123">
-    core/model.ts:123
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L127">core/model.ts:127</a></span>
+
+Zero padding on every side. Frozen; shared by [`DEFAULT_CANVAS`](#default_canvas).
 
 ```ts
 export const EMPTY_PADDING: Readonly<GridPadding>
@@ -181,12 +131,7 @@ export const EMPTY_PADDING: Readonly<GridPadding>
 
 ### MIN_ITEM_SIZE
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L141">
-    core/model.ts:141
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L149">core/model.ts:149</a></span>
 
 Smallest width or height an item may have.
 
@@ -198,12 +143,9 @@ export const MIN_ITEM_SIZE: 1
 
 ### GridAxis
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L111">
-    core/model.ts:111
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L114">core/model.ts:114</a></span>
+
+Horizontal (`x`) or vertical (`y`) axis.
 
 ```ts
 export type GridAxis = 'x' | 'y'
@@ -211,12 +153,7 @@ export type GridAxis = 'x' | 'y'
 
 ### GridBounds
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L117">
-    core/model.ts:117
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L120">core/model.ts:120</a></span>
 
 Bounds a solver operates against. Derived from a canvas; `height` is `null`
 for scrollable canvases.
@@ -229,20 +166,15 @@ export type GridBounds = {
 }
 ```
 
-| Member    | Type          | Description |
-| --------- | ------------- | ----------- | --- |
-| `width`   | `number`      |             |
-| `height`  | `number \\    | null`       |     |
-| `padding` | `GridPadding` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `width` | `number` |  |
+| `height` | `number \\| null` |  |
+| `padding` | `GridPadding` |  |
 
 ### GridCanvas
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L23">
-    core/model.ts:23
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L23">core/model.ts:23</a></span>
 
 The rectangle items are laid out in. Items use canvas-relative pixel coordinates.
 
@@ -255,21 +187,16 @@ export type GridCanvas = {
 }
 ```
 
-| Member       | Type             | Description |
-| ------------ | ---------------- | ----------- |
-| `width`      | `number`         |             |
-| `height`     | `number`         |             |
-| `padding`    | `GridPadding`    |             |
-| `heightMode` | `GridHeightMode` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `width` | `number` |  |
+| `height` | `number` |  |
+| `padding` | `GridPadding` |  |
+| `heightMode` | `GridHeightMode` |  |
 
 ### GridEdges
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L101">
-    core/model.ts:101
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L103">core/model.ts:103</a></span>
 
 Edge-based rectangle used for hit testing and viewport math.
 
@@ -282,21 +209,16 @@ export type GridEdges = {
 }
 ```
 
-| Member   | Type     | Description |
-| -------- | -------- | ----------- |
-| `top`    | `number` |             |
-| `right`  | `number` |             |
-| `bottom` | `number` |             |
-| `left`   | `number` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `top` | `number` |  |
+| `right` | `number` |  |
+| `bottom` | `number` |  |
+| `left` | `number` |  |
 
 ### GridHeightMode
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L20">
-    core/model.ts:20
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L20">core/model.ts:20</a></span>
 
 How the canvas treats its vertical extent.
 
@@ -309,12 +231,7 @@ export type GridHeightMode = 'bounded' | 'scrollable'
 
 ### GridItem
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L80">
-    core/model.ts:80
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L80">core/model.ts:80</a></span>
 
 A laid-out item. `data` is caller-owned and passes through untouched.
 
@@ -327,31 +244,26 @@ export type GridItem<TData = unknown> = GridRect &
   }
 ```
 
-| Member         | Type             | Description                                                              |
-| -------------- | ---------------- | ------------------------------------------------------------------------ |
-| `x`            | `number`         |                                                                          |
-| `y`            | `number`         |                                                                          |
-| `w`            | `number`         |                                                                          |
-| `h`            | `number`         |                                                                          |
-| `minW?`        | `number`         |                                                                          |
-| `minH?`        | `number`         |                                                                          |
-| `maxW?`        | `number`         |                                                                          |
-| `maxH?`        | `number`         |                                                                          |
-| `sizeMode?`    | `GridSizeMode`   |                                                                          |
-| `fixedWidth?`  | `number`         | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`.   |
-| `fixedHeight?` | `number`         | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
-| `id`           | `string`         |                                                                          |
-| `policy?`      | `GridItemPolicy` |                                                                          |
-| `data?`        | `TData`          |                                                                          |
+| Member | Type | Description |
+| --- | --- | --- |
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `w` | `number` |  |
+| `h` | `number` |  |
+| `minW?` | `number` |  |
+| `minH?` | `number` |  |
+| `maxW?` | `number` |  |
+| `maxH?` | `number` |  |
+| `sizeMode?` | `GridSizeMode` |  |
+| `fixedWidth?` | `number` | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`. |
+| `fixedHeight?` | `number` | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
+| `id` | `string` |  |
+| `policy?` | `GridItemPolicy` |  |
+| `data?` | `TData` |  |
 
 ### GridItemConstraints
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L67">
-    core/model.ts:67
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L67">core/model.ts:67</a></span>
 
 Size constraints an item may carry.
 
@@ -369,24 +281,19 @@ export type GridItemConstraints = {
 }
 ```
 
-| Member         | Type           | Description                                                              |
-| -------------- | -------------- | ------------------------------------------------------------------------ |
-| `minW?`        | `number`       |                                                                          |
-| `minH?`        | `number`       |                                                                          |
-| `maxW?`        | `number`       |                                                                          |
-| `maxH?`        | `number`       |                                                                          |
-| `sizeMode?`    | `GridSizeMode` |                                                                          |
-| `fixedWidth?`  | `number`       | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`.   |
-| `fixedHeight?` | `number`       | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `minW?` | `number` |  |
+| `minH?` | `number` |  |
+| `maxW?` | `number` |  |
+| `maxH?` | `number` |  |
+| `sizeMode?` | `GridSizeMode` |  |
+| `fixedWidth?` | `number` | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`. |
+| `fixedHeight?` | `number` | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
 
 ### GridItemPolicy
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L42">
-    core/model.ts:42
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L42">core/model.ts:42</a></span>
 
 Solver participation policy for one item.
 
@@ -408,19 +315,14 @@ export type GridItemPolicy = {
 }
 ```
 
-| Member       | Type          | Description |
-| ------------ | ------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `collision?` | `"solid" \\   | "ignore"`   | `solid` (default): the item occupies space and blocks other items. `ignore`: the item is a ghost. Solvers move, resize and place other items straight through it. Useful for reserved slots and floating items.                   |
-| `movement?`  | `"movable" \\ | "locked"`   | `movable` (default): the solver may push, swap, shrink or reorder the item to make room for another item. `locked`: the item is a wall. It still blocks, but never moves or resizes as a side effect of another item's operation. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `collision?` | `"solid" \\| "ignore"` | `solid` (default): the item occupies space and blocks other items. `ignore`: the item is a ghost. Solvers move, resize and place other items straight through it. Useful for reserved slots and floating items. |
+| `movement?` | `"movable" \\| "locked"` | `movable` (default): the solver may push, swap, shrink or reorder the item to make room for another item. `locked`: the item is a wall. It still blocks, but never moves or resizes as a side effect of another item's operation. |
 
 ### GridItemSize
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L88">
-    core/model.ts:88
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L88">core/model.ts:88</a></span>
 
 Size information used when creating or placing an item.
 
@@ -428,26 +330,21 @@ Size information used when creating or placing an item.
 export type GridItemSize = Pick<GridItem, 'w' | 'h'> & GridItemConstraints
 ```
 
-| Member         | Type           | Description                                                              |
-| -------------- | -------------- | ------------------------------------------------------------------------ |
-| `w`            | `number`       |                                                                          |
-| `h`            | `number`       |                                                                          |
-| `minW?`        | `number`       |                                                                          |
-| `minH?`        | `number`       |                                                                          |
-| `maxW?`        | `number`       |                                                                          |
-| `maxH?`        | `number`       |                                                                          |
-| `sizeMode?`    | `GridSizeMode` |                                                                          |
-| `fixedWidth?`  | `number`       | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`.   |
-| `fixedHeight?` | `number`       | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `w` | `number` |  |
+| `h` | `number` |  |
+| `minW?` | `number` |  |
+| `minH?` | `number` |  |
+| `maxW?` | `number` |  |
+| `maxH?` | `number` |  |
+| `sizeMode?` | `GridSizeMode` |  |
+| `fixedWidth?` | `number` | Pixel width to pin when `sizeMode` fixes the width. Falls back to `w`. |
+| `fixedHeight?` | `number` | Pixel height to pin when `sizeMode` fixes the height. Falls back to `h`. |
 
 ### GridLayout
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L91">
-    core/model.ts:91
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L91">core/model.ts:91</a></span>
 
 A canvas and the items positioned inside it.
 
@@ -458,19 +355,14 @@ export type GridLayout<TData = unknown> = {
 }
 ```
 
-| Member   | Type                         | Description |
-| -------- | ---------------------------- | ----------- |
-| `canvas` | `GridCanvas`                 |             |
-| `items`  | `Array\<GridItem\<TData\>\>` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `canvas` | `GridCanvas` |  |
+| `items` | `Array\<GridItem\<TData\>\>` |  |
 
 ### GridPadding
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L7">
-    core/model.ts:7
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L7">core/model.ts:7</a></span>
 
 Per-side inset in pixels.
 
@@ -483,39 +375,31 @@ export type GridPadding = {
 }
 ```
 
-| Member   | Type     | Description |
-| -------- | -------- | ----------- |
-| `top`    | `number` |             |
-| `right`  | `number` |             |
-| `bottom` | `number` |             |
-| `left`   | `number` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `top` | `number` |  |
+| `right` | `number` |  |
+| `bottom` | `number` |  |
+| `left` | `number` |  |
 
 ### GridPoint
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L96">
-    core/model.ts:96
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L97">core/model.ts:97</a></span>
+
+A point in canvas pixel coordinates.
 
 ```ts
 export type GridPoint = { x: number; y: number }
 ```
 
-| Member | Type     | Description |
-| ------ | -------- | ----------- |
-| `x`    | `number` |             |
-| `y`    | `number` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `x` | `number` |  |
+| `y` | `number` |  |
 
 ### GridRect
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L59">
-    core/model.ts:59
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L59">core/model.ts:59</a></span>
 
 A positioned rectangle.
 
@@ -528,21 +412,16 @@ export type GridRect = {
 }
 ```
 
-| Member | Type     | Description |
-| ------ | -------- | ----------- |
-| `x`    | `number` |             |
-| `y`    | `number` |             |
-| `w`    | `number` |             |
-| `h`    | `number` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `x` | `number` |  |
+| `y` | `number` |  |
+| `w` | `number` |  |
+| `h` | `number` |  |
 
 ### GridResizeEdge
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L109">
-    core/model.ts:109
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L111">core/model.ts:111</a></span>
 
 Compass edge or corner used to resize an item.
 
@@ -552,30 +431,22 @@ export type GridResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
 ### GridSize
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L98">
-    core/model.ts:98
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L100">core/model.ts:100</a></span>
+
+A width and height in pixels.
 
 ```ts
 export type GridSize = { w: number; h: number }
 ```
 
-| Member | Type     | Description |
-| ------ | -------- | ----------- |
-| `w`    | `number` |             |
-| `h`    | `number` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `w` | `number` |  |
+| `h` | `number` |  |
 
 ### GridSizeMode
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L39">
-    core/model.ts:39
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/model.ts#L39">core/model.ts:39</a></span>
 
 Which axes keep their pixel size when the layout is projected to another
 canvas size.

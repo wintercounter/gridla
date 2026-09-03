@@ -6,6 +6,10 @@
 
 export type Listener = () => void
 
+/**
+ * Minimal external store: a snapshot getter, a subscribe function, and a setter.
+ * Shaped for `useSyncExternalStore`.
+ */
 export type Store<S> = {
   getSnapshot: () => S
   subscribe: (listener: Listener) => () => void
@@ -13,6 +17,10 @@ export type Store<S> = {
   set: (next: S | ((prev: S) => S)) => void
 }
 
+/**
+ * Create a `Store` holding `initial`. Listeners fire only when `set` changes the
+ * state reference (compared with `Object.is`).
+ */
 export function createStore<S>(initial: S): Store<S> {
   let state = initial
   const listeners = new Set<Listener>()

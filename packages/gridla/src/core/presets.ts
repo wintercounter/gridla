@@ -6,8 +6,13 @@
 import { canvasInnerHeight, canvasInnerWidth, inferGap } from './geometry'
 import type { GridItem, GridItemSize, GridLayout } from './model'
 
+/**
+ * Arrangement produced by `applyPreset`: full-width rows stacked vertically,
+ * full-height columns side by side, or a grid with a fixed column count.
+ */
 export type LayoutPreset = 'rows' | 'columns' | 'grid'
 
+/** Options for `applyPreset`. */
 export type PresetOptions = {
   /** Spacing between cells. Defaults to the smallest gap already in the layout. */
   gap?: number

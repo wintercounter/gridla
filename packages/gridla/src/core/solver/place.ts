@@ -303,6 +303,11 @@ export type NewGridItem<T = unknown> = GridItemSize & {
   data?: T
 }
 
+/**
+ * Input for `placeItem`. Give `position` for a top-left intent, or `pointer` to
+ * center the item on a point.
+ * @example placeItem({ layout, item: { id: 'note', w: 200, h: 120 }, pointer: { x: 300, y: 200 } })
+ */
 export type PlaceItemInput<T = unknown> = {
   layout: GridLayout<T>
   /** Item to insert. Its `id` must not already be in the layout unless replacing it. */
