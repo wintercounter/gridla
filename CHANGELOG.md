@@ -1,16 +1,11 @@
 # Changelog
 
-All notable changes to `gridla` are recorded here. The format follows
-[Keep a Changelog](https://keepachangelog.com/) and the project uses
-semantic versioning. Entries are generated from changesets at release time.
+Release notes for `gridla` are generated from changesets at release time and
+live with the package: [`packages/gridla/CHANGELOG.md`](packages/gridla/CHANGELOG.md).
+Every published version also has a [GitHub release](https://github.com/wintercounter/gridla/releases)
+with the same notes.
 
-## Unreleased
-
-### Added
-
-- Framework-neutral core: `moveItem`, `resizeItem`, `placeItem`,
-  `transferItem`, `projectLayout` (chain and segment strategies), `applyGap`,
-  `flattenLayout`, `compactLayout`, `applyPreset`, and geometry helpers.
-- React adapter: `GridProvider`, `GridCanvas`, `GridItem`,
-  `GridPreviewOutline`, `GridTransferScope`, selector hooks, pointer and
-  keyboard interaction.
+Latest: [0.2.0](packages/gridla/CHANGELOG.md#020) — framework adapters
+(`gridla/dom`, `gridla/elements`, `gridla/vue`, `gridla/svelte`, `gridla/solid`,
+`gridla/angular`, `gridla/qwik`) on the new `gridla/interaction` layer, plus
+solver and transfer fixes.
