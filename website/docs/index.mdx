@@ -34,7 +34,7 @@ const layout: GridLayout = {
 
 const result = moveItem({ layout, itemId: 'note', position: { x: 0, y: 0 }, options: { gap: 12 } })
 result.strategy // 'push-x' — chart slid right to make room
-result.layout.items // note at x=0, chart at x=312; the input layout is untouched
+result.layout.items[0] // { id: 'chart', x: 312, ... } — note sits at x=0; the input layout is untouched
 ```
 
 </Tab>

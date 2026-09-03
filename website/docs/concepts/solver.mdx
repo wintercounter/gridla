@@ -42,7 +42,7 @@ Every solver returns a `SolveResult`: `accepted`, the new `layout`, the active `
 | 7   | `fallback-snap`                   | Nearest valid slot within the item's own size.                                                 |
 | 8   | `rejected`                        | Nothing applied; `layout` equals the input.                                                    |
 
-Ghosts are partitioned out before any strategy runs and merged back afterwards. A push that would displace a locked item, or a fixed-axis item anchored against the canvas edge, returns nothing and the solver proceeds to the next strategy.
+Ghosts are partitioned out before any strategy runs and merged back afterwards. A push that would displace a locked item, or a fixed-axis item anchored against the canvas edge, returns nothing and the solver proceeds to the next strategy. A requested rectangle that still overlaps a locked item after `push-down` is rejected without trying `fallback-snap`.
 
 `pushAndShrinkSiblings` is exported for custom solvers; `edgeAlignedSlots` lists every canvas- or sibling-aligned slot an item could sit in.
 
