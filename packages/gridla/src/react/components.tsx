@@ -1,8 +1,8 @@
 import {
   forwardRef,
   useCallback,
-  useEffect,
   useImperativeHandle,
+  useLayoutEffect,
   useMemo,
   useRef,
   type CSSProperties,
@@ -44,7 +44,7 @@ export const GridCanvas = forwardRef<HTMLDivElement, GridCanvasProps>(function G
   useImperativeHandle(forwardedRef, () => ref.current as HTMLDivElement)
   const { store, config } = useGridContext()
   const size = useElementSize(ref, config.responsive)
-  useEffect(() => {
+  useLayoutEffect(() => {
     applyMeasuredSize(store, size, config)
   }, [store, size, config])
 

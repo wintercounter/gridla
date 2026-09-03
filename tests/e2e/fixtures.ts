@@ -194,15 +194,6 @@ export async function openStudioDocument(page: Page, document: unknown) {
   await resetStudioStorage(page, { document, welcomed: true })
   await gotoStudio(page)
   await expect(page.locator('dialog')).toHaveCount(0)
-  // A page booted from storage paints its group canvases at authored size
-  // until the next render; a click on the page inset (selects the page) and
-  // Escape (clears it) give it that render deterministically.
-  const root = page.locator('[data-gridla-canvas][data-root]')
-  const bounds = await root.boundingBox()
-  if (bounds) {
-    await page.mouse.click(bounds.x + bounds.width - 6, bounds.y + bounds.height - 6)
-    await page.keyboard.press('Escape')
-  }
 }
 
 export const test = base.extend<{

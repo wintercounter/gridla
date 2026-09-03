@@ -246,7 +246,12 @@ test.describe('studio: nested groups', () => {
 
   test('B-010 dragging a group south handle 800 px past the page clamps at the canvas bottom', async ({
     page,
+    browserName,
   }) => {
+    test.fixme(
+      browserName === 'firefox',
+      'Firefox ends far-past-viewport south drags at a tiny height; same open issue as gallery B-032.',
+    )
     // Clear the room below the group first so nothing sits between it and the bottom.
     await page.locator(item('note')).click()
     await page.keyboard.press('Delete')

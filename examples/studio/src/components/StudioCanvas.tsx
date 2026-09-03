@@ -9,6 +9,7 @@ import {
   memo,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   type CSSProperties,
@@ -26,6 +27,7 @@ import {
   type GridResizeEdge,
 } from 'gridla'
 import {
+  applyMeasuredSize,
   GridCanvas,
   type GridChangeDetail,
   GridItem,
@@ -84,6 +86,30 @@ function Registrar({
       }),
     [registry, groupId, canvasRef, actions, context],
   )
+  return null
+}
+
+/**
+ * Measure the canvas before paint. `GridCanvas` measures itself in a passive
+ * effect and then follows a `ResizeObserver`, so a freshly mounted canvas
+ * (boot, Load, Import) paints one frame at authored size and animates to the
+ * projected one; a nested group additionally waits for the observer to notice
+ * its parent's projection. Measuring in a layout effect on every render feeds
+ * the size to the provider synchronously: the root projects, the group items
+ * take their projected size in the same flush, and the nested canvases measure
+ * that size before the first paint. `applyMeasuredSize` is a no-op when the
+ * size is unchanged.
+ */
+function SyncMeasure({ canvasRef }: { canvasRef: RefObject<HTMLDivElement | null> }) {
+  const { store, config } = useGridContext()
+  useLayoutEffect(() => {
+    const element = canvasRef.current
+    if (!element || !config.responsive) return
+    const rect = element.getBoundingClientRect()
+    const size = { w: Math.round(rect.width), h: Math.round(rect.height) }
+    if (size.w <= 0 || size.h <= 0) return
+    applyMeasuredSize(store, size, config)
+  })
   return null
 }
 
@@ -322,9 +348,17 @@ export function GroupCanvas({
     [groupId],
   )
 
+  // A gesture captures the pointer on the canvas, so the click that ends a
+  // move or resize is dispatched to the canvas itself (the common ancestor of
+  // the pressed handle and the capturing element). Only a press that started
+  // on the canvas background may select the group.
+  const pressedItemRef = useRef(false)
+
   const onCanvasClick = useCallback(
     (event: MouseEvent<HTMLDivElement>) => {
-      if (event.target !== event.currentTarget) return
+      const fromItem = pressedItemRef.current
+      pressedItemRef.current = false
+      if (fromItem || event.target !== event.currentTarget) return
       dispatch({ type: 'select', ids: [groupId] })
     },
     [dispatch, groupId],
@@ -332,6 +366,8 @@ export function GroupCanvas({
 
   const onPointerDownCapture = useCallback((event: PointerEvent<HTMLDivElement>) => {
     pointerModifiers.shift = event.shiftKey
+    pressedItemRef.current =
+      event.target instanceof Element && event.target.closest('[data-gridla-item]') !== null
   }, [])
 
   const onDeleteKey = useCallback(() => {
@@ -381,6 +417,7 @@ export function GroupCanvas({
       acceptTransfers={acceptTransfers}
     >
       <Registrar groupId={groupId} canvasRef={canvasRef} locked={groupLocked} />
+      <SyncMeasure canvasRef={canvasRef} />
       <GridCanvas
         ref={canvasRef}
         className="st-canvas"
