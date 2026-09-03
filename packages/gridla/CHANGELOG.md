@@ -1,5 +1,11 @@
 # gridla
 
+## 0.2.1
+
+### Patch Changes
+
+- [`270fea6`](https://github.com/wintercounter/gridla/commit/270fea6aa1d08c2ce8c407ca591709fe09e0ff67) Thanks [@wintercounter](https://github.com/wintercounter)! - Resize handle geometry uses the `--gridla-handle-size`, `--gridla-handle-inset`, and `--gridla-handle-cursor[-<edge>]` custom properties, so stylesheets size and restyle the built-in handles without `!important`. The shared `resizeHandleStyle`, `rectStyle`, and `styleToText` helpers are exported from `gridla/interaction` and back every adapter. New `gridla/base.css` starter stylesheet, and a styling guide in the docs.
+
 ## 0.2.0
 
 ### Minor Changes
