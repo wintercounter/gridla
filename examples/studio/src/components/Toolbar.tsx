@@ -50,7 +50,18 @@ export function Toolbar(props: ToolbarProps) {
   return (
     <header className="st-toolbar">
       <div className="st-toolbar-group st-toolbar-brand">
-        <span className="st-wordmark">Gridla</span>
+        <a
+          className="st-wordmark"
+          href={
+            typeof location !== 'undefined' && location.pathname.startsWith('/gridla/')
+              ? '/gridla/'
+              : '/'
+          }
+          title="Back to the documentation"
+        >
+          Gridla
+        </a>
+        <span className="st-toolbar-kicker">Sample studio</span>
         <span className="st-toolbar-sep" />
         <span className="st-doc-name" title={props.name}>
           {props.name}
