@@ -4,6 +4,7 @@ import {
   isFixedHeight,
   isFixedWidth,
   isGhost,
+  isLocked,
   type GridBounds,
   type GridCanvas,
   type GridEdges,
@@ -543,6 +544,7 @@ export function findLayoutViolations(layout: GridLayout): LayoutViolation[] {
       const a = items[i]
       const b = items[j]
       if (isGhost(a) || isGhost(b)) continue
+      if (isLocked(a) && isLocked(b)) continue
       if (rectsOverlap(a, b)) {
         violations.push({ kind: 'overlap', itemId: a.id, otherId: b.id })
       }
