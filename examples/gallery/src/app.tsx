@@ -7,7 +7,8 @@ import { demoHref, useHashRoute, useMediaQuery } from './lib/route'
 
 function Wordmark() {
   return (
-    <svg viewBox="0 0 260 64" className="gl-wordmark" role="img" aria-label="gridla">
+    <svg viewBox="0 0 260 64" className="gl-wordmark" aria-labelledby="gl-wordmark-title">
+      <title id="gl-wordmark-title">gridla</title>
       <g fill="currentColor">
         <rect x="6" y="6" width="14" height="14" rx="2" />
         <rect x="25" y="6" width="14" height="14" rx="2" />
@@ -66,7 +67,11 @@ function NavGroup({
 function Nav({ activeId }: { activeId: string }) {
   return (
     <nav className="gl-nav" aria-label="Demos">
-      <NavGroup title="Core" entries={demos.filter((d) => d.group === 'core')} activeId={activeId} />
+      <NavGroup
+        title="Core"
+        entries={demos.filter((d) => d.group === 'core')}
+        activeId={activeId}
+      />
       <NavGroup
         title="React"
         entries={demos.filter((d) => d.group === 'react')}

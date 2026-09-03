@@ -9,15 +9,7 @@ import type { ReactNode } from 'react'
 
 import type { GridItemSize } from 'gridla'
 
-export type NodeKind =
-  | 'heading'
-  | 'text'
-  | 'image'
-  | 'stat'
-  | 'chart'
-  | 'list'
-  | 'button'
-  | 'group'
+export type NodeKind = 'heading' | 'text' | 'image' | 'stat' | 'chart' | 'list' | 'button' | 'group'
 
 export type NodeProps = Record<string, string | number | boolean>
 
@@ -213,7 +205,10 @@ function Chart(props: NodeProps) {
   const height = 60
   const step = width / (points.length - 1)
   const path = points
-    .map((value, index) => `${index === 0 ? 'M' : 'L'}${(index * step).toFixed(1)},${(height - (value / 100) * height).toFixed(1)}`)
+    .map(
+      (value, index) =>
+        `${index === 0 ? 'M' : 'L'}${(index * step).toFixed(1)},${(height - (value / 100) * height).toFixed(1)}`,
+    )
     .join(' ')
   return (
     <div className="st-content st-chart" data-tone={str(props, 'tone', 'paper')}>
@@ -270,7 +265,7 @@ function List(props: NodeProps) {
 
 function Button(props: NodeProps) {
   return (
-    <div className="st-content st-button" data-tone={str(props, 'tone', 'paper')}>
+    <div className="st-content st-cta" data-tone={str(props, 'tone', 'paper')}>
       <span className="st-button-face" data-variant={str(props, 'variant', 'primary')}>
         {str(props, 'label', 'Button')}
       </span>

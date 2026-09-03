@@ -26,6 +26,7 @@ import {
   boundsInnerRight,
   canPlaceItem,
   clampItem,
+  cloneItems,
   horizontalOverlap,
   itemArea,
   itemBottom,
@@ -38,6 +39,9 @@ import {
 } from '../geometry'
 import {
   MIN_ITEM_SIZE,
+  isFixedHeight,
+  isFixedOnAxis,
+  isFixedWidth,
   isGhost,
   isLocked,
   type GridAxis,
@@ -52,6 +56,7 @@ import {
   edgeAlignedSlots,
   emitTrace,
   findById,
+  fixedAxesPreserved,
   isEdgeAnchoredAgainstPush,
   partitionItems,
   pushOverlapsDown,
@@ -245,7 +250,9 @@ export function pushAndShrinkSiblings<T>(
   if (!significantOverlap) return null
 
   const minSize = (item: GridItem<T>) =>
-    Math.max(MIN_ITEM_SIZE, item[minKey] ?? MIN_ITEM_SIZE, item[sizeKey] * FLOOR)
+    isFixedOnAxis(item, axis)
+      ? item[sizeKey]
+      : Math.max(MIN_ITEM_SIZE, item[minKey] ?? MIN_ITEM_SIZE, item[sizeKey] * FLOOR)
 
   const chain: GridItem<T>[] = []
   const chainSet = new Set<string>()
@@ -477,6 +484,8 @@ function tryChainColumnReorder<T>({
     )
     .sort((a, b) => a.y - b.y)
   if (members.length < 2) return null
+  // Heights are equalized across the column; a fixed-height member cannot take part.
+  if (members.some((it) => isFixedHeight(it)) || isFixedHeight(origin)) return null
 
   const activeRight = itemRight(active)
   const xOverlapsChain = members.some(
@@ -522,6 +531,8 @@ function tryChainColumnReorder<T>({
   if (contentBudget < N) return null
   const equalH = Math.floor(contentBudget / N)
   const lastH = contentBudget - equalH * (N - 1)
+  if (reordered.some((it, i) => (it.minH ?? MIN_ITEM_SIZE) > (i === N - 1 ? lastH : equalH)))
+    return null
   const newHeights = new Map<string, number>()
   for (let i = 0; i < N; i += 1) newHeights.set(reordered[i].id, i === N - 1 ? lastH : equalH)
 
@@ -584,6 +595,7 @@ function tryInsertIntoRow<T>({
   let rowMembers: GridItem<T>[] = []
   for (const arr of clusters.values()) if (arr.length > rowMembers.length) rowMembers = arr
   if (rowMembers.length < 2) return null
+  if (rowMembers.some((it) => isFixedHeight(it)) || isFixedHeight(active)) return null
   rowMembers.sort((a, b) => a.x - b.x)
   const rowY = rowMembers[0].y
   const rowH = rowMembers[0].h
@@ -596,6 +608,14 @@ function tryInsertIntoRow<T>({
       break
     }
   }
+  // The item adopts the row's height; refuse when that breaks its own constraints.
+  if (
+    isFixedHeight(active) ||
+    rowH < (active.minH ?? MIN_ITEM_SIZE) ||
+    (active.maxH !== undefined && rowH > active.maxH)
+  ) {
+    return null
+  }
   const adaptedActive: GridItem<T> = { ...active, y: rowY, h: rowH }
   const newChain = [...rowMembers.slice(0, insertAt), adaptedActive, ...rowMembers.slice(insertAt)]
 
@@ -607,7 +627,7 @@ function tryInsertIntoRow<T>({
   const overflow = totalItemW + numGaps * gap - rowExtent
   const FLOOR = 0.4
   const minSize = (it: GridItem<T>) =>
-    Math.max(MIN_ITEM_SIZE, it.minW ?? MIN_ITEM_SIZE, it.w * FLOOR)
+    isFixedWidth(it) ? it.w : Math.max(MIN_ITEM_SIZE, it.minW ?? MIN_ITEM_SIZE, it.w * FLOOR)
 
   const newWidths = newChain.map((it) => it.w)
   if (overflow > 0.5) {
@@ -714,6 +734,7 @@ function tryInsertIntoColumn<T>({
   let columnMembers: GridItem<T>[] = []
   for (const arr of clusters.values()) if (arr.length > columnMembers.length) columnMembers = arr
   if (columnMembers.length < 2) return null
+  if (columnMembers.some((it) => isFixedHeight(it)) || isFixedHeight(active)) return null
   columnMembers.sort((a, b) => a.y - b.y)
   const colX = columnMembers[0].x
   const colW = columnMembers[0].w
@@ -726,6 +747,13 @@ function tryInsertIntoColumn<T>({
       insertAt = i
       break
     }
+  }
+  if (
+    isFixedWidth(active) ||
+    colW < (active.minW ?? MIN_ITEM_SIZE) ||
+    (active.maxW !== undefined && colW > active.maxW)
+  ) {
+    return null
   }
   const adaptedActive: GridItem<T> = { ...active, x: colX, w: colW }
   const newChain = [
@@ -741,6 +769,8 @@ function tryInsertIntoColumn<T>({
   if (contentBudget < N) return null
   const equalH = Math.floor(contentBudget / N)
   const lastH = contentBudget - equalH * (N - 1)
+  if (newChain.some((it, i) => (it.minH ?? MIN_ITEM_SIZE) > (i === N - 1 ? lastH : equalH)))
+    return null
 
   let cursor = colTop
   const positions = new Map<string, { y: number; h: number }>()
@@ -1178,6 +1208,16 @@ export function moveItem<T = unknown>({
     items: GridItem<T>[],
     shiftedSiblings = false,
   ): SolveResult<T> => {
+    if (accepted && !fixedAxesPreserved(currentItems, items, itemId)) {
+      emitTrace(onTrace, 'move', 'rejected', active, false)
+      return {
+        accepted: false,
+        layout: { canvas: layout.canvas, items: cloneItems(currentItems) },
+        item: active,
+        strategy: 'rejected',
+        shiftedSiblings: false,
+      }
+    }
     emitTrace(onTrace, 'move', strategy, active, accepted)
     return {
       accepted,
@@ -1223,13 +1263,7 @@ export function moveItem<T = unknown>({
     gap,
   })
   if (earlyColReordered) {
-    return done(
-      'reorder-column',
-      true,
-      earlyColReordered.item,
-      [...earlyColReordered.items, ...ghostItems],
-      true,
-    )
+    return done('reorder-column', true, earlyColReordered.item, earlyColReordered.items, true)
   }
 
   const overlapsRowSibling = baseItems.some(
@@ -1255,13 +1289,7 @@ export function moveItem<T = unknown>({
 
   const chainReordered = tryChainRowReorder({ active: desired, baseItems, bounds, currentItems })
   if (chainReordered) {
-    return done(
-      'reorder-row',
-      true,
-      chainReordered.item,
-      [...chainReordered.items, ...ghostItems],
-      true,
-    )
+    return done('reorder-row', true, chainReordered.item, chainReordered.items, true)
   }
 
   const swapped = trySwapWithCollision({ active: desired, baseItems, bounds, currentItems })
@@ -1299,18 +1327,12 @@ export function moveItem<T = unknown>({
     gap,
   })
   if (columnInserted) {
-    return done(
-      'insert-column',
-      true,
-      columnInserted.item,
-      [...columnInserted.items, ...ghostItems],
-      true,
-    )
+    return done('insert-column', true, columnInserted.item, columnInserted.items, true)
   }
 
   const inserted = tryInsertIntoRow({ active: desired, baseItems, bounds, currentItems, gap })
   if (inserted) {
-    return done('insert-row', true, inserted.item, [...inserted.items, ...ghostItems], true)
+    return done('insert-row', true, inserted.item, inserted.items, true)
   }
 
   const shrunkNeighbor = tryShrinkNeighborsForMove({
@@ -1378,7 +1400,7 @@ export function moveItem<T = unknown>({
     (sibling) => isLocked(sibling) && rectsOverlap(sibling, desired),
   )
   if (desiredOverlapsLocked) {
-    return done('rejected', false, desired, replaceItem(currentItems, desired))
+    return done('rejected', false, desired, cloneItems(currentItems))
   }
   const FALLBACK_MAX = Math.max(desired.w, desired.h)
   const fallbackSnap = snap
@@ -1387,5 +1409,5 @@ export function moveItem<T = unknown>({
   if (fallbackSnap)
     return done('fallback-snap', true, fallbackSnap, replaceItem(currentItems, fallbackSnap))
 
-  return done('rejected', false, desired, replaceItem(currentItems, desired))
+  return done('rejected', false, desired, cloneItems(currentItems))
 }

@@ -1,4 +1,4 @@
-import fc from 'fast-check'
+import * as fc from 'fast-check'
 
 import { renderLayoutForRect } from 'gridla'
 
@@ -179,6 +179,19 @@ export function tileItems(
     target.policy = { ...target.policy, collision: 'ignore' }
   }
   return items
+}
+
+/**
+ * The gap a tiling can actually honour: `gap` when every row and column can
+ * hold its cells plus a gap each, otherwise 0. Tiny rects (nested containers
+ * rebased to a few pixels) would otherwise author gaps smaller than the
+ * configured one, which the engine is entitled to enforce.
+ */
+export function effectiveGap(canvas: GridCanvas, spec: TileSpec, gap: number): number {
+  const cols = Math.max(...spec.rows.map((row) => row.cells.length))
+  const fitsW = innerWidth(canvas) >= cols * (gap + 1)
+  const fitsH = innerHeight(canvas) >= spec.rows.length * (gap + 1)
+  return fitsW && fitsH ? gap : 0
 }
 
 /** A valid layout whose items respect `gap` between neighbours. */
@@ -375,9 +388,11 @@ export type TreeCase = {
  */
 function fitContainer(
   spec: ContainerSpec,
-  items: GridItem[],
   rect: GridRect,
-): { canvas: GridCanvas; padding: GridPadding | undefined; items: GridItem[] } {
+  prefix: string,
+): { canvas: GridCanvas; padding: GridPadding | undefined; items: GridItem[]; gap: number } {
+  const gap = effectiveGap(spec.canvas, spec.spec, spec.gap)
+  const items = tileItems(spec.canvas, spec.spec, gap, prefix)
   const padding = spec.padding ?? spec.canvas.padding
   const inner = {
     w: rect.w - padding.left - padding.right,
@@ -388,7 +403,7 @@ function fitContainer(
   const fitsW = (!hasFixedWidth(layout) || inner.w >= innerWidth(spec.canvas)) && need.w <= inner.w
   const fitsH =
     (!hasFixedHeight(layout) || inner.h >= innerHeight(spec.canvas)) && need.h <= inner.h
-  if (fitsW && fitsH) return { canvas: spec.canvas, padding: spec.padding, items }
+  if (fitsW && fitsH) return { canvas: spec.canvas, padding: spec.padding, items, gap }
   // Rebase to the rect. The rect may be tiny, so drop the padding rather
   // than let it exceed the rect and produce a negative inner size.
   const canvas: GridCanvas = {
@@ -397,8 +412,13 @@ function fitContainer(
     padding: { top: 0, right: 0, bottom: 0, left: 0 },
     heightMode: 'bounded',
   }
-  const prefix = items[0]!.id.replace(/-\d+$/, '')
-  return { canvas, padding: undefined, items: tileItems(canvas, spec.spec, spec.gap, prefix) }
+  const rebasedGap = effectiveGap(canvas, spec.spec, spec.gap)
+  return {
+    canvas,
+    padding: undefined,
+    items: tileItems(canvas, spec.spec, rebasedGap, prefix),
+    gap: rebasedGap,
+  }
 }
 
 /**
@@ -422,28 +442,20 @@ export const treeArb: fc.Arbitrary<TreeCase> = fc
     }),
   })
   .map(({ root, children, rootRect }) => {
-    const rootFit = fitContainer(
-      root,
-      tileItems(root.canvas, root.spec, root.gap, 'panel'),
-      rootRect,
-    )
+    const rootFit = fitContainer(root, rootRect, 'panel')
     const rootLayout: GridLayout = { canvas: rootFit.canvas, items: rootFit.items }
-    const rendered = renderLayoutForRect(rootLayout, rootRect, rootFit.padding, root.gap)
+    const rendered = renderLayoutForRect(rootLayout, rootRect, rootFit.padding, rootFit.gap)
     const nodes: GridNode[] = rootFit.items.map((item, index) => {
       const child = children[index]
       if (!child) return { id: item.id }
       const projected = rendered.items.find((entry) => entry.id === item.id) ?? item
       const rect = { x: projected.x, y: projected.y, w: projected.w, h: projected.h }
-      const fit = fitContainer(
-        child,
-        tileItems(child.canvas, child.spec, child.gap, `${item.id}-card`),
-        rect,
-      )
+      const fit = fitContainer(child, rect, `${item.id}-card`)
       const node: GridNode = {
         id: item.id,
         layout: { canvas: fit.canvas, items: fit.items },
         children: fit.items.map((grand) => ({ id: grand.id })),
-        gap: child.gap,
+        gap: fit.gap,
       }
       if (fit.padding) node.padding = fit.padding
       return node
@@ -452,7 +464,7 @@ export const treeArb: fc.Arbitrary<TreeCase> = fc
       id: 'root',
       layout: rootLayout,
       children: nodes,
-      gap: root.gap,
+      gap: rootFit.gap,
     }
     if (rootFit.padding) rootNode.padding = rootFit.padding
     return { root: rootNode, rootRect }

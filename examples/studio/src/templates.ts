@@ -60,7 +60,7 @@ function leaf(
   y: number,
   w: number,
   h: number,
-  props: Partial<NodeProps> = {},
+  props: NodeProps = {},
   size: Partial<GridItemSize> = {},
   extra: Partial<GridItem> = {},
 ): Placed {
@@ -78,7 +78,7 @@ function group(
   y: number,
   w: number,
   h: number,
-  props: Partial<NodeProps>,
+  props: NodeProps,
   layout: { width: number; height: number; inset?: number; gap?: number },
   children: Placed[],
   extra: Partial<GridItem> = {},
@@ -149,7 +149,8 @@ function dashboard(): StudioDocument {
     leaf('chart', 24, 278, chartWidth, 300, { title: 'Weekly throughput', variant: 'line' }),
     leaf('list', 24 + chartWidth + gap, 278, inner - chartWidth - gap, 300, {
       title: 'Open tasks',
-      items: 'Reconcile Q3 refunds\nRotate access keys\nReview basket size drop\nPlan capacity for launch week',
+      items:
+        'Reconcile Q3 refunds\nRotate access keys\nReview basket size drop\nPlan capacity for launch week',
     }),
     leaf('chart', 24, 594, Math.floor((inner - gap) / 2), 200, {
       title: 'Orders by hour',
@@ -268,21 +269,13 @@ function freeform(): StudioDocument {
   )
   return page('Freeform', 720, 12, [
     leaf('heading', 24, 24, 520, 72, { text: 'Loose parts', level: '1' }),
-    leaf(
-      'image',
-      560,
-      24,
-      280,
-      180,
-      { label: 'Pinned' },
-      {},
-      { policy: { movement: 'locked' } },
-    ),
+    leaf('image', 560, 24, 280, 180, { label: 'Pinned' }, {}, { policy: { movement: 'locked' } }),
     leaf('chart', 24, 120, 380, 220, { title: 'Signal', variant: 'bars' }),
     leaf('stat', 420, 220, 200, 110, { label: 'Score', value: '8.4', delta: '+0.6' }),
     leaf('list', 24, 360, 300, 200, {
       title: 'Try',
-      items: 'Shift+click two blocks, then duplicate\nCmd/Ctrl+L locks the selection\nArrow keys nudge the selected block',
+      items:
+        'Shift+click two blocks, then duplicate\nCmd/Ctrl+L locks the selection\nArrow keys nudge the selected block',
     }),
     nested,
     leaf('button', 860, 24, 180, 56, { label: 'Unpin', variant: 'outline' }),

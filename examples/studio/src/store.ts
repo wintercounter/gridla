@@ -10,12 +10,12 @@ import {
   applyPreset,
   isLocked,
   placeItem,
-  type GridChangeDetail,
   type GridItem,
   type GridLayout,
   type GridPadding,
   type LayoutPreset,
 } from 'gridla'
+import type { GridChangeDetail } from 'gridla/react'
 
 import {
   cloneSubtree,
@@ -57,7 +57,7 @@ export type StudioAction =
       node?: StudioNode
     }
   | { type: 'replace-document'; doc: StudioDocument; history?: boolean }
-  | { type: 'update-props'; id: string; props: Partial<NodeProps> }
+  | { type: 'update-props'; id: string; props: NodeProps }
   | { type: 'update-group'; id: string; patch: GroupPatch }
   | { type: 'update-item'; id: string; patch: Partial<GridItem> }
   | { type: 'remove'; ids: readonly string[] }
@@ -83,7 +83,8 @@ function commit(
   key: string | null,
   selection = state.selection,
 ): StudioState {
-  if (root === state.doc.root) return selection === state.selection ? state : { ...state, selection }
+  if (root === state.doc.root)
+    return selection === state.selection ? state : { ...state, selection }
   const now = Date.now()
   const coalesce =
     key !== null && state.lastEntry?.key === key && now - state.lastEntry.at < COALESCE_MS
@@ -95,6 +96,21 @@ function commit(
     selection,
     lastEntry: key === null ? null : { key, at: now },
   }
+}
+
+/** Map over the items of the group that owns `id`. No-op when the id has no parent. */
+function patchParentItems(
+  root: StudioNode,
+  id: string,
+  map: (item: GridItem) => GridItem,
+): StudioNode {
+  const path = findNode(root, id)
+  const parent = path?.parent
+  if (!parent?.layout) return root
+  return setGroupLayout(root, parent.id, {
+    ...parent.layout,
+    items: parent.layout.items.map((item) => (item.id === id ? map(item) : item)),
+  })
 }
 
 function existingIds(root: StudioNode, ids: readonly string[]): string[] {
@@ -124,29 +140,31 @@ function reconcileLayout(
   incoming: StudioNode | undefined,
 ): StudioNode {
   const path = findNode(root, groupId)
-  if (!path || !path.node.layout) return root
-  const group = path.node
+  const group = path?.node
+  if (!group?.layout) return root
   const children = group.children ?? []
-  const hiddenItems = group.layout!.items.filter(
+  const hiddenItems = group.layout.items.filter(
     (item) => children.find((child) => child.id === item.id)?.hidden,
   )
   const visibleIds = new Set(layout.items.map((item) => item.id))
   let next = root
   let nextChildren = children
+  const arrivals: StudioNode[] = []
 
   // Items that arrived: a new node from the palette, or a transfer from another group.
   for (const item of layout.items) {
     if (children.some((child) => child.id === item.id)) continue
     if (incoming && incoming.id === item.id) {
-      nextChildren = [...nextChildren, incoming]
+      arrivals.push(incoming)
       continue
     }
     const moved = findNode(next, item.id)
     if (!moved || !moved.parent) continue
     if (isAncestorOrSelf(next, item.id, groupId)) continue
     next = removeNodes(next, new Set([item.id]))
-    nextChildren = [...nextChildren, moved.node]
+    arrivals.push(moved.node)
   }
+  nextChildren = [...nextChildren, ...arrivals]
 
   // Items that left: removed, or transferred out (their new group already took the node).
   nextChildren = nextChildren.filter((child) => child.hidden || visibleIds.has(child.id))
@@ -166,7 +184,10 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
   const root = state.doc.root
   switch (action.type) {
     case 'layout-changed': {
+      // DEBUG-TEMP
+      console.warn('layout-changed', action.groupId, action.detail.reason, action.detail.itemId, action.layout.items.map((i) => i.id).join(','))
       const next = reconcileLayout(root, action.groupId, action.layout, action.node)
+      console.warn('  -> changed', next !== root)
       const { reason, itemId } = action.detail
       const key =
         reason === 'move' || reason === 'update' || reason === 'transfer' || reason === 'resize'
@@ -215,15 +236,11 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
       return commit(state, next, `group:${action.id}`)
     }
     case 'update-item': {
-      const path = findNode(root, action.id)
-      if (!path?.parent?.layout) return state
-      const parent = path.parent
-      const next = setGroupLayout(root, parent.id, {
-        ...parent.layout!,
-        items: parent.layout!.items.map((item) =>
-          item.id === action.id ? { ...item, ...action.patch, id: item.id } : item,
-        ),
-      })
+      const next = patchParentItems(root, action.id, (item) => ({
+        ...item,
+        ...action.patch,
+        id: item.id,
+      }))
       return commit(state, next, `item:${action.id}`)
     }
     case 'remove': {
@@ -244,9 +261,10 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
         const path = findNode(next, id)
         if (!path?.parent?.layout || !path.item) continue
         const copy = cloneSubtree(path.node)
-        const parent = findNode(next, path.parent.id)!.node
+        const parent = findNode(next, path.parent.id)?.node
+        if (!parent?.layout) continue
         const result = placeItem({
-          layout: parent.layout!,
+          layout: parent.layout,
           item: { ...path.item, id: copy.id, x: undefined, y: undefined },
           position: { x: path.item.x + 24, y: path.item.y + 24 },
           options: { gap: parent.gap ?? 0, snap: false },
@@ -268,20 +286,10 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
       })
       let next = root
       for (const id of ids) {
-        const path = findNode(next, id)
-        if (!path?.parent?.layout) continue
-        const parent = path.parent
-        next = setGroupLayout(next, parent.id, {
-          ...parent.layout!,
-          items: parent.layout!.items.map((item) =>
-            item.id === id
-              ? {
-                  ...item,
-                  policy: { ...item.policy, movement: allLocked ? 'movable' : 'locked' },
-                }
-              : item,
-          ),
-        })
+        next = patchParentItems(next, id, (item) => ({
+          ...item,
+          policy: { ...item.policy, movement: allLocked ? 'movable' : 'locked' },
+        }))
       }
       return commit(state, next, null)
     }
@@ -297,11 +305,12 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
         next = updateNode(next, id, (node) => ({ ...node, hidden: !allHidden }))
         if (allHidden) {
           // Coming back: make sure the stored rect does not overlap what moved in meanwhile.
-          const group = findNode(next, parent.id)!.node
+          const group = findNode(next, parent.id)?.node
+          if (!group?.layout) continue
           next = setGroupLayout(
             next,
             parent.id,
-            reinsertItem(group.layout!, path.item, group.gap ?? 0),
+            reinsertItem(group.layout, path.item, group.gap ?? 0),
           )
         }
       }

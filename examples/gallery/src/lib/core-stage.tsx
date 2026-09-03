@@ -7,7 +7,14 @@ import {
   type ReactNode,
 } from 'react'
 
-import { itemBottom, type GridCanvas, type GridItem, type GridLayout, type GridPoint, type GridRect } from 'gridla'
+import {
+  itemBottom,
+  type GridCanvas,
+  type GridItem,
+  type GridLayout,
+  type GridPoint,
+  type GridRect,
+} from 'gridla'
 import { renderLayout } from '@gridla/demo-kit'
 
 export type StagePointer = {
@@ -15,7 +22,7 @@ export type StagePointer = {
   point: GridPoint
   /** Id of the item under the pointer, if any. */
   itemId: string | null
-  event: PointerEvent<HTMLDivElement>
+  event: PointerEvent<HTMLElement>
 }
 
 export type CoreStageProps = {
@@ -59,7 +66,7 @@ export function CoreStage({
   onPointerLeave,
   style,
 }: CoreStageProps) {
-  const outer = useRef<HTMLDivElement | null>(null)
+  const outer = useRef<HTMLElement | null>(null)
   const items = useRef<HTMLDivElement | null>(null)
   const [width, setWidth] = useState(0)
 
@@ -80,7 +87,7 @@ export function CoreStage({
   const extent = canvasExtent(layout)
   const scale = fit === 'scale' && width > 0 ? Math.min(1, width / layout.canvas.width) : 1
 
-  const toPointer = (event: PointerEvent<HTMLDivElement>): StagePointer => {
+  const toPointer = (event: PointerEvent<HTMLElement>): StagePointer => {
     const rect = (outer.current as HTMLDivElement).getBoundingClientRect()
     const target = event.target instanceof Element ? event.target.closest('[data-id]') : null
     return {
@@ -91,10 +98,9 @@ export function CoreStage({
   }
 
   return (
-    <div
+    <section
       ref={outer}
       className="gl-stage"
-      role="img"
       aria-label={ariaLabel}
       style={{ height: Math.round(extent * scale), ...style }}
       onPointerDown={onPointerDown ? (event) => onPointerDown(toPointer(event)) : undefined}
@@ -114,7 +120,7 @@ export function CoreStage({
         {children}
       </div>
       {label ? <span className="gd-stage-label">{label}</span> : null}
-    </div>
+    </section>
   )
 }
 

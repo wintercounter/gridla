@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import fc from 'fast-check'
+import * as fc from 'fast-check'
 
 import {
   isFixedHeight,
@@ -55,6 +55,32 @@ function assertInside(layout: GridLayout): void {
       expect(item.y + item.h).toBeLessThanOrEqual(bottom + TOL)
     }
   }
+}
+
+function isTiled(layout: GridLayout, gap: number): boolean {
+  const { canvas, items } = layout
+  const right = canvas.width - canvas.padding.right
+  const bottom = canvas.height - canvas.padding.bottom
+  const xStarts = new Set(items.map((item) => item.x))
+  const yStarts = new Set(items.map((item) => item.y))
+  for (const a of items) {
+    const r = a.x + a.w
+    const b = a.y + a.h
+    const rightMeets = r === right || xStarts.has(r) || xStarts.has(r + gap)
+    const bottomMeets = b === bottom || yStarts.has(b) || yStarts.has(b + gap)
+    if (!rightMeets || !bottomMeets) return false
+    if (
+      a.x !== canvas.padding.left &&
+      !items.some((o) => o !== a && (o.x + o.w === a.x || o.x + o.w + gap === a.x))
+    )
+      return false
+    if (
+      a.y !== canvas.padding.top &&
+      !items.some((o) => o !== a && (o.y + o.h === a.y || o.y + o.h + gap === a.y))
+    )
+      return false
+  }
+  return true
 }
 
 function project(
@@ -153,6 +179,14 @@ describe('projection invariants', () => {
         strategyArb,
         ({ gap, layout }, extraW, extraH, strategy) => {
           const a = normalizeLayout(layout)
+          // The chain strategy applies one-way corrections on purpose: gaps
+          // within 2px of the configured gap snap onto it, edges that share
+          // a canonical value snap to one target value, and chains that
+          // reach a canvas edge anchor there. Those rules make layouts with
+          // loose slack non-reversible by design, so the round-trip
+          // guarantee is checked on tiled layouts: every neighbor gap is 0
+          // or `gap`, and every item edge meets a neighbor or the canvas.
+          fc.pre(strategy !== 'chain' || isTiled(a, gap))
           const b: GridCanvas = {
             ...a.canvas,
             width: a.canvas.width + extraW,
@@ -260,6 +294,33 @@ describe('projection invariants: minimized counterexamples', () => {
       padding: { top: 7, right: 0, bottom: 0, left: 0 },
     }
     assertInside(projectLayout(layout, target, { strategy: 'chain', gap: 6 }))
+  })
+
+  it('chain: shifting the inner area by a top padding keeps free rows at their height', () => {
+    // 200×200 → 200×206 with 6px top padding: the inner area is unchanged.
+    // Observed: the free items collapse to 1px tall and the last one lands
+    // at y=302, 96px below the canvas.
+    const layout: GridLayout = {
+      canvas: canvas(200, 200),
+      items: [
+        { id: 'stat-1', x: 0, y: 0, w: 50, h: 97, minW: 20, minH: 20 },
+        { id: 'stat-2', x: 50, y: 0, w: 50, h: 97, minW: 20, minH: 20 },
+        { id: 'stat-3', x: 100, y: 0, w: 50, h: 97, minW: 20, minH: 20, sizeMode: 'fixed' },
+        { id: 'stat-4', x: 150, y: 0, w: 50, h: 97, minW: 20, minH: 20, sizeMode: 'fixed-h' },
+        { id: 'chart', x: 0, y: 100, w: 120, h: 100, minW: 20, minH: 20, sizeMode: 'fixed' },
+        { id: 'feed-a', x: 120, y: 100, w: 80, h: 100, minW: 20, minH: 21 },
+      ],
+    }
+    const target: GridCanvas = {
+      ...canvas(200, 206),
+      padding: { top: 6, right: 0, bottom: 0, left: 0 },
+    }
+    const projected = projectLayout(layout, target, { strategy: 'chain' })
+    assertInside(projected)
+    for (const item of projected.items) {
+      const source = layout.items.find((entry) => entry.id === item.id)!
+      expect(item.h).toBe(source.h)
+    }
   })
 
   it('segments: a free item beside a full-width fixed item keeps a usable width', () => {

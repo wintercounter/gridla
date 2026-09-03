@@ -347,11 +347,7 @@ body {
 
 .gl-outline[data-kind='rejected'] {
   border: 2px solid var(--g-accent);
-  background: repeating-linear-gradient(
-    45deg,
-    transparent 0 6px,
-    var(--g-accent-soft) 6px 12px
-  );
+  background: repeating-linear-gradient(45deg, transparent 0 6px, var(--g-accent-soft) 6px 12px);
 }
 
 .gl-outline[data-kind='hover'] {
@@ -699,12 +695,13 @@ body {
 
 .gl-ssr {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--g-space-4);
 }
 
 @container (min-width: 720px) {
   .gl-ssr {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   }
 }
 
@@ -732,7 +729,7 @@ body {
   border: var(--g-border-w) solid var(--g-line);
   border-radius: var(--g-radius-3);
   background: var(--g-bg-sunken);
-  overflow: hidden;
+  overflow: auto;
 }
 
 /* Stress meter */
@@ -768,4 +765,56 @@ body {
   font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
   padding: 4px;
   color: var(--g-fg-muted);
+}
+
+/* Additions used by comparison-style demos */
+
+.gl-compare-wrap {
+  container-type: inline-size;
+  flex: 1 1 30rem;
+  min-width: 0;
+}
+
+.gl-section-title {
+  margin: var(--g-space-2) 0 var(--g-space-1);
+  font: 600 var(--g-text-md) / var(--g-leading-tight) var(--g-font-display);
+  letter-spacing: -0.01em;
+}
+
+.gl-section-title + .gl-intro {
+  margin-top: 0;
+  margin-bottom: var(--g-space-3);
+}
+
+.gl-section-title ~ .gl-section-title {
+  margin-top: var(--g-space-5);
+}
+
+.gl-pane-hint,
+.gl-note {
+  margin: 0;
+  font-size: var(--g-text-xs);
+  color: var(--g-fg-muted);
+}
+
+.gl-measure-wrap {
+  width: 100%;
+}
+
+.gl-measure-inner {
+  min-width: 120px;
+  transition: width var(--g-duration) var(--g-ease-out);
+}
+
+.gl-crosshair {
+  position: absolute;
+  left: -8px;
+  top: -8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--g-accent);
+  background: var(--g-accent-soft);
+  pointer-events: none;
+  z-index: 5;
 }

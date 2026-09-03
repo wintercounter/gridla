@@ -6,7 +6,8 @@
 
 import { createContext, useContext } from 'react'
 
-import type { GridActions, GridContextValue, GridLayout, GridPoint } from 'gridla/react'
+import type { GridLayout, GridPoint } from 'gridla'
+import type { GridActions, GridContextValue } from 'gridla/react'
 
 export type CanvasEntry = {
   groupId: string
@@ -14,6 +15,8 @@ export type CanvasEntry = {
   actions: GridActions
   gesture: GridContextValue['gesture']
   getLayout: () => GridLayout
+  /** Subscribe to the provider's store (rendered layout changes). */
+  subscribe: (listener: () => void) => () => void
   /** Fine-grained accept check for palette drops. */
   accepts: () => boolean
 }
@@ -24,6 +27,8 @@ export type CanvasRegistry = {
   entries: () => CanvasEntry[]
   /** The deepest accepting canvas under a client point. */
   findAt: (client: GridPoint) => CanvasEntry | null
+  /** Notified when canvases register or unregister. */
+  subscribe: (listener: () => void) => () => void
 }
 
 function containsPoint(element: HTMLElement, client: GridPoint): boolean {
@@ -38,11 +43,25 @@ function containsPoint(element: HTMLElement, client: GridPoint): boolean {
 
 export function createCanvasRegistry(): CanvasRegistry {
   const entries = new Map<string, CanvasEntry>()
+  const listeners = new Set<() => void>()
+  const notify = () => {
+    for (const listener of listeners) listener()
+  }
   return {
     register: (entry) => {
       entries.set(entry.groupId, entry)
+      notify()
       return () => {
-        if (entries.get(entry.groupId) === entry) entries.delete(entry.groupId)
+        if (entries.get(entry.groupId) === entry) {
+          entries.delete(entry.groupId)
+          notify()
+        }
+      }
+    },
+    subscribe: (listener) => {
+      listeners.add(listener)
+      return () => {
+        listeners.delete(listener)
       }
     },
     get: (groupId) => entries.get(groupId) ?? null,

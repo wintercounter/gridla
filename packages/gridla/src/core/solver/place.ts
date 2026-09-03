@@ -29,6 +29,10 @@ import {
 } from '../geometry'
 import {
   MIN_ITEM_SIZE,
+  isFixedHeight,
+  isFixedWidth,
+  isGhost,
+  isLocked,
   type GridBounds,
   type GridItem,
   type GridItemSize,
@@ -39,6 +43,7 @@ import {
   chooseOpenCandidate,
   emitTrace,
   findById,
+  fixedAxesPreserved,
   nearestEdgeAlignedSlots,
   pushOverlapsDown,
   removeItem,
@@ -246,23 +251,29 @@ function shrinkSiblingsForSlot<T>(
     if (!target) return null
     type Option = { axis: 'x' | 'y'; start: number; size: number }
     const options: Option[] = []
-    if (sibling.y < slot.y && sibling.y + sibling.h > slot.y) {
+    if (isGhost(sibling) || isLocked(sibling)) return null
+    const canShrinkY = !isFixedHeight(sibling)
+    const canShrinkX = !isFixedWidth(sibling)
+    if (canShrinkY && sibling.y < slot.y && sibling.y + sibling.h > slot.y) {
       options.push({ axis: 'y', start: sibling.y, size: slot.y - gap - sibling.y })
     }
-    if (sibling.y < slot.y + slot.h && sibling.y + sibling.h > slot.y + slot.h) {
+    if (canShrinkY && sibling.y < slot.y + slot.h && sibling.y + sibling.h > slot.y + slot.h) {
       const start = slot.y + slot.h + gap
       options.push({ axis: 'y', start, size: sibling.y + sibling.h - start })
     }
-    if (sibling.x < slot.x && sibling.x + sibling.w > slot.x) {
+    if (canShrinkX && sibling.x < slot.x && sibling.x + sibling.w > slot.x) {
       options.push({ axis: 'x', start: sibling.x, size: slot.x - gap - sibling.x })
     }
-    if (sibling.x < slot.x + slot.w && sibling.x + sibling.w > slot.x + slot.w) {
+    if (canShrinkX && sibling.x < slot.x + slot.w && sibling.x + sibling.w > slot.x + slot.w) {
       const start = slot.x + slot.w + gap
       options.push({ axis: 'x', start, size: sibling.x + sibling.w - start })
     }
-    const viable = options.filter(
-      (opt) => opt.size > 0 && opt.size >= (opt.axis === 'y' ? sibling.h : sibling.w) * FLOOR,
-    )
+    const viable = options.filter((opt) => {
+      const full = opt.axis === 'y' ? sibling.h : sibling.w
+      const min =
+        opt.axis === 'y' ? (sibling.minH ?? MIN_ITEM_SIZE) : (sibling.minW ?? MIN_ITEM_SIZE)
+      return opt.size > 0 && opt.size >= full * FLOOR && opt.size >= min
+    })
     if (viable.length === 0) return null
     const loss = (o: Option) => (o.axis === 'y' ? sibling.h : sibling.w) - o.size
     viable.sort((a, b) => loss(a) - loss(b))
@@ -331,6 +342,16 @@ export function placeItem<T = unknown>({
     items: GridItem<T>[],
     shiftedSiblings = false,
   ): SolveResult<T> => {
+    if (accepted && !fixedAxesPreserved(siblings, items, active.id)) {
+      emitTrace(onTrace, 'place', 'rejected', active, false)
+      return {
+        accepted: false,
+        layout: { canvas: layout.canvas, items: cloneItems(layout.items) },
+        item: active,
+        strategy: 'rejected',
+        shiftedSiblings: false,
+      }
+    }
     emitTrace(onTrace, 'place', strategy, active, accepted)
     return {
       accepted,
@@ -418,8 +439,10 @@ export function placeItem<T = unknown>({
       const found = shrinkSiblingsForSlot(sized, siblings, bounds, gap, pointer)
       if (found) return done('pointer-shrink-siblings', true, found.item, found.items, true)
     }
+    // Nothing clean fits. Report the pointer-centered rect as the candidate
+    // so a preview can still follow the pointer, but do not accept it.
     const fallbackSlot = centered(base)
-    return done('pointer-overlap', true, fallbackSlot, withSiblings(fallbackSlot))
+    return done('pointer-overlap', false, fallbackSlot, cloneItems(layout.items))
   }
 
   const x = position?.x ?? input.x ?? bounds.padding.left

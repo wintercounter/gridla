@@ -122,83 +122,183 @@ function projectChainAlongAxis<T>({
   const axisMin = isY ? 'minH' : 'minW'
   if (chain.length === 0) return
 
+  // Items that start at (nearly) the same coordinate form a lane: a row of a
+  // vertical chain or a column of a horizontal one. Lanes, not items, are the
+  // sequential elements that share the axis. A member whose end reaches past
+  // the next lane spans several lanes.
+  const LANE_TOL = 2
   const sorted = [...chain].sort((a, b) => a[axisStart] - b[axisStart])
+  type Lane = { start: number; end: number; members: GridItem<T>[]; fixed: boolean; min: number }
+  const lanes: Lane[] = []
+  for (const item of sorted) {
+    const start = item[axisStart] - sourcePadStart
+    const lane = lanes[lanes.length - 1]
+    if (lane && start - lane.start <= LANE_TOL) lane.members.push(item)
+    else lanes.push({ start, end: start, members: [item], fixed: false, min: MIN_ITEM_SIZE })
+  }
+  for (let i = 0; i < lanes.length; i += 1) {
+    const lane = lanes[i]
+    const nextStart = i + 1 < lanes.length ? lanes[i + 1].start : Number.POSITIVE_INFINITY
+    let end = -Infinity
+    let allFixed = true
+    let anyNonSpanning = false
+    let min = MIN_ITEM_SIZE
+    for (const member of lane.members) {
+      const memberEnd = member[axisStart] - sourcePadStart + member[axisSize]
+      const spanning = memberEnd > nextStart + LANE_TOL
+      if (spanning) continue
+      anyNonSpanning = true
+      end = Math.max(end, memberEnd)
+      if (!isFixedOnAxis(member, axis)) {
+        allFixed = false
+        min = Math.max(min, member[axisMin] ?? MIN_ITEM_SIZE)
+      }
+    }
+    if (!anyNonSpanning) {
+      // Every member spans past the next lane: the lane ends where the next
+      // lane starts, touching.
+      end = Number.isFinite(nextStart)
+        ? nextStart
+        : Math.max(...lane.members.map((m) => m[axisStart] - sourcePadStart + m[axisSize]))
+      allFixed = false
+    }
+    lane.end = Math.max(lane.start + 1, end)
+    lane.fixed = anyNonSpanning && allFixed
+    lane.min = min
+  }
 
+  // Slots: space before each lane and after the last one, in source units.
   const slots: number[] = []
   let prevEnd = 0
-  for (const item of sorted) {
-    const innerStart = item[axisStart] - sourcePadStart
-    slots.push(Math.max(0, innerStart - prevEnd))
-    prevEnd = innerStart + item[axisSize]
+  for (const lane of lanes) {
+    slots.push(Math.max(0, lane.start - prevEnd))
+    prevEnd = Math.max(prevEnd, lane.end)
   }
   slots.push(Math.max(0, sourceInner - prevEnd))
 
   const SLOT_TOL = 2
-  const isFixedSlot = (slot: number): boolean => {
-    if (Math.abs(slot) <= SLOT_TOL) return true
-    if (gap > 0 && Math.abs(slot - gap) <= SLOT_TOL) return true
-    return false
-  }
+  const isFixedSlot = (slot: number): boolean =>
+    Math.abs(slot) <= SLOT_TOL || (gap > 0 && Math.abs(slot - gap) <= SLOT_TOL)
 
   let sumFixed = 0
   let sumFree = 0
-  const meta: Array<{ isFixed: boolean; item: GridItem<T> }> = []
-  for (const item of sorted) {
-    const isFixed = isFixedOnAxis(item, axis)
-    meta.push({ isFixed, item })
-    if (isFixed) sumFixed += item[axisSize]
-    else sumFree += item[axisSize]
+  for (const lane of lanes) {
+    const size = lane.end - lane.start
+    if (lane.fixed) sumFixed += size
+    else sumFree += size
   }
-
   let sumFixedSlots = 0
   let sumFreeSlots = 0
-  const slotFixed: boolean[] = []
-  for (const slot of slots) {
-    const fixed = isFixedSlot(slot)
-    slotFixed.push(fixed)
-    if (fixed) sumFixedSlots += slot
+  const slotFixed = slots.map((slot) => isFixedSlot(slot))
+  slots.forEach((slot, index) => {
+    if (slotFixed[index]) sumFixedSlots += slot
     else sumFreeSlots += slot
-  }
+  })
 
   const flexBudget = Math.max(0, targetInner - sumFixed - sumFixedSlots)
   const flexTotal = sumFree + sumFreeSlots
-  const itemAvailable = Math.max(MIN_ITEM_SIZE, targetInner - sumFixed - sumFixedSlots)
-  const newItemSizes: number[] = []
-  let itemTotal = 0
-  for (const { item, isFixed } of meta) {
-    const originalSize = item[axisSize]
-    let newSize: number
-    if (isFixed || flexTotal === 0) {
-      newSize = originalSize
+  const laneAvailable = Math.max(MIN_ITEM_SIZE, targetInner - sumFixed - sumFixedSlots)
+  const newLaneSizes: number[] = []
+  let laneTotal = 0
+  for (const lane of lanes) {
+    const size = lane.end - lane.start
+    let next: number
+    if (lane.fixed || flexTotal === 0) {
+      next = size
     } else {
-      const proposed = flexBudget * (originalSize / flexTotal)
-      const declaredMin = item[axisMin] ?? MIN_ITEM_SIZE
-      const effectiveMin = Math.min(declaredMin, itemAvailable)
-      newSize = Math.min(itemAvailable, Math.max(effectiveMin, proposed))
+      const proposed = flexBudget * (size / flexTotal)
+      const effectiveMin = Math.min(lane.min, laneAvailable)
+      next = Math.min(laneAvailable, Math.max(effectiveMin, proposed))
     }
-    newItemSizes.push(newSize)
-    itemTotal += newSize
+    newLaneSizes.push(next)
+    laneTotal += next
   }
-  const freeSlotBudget = Math.max(0, targetInner - itemTotal - sumFixedSlots)
-  const newSlotSizes: number[] = []
-  for (let i = 0; i < slots.length; i += 1) {
-    if (slotFixed[i]) newSlotSizes.push(slots[i])
-    else if (sumFreeSlots > 0) newSlotSizes.push(freeSlotBudget * (slots[i] / sumFreeSlots))
-    else newSlotSizes.push(0)
+  // Minimum sizes can add up to more than the canvas offers. Visual bounds
+  // win over declared minimums: take the overflow from free lanes that still
+  // have slack above their minimum, and only then from every free lane.
+  let freeLaneTotal = 0
+  lanes.forEach((lane, index) => {
+    if (!lane.fixed) freeLaneTotal += newLaneSizes[index]
+  })
+  if (freeLaneTotal > laneAvailable) {
+    let overflow = freeLaneTotal - laneAvailable
+    let slackTotal = 0
+    lanes.forEach((lane, index) => {
+      if (!lane.fixed) slackTotal += Math.max(0, newLaneSizes[index] - lane.min)
+    })
+    if (slackTotal > 0) {
+      const take = Math.min(overflow, slackTotal)
+      lanes.forEach((lane, index) => {
+        if (lane.fixed) return
+        const slack = Math.max(0, newLaneSizes[index] - lane.min)
+        newLaneSizes[index] -= take * (slack / slackTotal)
+      })
+      overflow -= take
+    }
+    if (overflow > 0) {
+      let freeTotal = 0
+      lanes.forEach((lane, index) => {
+        if (!lane.fixed) freeTotal += newLaneSizes[index]
+      })
+      if (freeTotal > 0) {
+        const ratio = Math.max(0, freeTotal - overflow) / freeTotal
+        lanes.forEach((lane, index) => {
+          if (!lane.fixed)
+            newLaneSizes[index] = Math.max(MIN_ITEM_SIZE, newLaneSizes[index] * ratio)
+        })
+      }
+    }
+    laneTotal = newLaneSizes.reduce((total, size) => total + size, 0)
+  }
+  const freeSlotBudget = Math.max(0, targetInner - laneTotal - sumFixedSlots)
+  const newSlotSizes = slots.map((slot, index) =>
+    slotFixed[index] ? slot : sumFreeSlots > 0 ? freeSlotBudget * (slot / sumFreeSlots) : 0,
+  )
+
+  // Piecewise mapping from source coordinates to target coordinates: each
+  // lane and each slot is a segment with its own scale.
+  type Segment = { from: number; to: number; newFrom: number; newTo: number }
+  const segments: Segment[] = []
+  let cursor = 0
+  let source = 0
+  for (let i = 0; i < lanes.length; i += 1) {
+    const slotEnd = lanes[i].start
+    segments.push({ from: source, to: slotEnd, newFrom: cursor, newTo: cursor + newSlotSizes[i] })
+    cursor += newSlotSizes[i]
+    source = slotEnd
+    const laneEnd = lanes[i].end
+    segments.push({ from: source, to: laneEnd, newFrom: cursor, newTo: cursor + newLaneSizes[i] })
+    cursor += newLaneSizes[i]
+    source = Math.max(source, laneEnd)
+  }
+  segments.push({
+    from: source,
+    to: sourceInner,
+    newFrom: cursor,
+    newTo: cursor + newSlotSizes[lanes.length],
+  })
+  const map = (value: number): number => {
+    const segment =
+      segments.find((entry) => value >= entry.from && value <= entry.to) ??
+      (value < segments[0].from ? segments[0] : segments[segments.length - 1])
+    const span = segment.to - segment.from
+    if (span <= 0) return segment.newFrom
+    return segment.newFrom + ((value - segment.from) / span) * (segment.newTo - segment.newFrom)
   }
 
-  let cursor = 0
-  for (let i = 0; i < meta.length; i += 1) {
-    cursor += newSlotSizes[i]
-    const { item } = meta[i]
-    const newSize = newItemSizes[i]
+  for (const item of sorted) {
+    const start = item[axisStart] - sourcePadStart
+    const end = start + item[axisSize]
+    const newStart = map(start)
+    const newSize = isFixedOnAxis(item, axis)
+      ? item[axisSize]
+      : Math.max(MIN_ITEM_SIZE, map(end) - newStart)
     const existing = updates.get(item.id) ?? { ...item }
     updates.set(item.id, {
       ...existing,
-      [axisStart]: targetPadStart + cursor,
+      [axisStart]: targetPadStart + newStart,
       [axisSize]: newSize,
     } as GridItem<T>)
-    cursor += newSize
   }
 }
 
@@ -367,7 +467,9 @@ function alignFreeEdgesToChainEdges<T>(
       target.w = Math.max(1, Math.round(rightTarget) - Math.round(leftTarget))
     } else if (leftTarget !== undefined) {
       target.x = Math.round(leftTarget)
+      target.w = Math.max(1, Math.round(target.w))
     } else if (rightTarget !== undefined) {
+      target.w = Math.max(1, Math.round(target.w))
       target.x = Math.round(rightTarget) - target.w
     } else {
       target.x = Math.round(target.x)
@@ -380,7 +482,9 @@ function alignFreeEdgesToChainEdges<T>(
       target.h = Math.max(1, Math.round(bottomTarget) - Math.round(topTarget))
     } else if (topTarget !== undefined) {
       target.y = Math.round(topTarget)
+      target.h = Math.max(1, Math.round(target.h))
     } else if (bottomTarget !== undefined) {
+      target.h = Math.max(1, Math.round(target.h))
       target.y = Math.round(bottomTarget) - target.h
     } else {
       target.y = Math.round(target.y)
@@ -464,14 +568,28 @@ function anchorFixedSizeItems<T>(
   const targetBottom = canvas.height - canvas.padding.bottom
   const targetLeft = canvas.padding.left
   const targetTop = canvas.padding.top
+  // A fixed item that shares its lane with a free sibling (same start on
+  // the axis, overlapping on the other) stays with the lane: anchoring it to
+  // the edge alone would tear the row or column apart.
+  const sharesLaneWithFree = (canon: GridItem<T>, axis: GridAxis) =>
+    canonical.some((sib) => {
+      if (sib.id === canon.id || isFixedOnAxis(sib, axis)) return false
+      const sameStart =
+        axis === 'x' ? Math.abs(sib.x - canon.x) <= TOL : Math.abs(sib.y - canon.y) <= TOL
+      const crossOverlap =
+        axis === 'x'
+          ? Math.min(sib.y + sib.h, canon.y + canon.h) - Math.max(sib.y, canon.y) > 0
+          : Math.min(sib.x + sib.w, canon.x + canon.w) - Math.max(sib.x, canon.x) > 0
+      return sameStart && crossOverlap
+    })
   for (const canon of canonical) {
     const target = scaledById.get(canon.id)
     if (!target) continue
-    if (isFixedWidth(canon)) {
+    if (isFixedWidth(canon) && !sharesLaneWithFree(canon, 'x')) {
       if (Math.abs(canon.x + canon.w - sourceRight) <= TOL) target.x = targetRight - target.w
       else if (Math.abs(canon.x - sourceLeft) <= TOL) target.x = targetLeft
     }
-    if (isFixedHeight(canon)) {
+    if (isFixedHeight(canon) && !sharesLaneWithFree(canon, 'y')) {
       if (Math.abs(canon.y + canon.h - sourceBottom) <= TOL) target.y = targetBottom - target.h
       else if (Math.abs(canon.y - sourceTop) <= TOL) target.y = targetTop
     }
@@ -760,6 +878,28 @@ export function preserveGaps<T>(
   alignFreeEdgesToChainEdges(scaledById, canonicalItems, xChainMembers, yChainMembers)
   restoreFixedAxisSizes(scaledById, canonicalItems)
   anchorFixedSizeItems(scaledById, canonicalItems, canvas, sourceCanvas)
+  clampToCanvas(scaled, canvas)
+}
+
+/** Keep every item inside the canvas after the alignment passes moved edges. */
+function clampToCanvas<T>(items: GridItem<T>[], canvas: GridCanvas): void {
+  const innerRight = canvas.width - canvas.padding.right
+  const innerBottom =
+    canvas.heightMode === 'scrollable'
+      ? Number.POSITIVE_INFINITY
+      : canvas.height - canvas.padding.bottom
+  for (const item of items) {
+    if (item.x < canvas.padding.left) item.x = canvas.padding.left
+    if (item.y < canvas.padding.top) item.y = canvas.padding.top
+    if (item.x + item.w > innerRight) {
+      if (isFixedWidth(item)) item.x = Math.max(canvas.padding.left, innerRight - item.w)
+      else item.w = Math.max(MIN_ITEM_SIZE, innerRight - item.x)
+    }
+    if (item.y + item.h > innerBottom) {
+      if (isFixedHeight(item)) item.y = Math.max(canvas.padding.top, innerBottom - item.h)
+      else item.h = Math.max(MIN_ITEM_SIZE, innerBottom - item.y)
+    }
+  }
 }
 
 /** Full chain projection: scale, then preserve gaps. */
@@ -770,6 +910,7 @@ export function projectItemsByChain<T>(
   gap = 0,
 ): GridItem<T>[] {
   const projected = scaleItems(items, sourceCanvas, targetCanvas, gap)
+  if (canvasesEqual(sourceCanvas, targetCanvas)) return roundItemRects(projected)
   preserveGaps(projected, items, gap, targetCanvas, sourceCanvas)
   return projected
 }
