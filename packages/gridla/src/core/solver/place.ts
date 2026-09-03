@@ -37,9 +37,9 @@ import {
 } from '../model'
 import {
   chooseOpenCandidate,
-  edgeAlignedSlots,
   emitTrace,
   findById,
+  nearestEdgeAlignedSlots,
   pushOverlapsDown,
   removeItem,
   resolveOptions,
@@ -49,6 +49,9 @@ import {
   type SolveOptions,
   type SolveResult,
 } from './shared'
+
+/** Slots per size step for which the pointer form also tries a push-down. */
+const MAX_PUSH_ATTEMPTS = 128
 
 // ---------------------------------------------------------------------------
 // Position form strategies
@@ -364,14 +367,20 @@ export function placeItem<T = unknown>({
     }
 
     const attempt = (sized: GridItem<T>): SolveResult<T> | null => {
-      const candidates = edgeAlignedSlots(sized, siblings, bounds, gap)
-      if (candidates.length === 0) return null
-      const distance = (slot: GridItem<T>) => Math.hypot(pointer.x - slot.x, pointer.y - slot.y)
-      const sorted = [...candidates].sort((a, b) => distance(a) - distance(b))
+      // Only the slots nearest the pointer are worth trying: the candidate set
+      // grows with the square of the item count and a far slot is never a
+      // good answer to "drop here".
+      const sorted = nearestEdgeAlignedSlots(sized, siblings, bounds, gap, pointer)
+      if (sorted.length === 0) return null
+      let pushAttempts = 0
       for (const slot of sorted) {
         if (canPlaceItem(siblings, slot, bounds, gap)) {
           return done('pointer-scaled', true, slot, withSiblings(slot))
         }
+        // Pushing siblings is quadratic in the item count; only try it for
+        // the slots closest to the pointer.
+        if (pushAttempts >= MAX_PUSH_ATTEMPTS) continue
+        pushAttempts += 1
         const pushed = pushOverlapsDown(withSiblings(slot), slot.id, bounds, gap)
         if (pushed) {
           return done('pointer-scaled', true, findById(pushed, slot.id) ?? slot, pushed, true)

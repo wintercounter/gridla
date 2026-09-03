@@ -1,7 +1,14 @@
 import { describe, expect, it } from 'bun:test'
 import fc from 'fast-check'
 
-import { findContainerAt, flattenLayout, hitTest, pointInRect, type FlatLayout } from 'gridla'
+import {
+  findContainerAt,
+  flattenLayout,
+  hitTest,
+  pointInRect,
+  type FlatLayout,
+  type GridNode,
+} from 'gridla'
 
 import { deepFreeze, snapshot, treeArb, type TreeCase } from './arbitraries'
 
@@ -157,5 +164,37 @@ describe('nested invariants', () => {
       }),
       { numRuns: 200 },
     )
+  })
+})
+
+/**
+ * Minimized counterexample found by the containment property. The root's
+ * authored 200×205 layout renders into a 200×200 rect with 7px top padding;
+ * the chain projection hands the free row 113px so it ends at y=202.
+ */
+describe('nested invariants: minimized counterexamples', () => {
+  it('a free row below two minH-pinned rows stays inside the root rect', () => {
+    const root: GridNode = {
+      id: 'root',
+      gap: 6,
+      padding: { top: 7, right: 0, bottom: 0, left: 0 },
+      layout: {
+        canvas: {
+          width: 200,
+          height: 205,
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          heightMode: 'bounded',
+        },
+        items: [
+          { id: 'header', x: 0, y: 0, w: 200, h: 35, minW: 20, minH: 35 },
+          { id: 'ticker', x: 0, y: 41, w: 200, h: 35, minW: 20, minH: 35 },
+          { id: 'feed-a', x: 0, y: 82, w: 200, h: 120, minW: 20, minH: 20 },
+        ],
+      },
+      children: [{ id: 'header' }, { id: 'ticker' }, { id: 'feed-a' }],
+    }
+    const flat = flattenLayout(root, { x: 0, y: 0, w: 200, h: 200 })
+    const feed = flat.itemsById.get('feed-a')!
+    expect(feed.rect.y + feed.rect.h).toBeLessThanOrEqual(200 + TOL)
   })
 })
