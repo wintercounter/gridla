@@ -202,6 +202,28 @@ test.describe('studio: nested groups', () => {
     await press(page, start.x, start.y)
     await moveTo(page, start, { x: body.x + 300, y: gapY }, 16)
 
+    const diag = await page.evaluate(
+      ({ x, y }) => {
+        const rect = (el: Element) => {
+          const r = el.getBoundingClientRect()
+          return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)]
+        }
+        const canvases = Array.from(document.querySelectorAll<HTMLElement>('[data-gridla-canvas]')).map(
+          (el) => ({
+            group: el.getAttribute('data-group-id'),
+            rect: rect(el),
+            preview: el.querySelector(':scope > [data-gridla-preview]') ? rect(el.querySelector(':scope > [data-gridla-preview]')!) : null,
+            active: el.querySelector(':scope > [data-gridla-item][data-gridla-active]')?.getAttribute('data-gridla-item') ?? null,
+            transferring: !!el.querySelector(':scope > [data-gridla-item][data-gridla-transferring]'),
+          }),
+        )
+        const under = document.elementsFromPoint(x, y).slice(0, 6).map((el) => `${el.tagName.toLowerCase()}${el.id ? '#' + el.id : ''}.${String(el.className).slice(0, 40)}[${el.getAttribute('data-gridla-item') ?? el.getAttribute('data-group-id') ?? ''}]`)
+        return { pointer: [x, y], canvases, under, html: document.documentElement.hasAttribute('data-gridla-dragging') }
+      },
+      { x: body.x + 300, y: gapY },
+    )
+    console.log('B-054 diag', JSON.stringify({ header, body, gapY, start, diag }))
+
     await expect(page.locator(previewIn('root'))).toBeVisible()
     await expect.poll(() => itemBox(page, 'body').then((r) => r.y)).toBeGreaterThan(body.y + 20)
     // The pushed group and its children animate to their new rects; poll so
