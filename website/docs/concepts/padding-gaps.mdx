@@ -1,0 +1,60 @@
+---
+title: Padding and gaps
+description: Canvas padding is part of the layout. Gaps are a per-call option that every solver, projection, and preset respects.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Padding and gaps
+
+Two kinds of spacing, deliberately kept apart.
+
+## Padding belongs to the canvas
+
+`canvas.padding` insets the item area from the canvas edges. Item coordinates include it: the first usable pixel is `(padding.left, padding.top)`, and `canvasInnerRect(canvas)` returns the usable rectangle. Solvers clamp against the padded bounds, projection keeps padding fixed in pixels, and presets tile the inner area.
+
+```ts
+import { canvasInnerRect, type GridCanvas } from 'gridla'
+
+const canvas: GridCanvas = {
+  width: 1200,
+  height: 720,
+  padding: { top: 24, right: 24, bottom: 24, left: 24 },
+  heightMode: 'bounded',
+}
+canvasInnerRect(canvas) // { x: 24, y: 24, w: 1152, h: 672 }
+```
+
+`normalizeCanvas` guarantees the canvas is at least one pixel larger than its padding on each axis, so an inner rectangle always exists.
+
+## Gaps belong to the operation
+
+A gap is the minimum distance kept between solid neighbors. It is not stored on the layout; it is passed to every call that needs it, so the same layout can be rendered tight or airy without rewriting coordinates:
+
+- `SolveOptions.gap` for `moveItem`, `resizeItem`, `placeItem`, and `transferItem`. Snap candidates, push cursors, and collision checks all use it. Default `0`.
+- `ProjectOptions.gap` for `projectLayout` with the chain strategy: gaps of exactly this size between chain members are restored after scaling instead of being scaled with the rest.
+- `PresetOptions.gap` for `applyPreset`, defaulting to the smallest gap already present (`inferGap`).
+- `GridNode.gap` for nested containers, applied when the container's children are projected and solved.
+- `GridProviderProps.gap` in React, which feeds all of the above.
+
+In nested layouts a gap can also be a _lane_: a 1px authored gap between rows must not block a free drop at the origin, and the move solver's `insert-row` / `insert-column` strategies exist for arriving in such a lane.
+
+### Changing the gap of an existing layout
+
+`applyGap(layout, gap, options)` re-spaces every chain of adjacent items so neighbors sit exactly `gap` pixels apart. Rows and columns keep their structure and canvas-spanning chains keep filling the canvas. The detector recognizes existing gaps of `0, 1, 6, 12, 18` pixels by default; pass `recognizedGaps` when your spacing scale differs.
+
+```ts
+import { applyGap, inferGap, type GridLayout } from 'gridla'
+
+export function respace(layout: GridLayout, gap: number): GridLayout {
+  return applyGap(layout, gap, { recognizedGaps: [0, 1, 4, 8, 12, 16, 24, inferGap(layout.items)] })
+}
+```
+
+### Enforcing a gap
+
+`enforceMinimumGaps(items, bounds, gap)` pushes and trims items left-to-right and top-to-bottom so no two neighbors are closer than `gap`, then clamps to bounds. It is a repair tool for imported layouts, not something you need after a solve; solver results already satisfy the gap for every item they changed.
+
+`rectsViolateGap(a, b, gap)` is the primitive: true when two rectangles are closer than `gap` on both axes. `rectsOverlap` is the same with `gap = 0`, and touching edges do not count as overlap.
+
+<Demo id="padding-gaps" title="Padding and independently configurable gaps" />

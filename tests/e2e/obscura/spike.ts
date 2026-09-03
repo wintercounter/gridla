@@ -84,7 +84,9 @@ let endpoint: string
 if (control) {
   endpoint = process.env.CHROMIUM_PATH ?? 'bundled chromium'
 } else {
-  proc = spawn(bin, ['serve', '--port', String(cdpPort), '--allow-private-network', '--quiet'], { stdio: 'ignore' })
+  proc = spawn(bin, ['serve', '--port', String(cdpPort), '--allow-private-network', '--quiet'], {
+    stdio: 'ignore',
+  })
   endpoint = `http://127.0.0.1:${cdpPort}`
   const deadline = Date.now() + 20_000
   let ready = false
@@ -117,7 +119,10 @@ async function probe(name: string, fn: () => Promise<string | void>) {
     const detail = await Promise.race([
       fn(),
       new Promise<never>((_, rej) => {
-        timer = setTimeout(() => rej(new Error(`probe timed out after ${PROBE_TIMEOUT}ms`)), PROBE_TIMEOUT)
+        timer = setTimeout(
+          () => rej(new Error(`probe timed out after ${PROBE_TIMEOUT}ms`)),
+          PROBE_TIMEOUT,
+        )
       }),
     ])
     results.push({ name, ok: true, detail: (detail ?? 'ok').toString() })
@@ -154,13 +159,20 @@ await probe('goto static HTML (local http server)', async () => {
 })
 
 await probe('ES module <script type=module>', async () => {
-  await need().waitForFunction(() => (window as any).__module !== undefined, null, { timeout: 5000 })
-  const v = await need().evaluate(() => (window as any).__module)
+  await need().waitForFunction(
+    () => (window as unknown as Record<string, unknown>).__module !== undefined,
+    null,
+    { timeout: 5000 },
+  )
+  const v = await need().evaluate(() => (window as unknown as Record<string, unknown>).__module)
   if (v !== 42) throw new Error(`expected 42, got ${v}`)
 })
 
 await probe('page.evaluate', async () => {
-  const v = await need().evaluate(({ a, b }) => ({ sum: a + b, ua: navigator.userAgent.slice(0, 40) }), { a: 1, b: 2 })
+  const v = await need().evaluate(
+    ({ a, b }) => ({ sum: a + b, ua: navigator.userAgent.slice(0, 40) }),
+    { a: 1, b: 2 },
+  )
   if (v.sum !== 3) throw new Error(`bad result ${JSON.stringify(v)}`)
   return JSON.stringify(v)
 })
@@ -170,7 +182,8 @@ await probe('getBoundingClientRect', async () => {
     const b = document.getElementById('box')!.getBoundingClientRect()
     return { x: b.x, y: b.y, w: b.width, h: b.height }
   })
-  if (r.x !== 20 || r.y !== 30 || r.w !== 100 || r.h !== 50) throw new Error(`unexpected rect ${JSON.stringify(r)}`)
+  if (r.x !== 20 || r.y !== 30 || r.w !== 100 || r.h !== 50)
+    throw new Error(`unexpected rect ${JSON.stringify(r)}`)
   return JSON.stringify(r)
 })
 
@@ -182,15 +195,21 @@ await probe('page.screenshot', async () => {
 
 await probe('page.mouse move/down/up -> pointer events', async () => {
   const p = need()
-  await p.evaluate(() => ((window as any).__events = []))
+  await p.evaluate(() => ((window as unknown as Record<string, unknown>).__events = []))
   await p.mouse.move(40, 40)
   await p.mouse.down()
   await p.mouse.move(60, 50, { steps: 3 })
   await p.mouse.up()
-  const ev = (await p.evaluate(() => (window as any).__events)) as { type: string; x: number; y: number; buttons: number }[]
+  const ev = (await p.evaluate(() => (window as unknown as Record<string, unknown>).__events)) as {
+    type: string
+    x: number
+    y: number
+    buttons: number
+  }[]
   const types = ev.map((e) => e.type)
   const has = (t: string) => types.includes(t)
-  if (!has('pointerdown') || !has('pointermove') || !has('pointerup')) throw new Error(`events=${JSON.stringify(ev).slice(0, 200)}`)
+  if (!has('pointerdown') || !has('pointermove') || !has('pointerup'))
+    throw new Error(`events=${JSON.stringify(ev).slice(0, 200)}`)
   const down = ev.find((e) => e.type === 'pointerdown')!
   const moveAfterDown = ev.some((e, i) => e.type === 'pointermove' && i > ev.indexOf(down))
   if (!moveAfterDown) throw new Error(`no pointermove after pointerdown: ${types.join(',')}`)
@@ -223,7 +242,10 @@ await probe('ResizeObserver fires after style change', async () => {
         setTimeout(() => {
           el.style.width = '150px'
         }, 50)
-        setTimeout(() => reject(new Error(`only ${sizes.length} RO callback(s): ${sizes.join(',')}`)), 3000)
+        setTimeout(
+          () => reject(new Error(`only ${sizes.length} RO callback(s): ${sizes.join(',')}`)),
+          3000,
+        )
       }),
   )
   if (!r.endsWith('150x20')) throw new Error(`unexpected sizes ${r}`)
@@ -238,7 +260,8 @@ await probe('requestAnimationFrame', async () => {
         let n = 0
         const tick = (ts: number) => {
           n++
-          if (n >= 3) resolve(`3 frames in ${Math.round(performance.now() - t0)}ms, ts=${Math.round(ts)}`)
+          if (n >= 3)
+            resolve(`3 frames in ${Math.round(performance.now() - t0)}ms, ts=${Math.round(ts)}`)
           else requestAnimationFrame(tick)
         }
         requestAnimationFrame(tick)
@@ -255,17 +278,19 @@ await probe('setPointerCapture / hasPointerCapture', async () => {
     const log: string[] = []
     el.addEventListener('gotpointercapture', () => log.push('got'))
     el.addEventListener('lostpointercapture', () => log.push('lost'))
-    ;(window as any).__cap = { el, log }
+    ;(window as unknown as Record<string, unknown>).__cap = { el, log }
     return typeof el.setPointerCapture
   })
   if (r !== 'function') throw new Error(`setPointerCapture is ${r}`)
   await p.evaluate(() => {
-    const { el } = (window as any).__cap
+    const { el } = (window as unknown as Record<string, unknown>).__cap
     el.addEventListener(
       'pointerdown',
       (e: PointerEvent) => {
         el.setPointerCapture(e.pointerId)
-        ;(window as any).__cap.has = el.hasPointerCapture(e.pointerId)
+        ;(window as unknown as Record<string, unknown>).__cap.has = el.hasPointerCapture(
+          e.pointerId,
+        )
       },
       { once: true },
     )
@@ -274,7 +299,10 @@ await probe('setPointerCapture / hasPointerCapture', async () => {
   await p.mouse.down()
   await p.mouse.move(400, 300)
   await p.mouse.up()
-  const res = await p.evaluate(() => ({ has: (window as any).__cap.has, log: (window as any).__cap.log }))
+  const res = await p.evaluate(() => ({
+    has: (window as unknown as Record<string, unknown>).__cap.has,
+    log: (window as unknown as Record<string, unknown>).__cap.log,
+  }))
   if (res.has !== true) throw new Error(`hasPointerCapture=${res.has} log=${res.log}`)
   return `hasPointerCapture=true events=${res.log.join(',') || '(none)'}`
 })
@@ -285,10 +313,18 @@ await probe('CSS transform reflected in getBoundingClientRect', async () => {
     const before = el.getBoundingClientRect()
     el.style.transform = 'translate(50px, 10px) scale(2)'
     const after = el.getBoundingClientRect()
-    return { bx: before.x, by: before.y, ax: after.x, ay: after.y, aw: after.width, ah: after.height }
+    return {
+      bx: before.x,
+      by: before.y,
+      ax: after.x,
+      ay: after.y,
+      aw: after.width,
+      ah: after.height,
+    }
   })
   // scale(2) around centre of 80x40 at (200,30): width 160, x = 200 - 40 + 50 = 210, y = 30 - 20 + 10 = 20
-  if (Math.abs(r.aw - 160) > 1 || Math.abs(r.ax - 210) > 1 || Math.abs(r.ay - 20) > 1) throw new Error(`rect ${JSON.stringify(r)}`)
+  if (Math.abs(r.aw - 160) > 1 || Math.abs(r.ax - 210) > 1 || Math.abs(r.ay - 20) > 1)
+    throw new Error(`rect ${JSON.stringify(r)}`)
   return JSON.stringify(r)
 })
 
@@ -315,41 +351,89 @@ await probe('PointerEvent constructor carries clientX/pointerId', async () => {
   const r = await need().evaluate(() => {
     const has = typeof PointerEvent
     if (has !== 'function') return { has }
-    const e = new PointerEvent('pointerdown', { clientX: 40, clientY: 41, pointerId: 7, buttons: 1, bubbles: true })
-    return { has, clientX: e.clientX, clientY: e.clientY, pointerId: e.pointerId, buttons: e.buttons, onpointerdown: 'onpointerdown' in window }
+    const e = new PointerEvent('pointerdown', {
+      clientX: 40,
+      clientY: 41,
+      pointerId: 7,
+      buttons: 1,
+      bubbles: true,
+    })
+    return {
+      has,
+      clientX: e.clientX,
+      clientY: e.clientY,
+      pointerId: e.pointerId,
+      buttons: e.buttons,
+      onpointerdown: 'onpointerdown' in window,
+    }
   })
-  if (r.has !== 'function' || r.clientX !== 40 || r.pointerId !== 7) throw new Error(JSON.stringify(r))
+  if (r.has !== 'function' || r.clientX !== 40 || r.pointerId !== 7)
+    throw new Error(JSON.stringify(r))
   return JSON.stringify(r)
 })
 
-await probe('raw CDP Input.dispatchMouseEvent -> pointer events (bypasses setInterceptDrags)', async () => {
-  const p = need()
-  await p.evaluate(() => {
-    ;(window as any).__events = []
-    for (const t of ['mousedown', 'mousemove', 'mouseup'])
-      document.getElementById('box')!.addEventListener(t, (e) => (window as any).__events.push({ type: t, x: (e as MouseEvent).clientX }))
-  })
-  const s = await p.context().newCDPSession(p)
-  try {
-    await s.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 40, y: 40, buttons: 0 })
-    await s.send('Input.dispatchMouseEvent', { type: 'mousePressed', x: 40, y: 40, button: 'left', buttons: 1, clickCount: 1 })
-    await s.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 70, y: 55, button: 'left', buttons: 1 })
-    await s.send('Input.dispatchMouseEvent', { type: 'mouseReleased', x: 70, y: 55, button: 'left', buttons: 0, clickCount: 1 })
-  } finally {
-    await s.detach().catch(() => {})
-  }
-  const types = (await p.evaluate(() => (window as any).__events.map((e: unknown) => e.type))) as string[]
-  const ok = ['pointerdown', 'pointermove', 'pointerup'].every((t) => types.includes(t))
-  if (!ok) throw new Error(`no pointer events; got: ${types.join(',') || '(none)'}`)
-  return types.join(',')
-})
+await probe(
+  'raw CDP Input.dispatchMouseEvent -> pointer events (bypasses setInterceptDrags)',
+  async () => {
+    const p = need()
+    await p.evaluate(() => {
+      ;(window as unknown as Record<string, unknown>).__events = []
+      for (const t of ['mousedown', 'mousemove', 'mouseup'])
+        document
+          .getElementById('box')!
+          .addEventListener(t, (e) =>
+            (window as unknown as Record<string, unknown>).__events.push({
+              type: t,
+              x: (e as MouseEvent).clientX,
+            }),
+          )
+    })
+    const s = await p.context().newCDPSession(p)
+    try {
+      await s.send('Input.dispatchMouseEvent', { type: 'mouseMoved', x: 40, y: 40, buttons: 0 })
+      await s.send('Input.dispatchMouseEvent', {
+        type: 'mousePressed',
+        x: 40,
+        y: 40,
+        button: 'left',
+        buttons: 1,
+        clickCount: 1,
+      })
+      await s.send('Input.dispatchMouseEvent', {
+        type: 'mouseMoved',
+        x: 70,
+        y: 55,
+        button: 'left',
+        buttons: 1,
+      })
+      await s.send('Input.dispatchMouseEvent', {
+        type: 'mouseReleased',
+        x: 70,
+        y: 55,
+        button: 'left',
+        buttons: 0,
+        clickCount: 1,
+      })
+    } finally {
+      await s.detach().catch(() => {})
+    }
+    const types = (await p.evaluate(() =>
+      (window as unknown as { __events: { type: string }[] }).__events.map((e) => e.type),
+    )) as string[]
+    const ok = ['pointerdown', 'pointermove', 'pointerup'].every((t) => types.includes(t))
+    if (!ok) throw new Error(`no pointer events; got: ${types.join(',') || '(none)'}`)
+    return types.join(',')
+  },
+)
 
 await probe('locator.click({ force: true }) + locator.hover', async () => {
   const p = need()
-  await p.evaluate(() => ((window as any).__events = []))
+  await p.evaluate(() => ((window as unknown as Record<string, unknown>).__events = []))
   await p.locator('#box').click({ force: true, timeout: 8000 })
   await p.locator('#box').hover({ timeout: 8000 })
-  const types = (await p.evaluate(() => (window as any).__events.map((e: unknown) => e.type))) as string[]
+  const types = (await p.evaluate(() =>
+    (window as unknown as { __events: { type: string }[] }).__events.map((e) => e.type),
+  )) as string[]
   return `events=${types.join(',') || '(none)'}`
 })
 
@@ -382,7 +466,11 @@ await probe('page.setContent', async () => {
 await probe('page.setViewportSize -> innerWidth/innerHeight', async () => {
   const p = need()
   await p.setViewportSize({ width: 777, height: 555 })
-  const r = await p.evaluate(() => ({ w: innerWidth, h: innerHeight, dw: document.documentElement.clientWidth }))
+  const r = await p.evaluate(() => ({
+    w: innerWidth,
+    h: innerHeight,
+    dw: document.documentElement.clientWidth,
+  }))
   if (r.w !== 777 || r.h !== 555) throw new Error(`viewport reports ${JSON.stringify(r)}`)
   return JSON.stringify(r)
 })
@@ -390,10 +478,16 @@ await probe('page.setViewportSize -> innerWidth/innerHeight', async () => {
 await probe('CDP Emulation.setDeviceMetricsOverride (what setViewportSize uses)', async () => {
   const p = need()
   const s = await p.context().newCDPSession(p)
-  const r = await s.send('Emulation.setDeviceMetricsOverride', { width: 640, height: 480, deviceScaleFactor: 1, mobile: false })
+  const r = await s.send('Emulation.setDeviceMetricsOverride', {
+    width: 640,
+    height: 480,
+    deviceScaleFactor: 1,
+    mobile: false,
+  })
   const v = await p.evaluate(() => ({ w: innerWidth, h: innerHeight }))
   await s.detach().catch(() => {})
-  if (v.w !== 640 || v.h !== 480) throw new Error(`override accepted (${JSON.stringify(r)}) but viewport is ${JSON.stringify(v)}`)
+  if (v.w !== 640 || v.h !== 480)
+    throw new Error(`override accepted (${JSON.stringify(r)}) but viewport is ${JSON.stringify(v)}`)
   return `ok -> ${JSON.stringify(v)}`
 })
 
@@ -420,10 +514,12 @@ await probe('newContext + newPage (isolated context)', async () => {
 
 await probe('locator.click + toHaveCount style query', async () => {
   const p = need()
-  await p.evaluate(() => ((window as any).__events = []))
+  await p.evaluate(() => ((window as unknown as Record<string, unknown>).__events = []))
   await p.locator('#box').click()
   const n = await p.locator('#box').count()
-  const ev = (await p.evaluate(() => (window as any).__events.map((e: unknown) => e.type))) as string[]
+  const ev = (await p.evaluate(() =>
+    (window as unknown as { __events: { type: string }[] }).__events.map((e) => e.type),
+  )) as string[]
   if (n !== 1 || !ev.includes('pointerdown')) throw new Error(`count=${n} events=${ev}`)
   return `count=${n} events=${ev.join(',')}`
 })
@@ -447,7 +543,9 @@ const lines = [
   ``,
   `| Probe | Result | Detail |`,
   `| --- | --- | --- |`,
-  ...results.map((r) => `| ${r.name} | ${r.ok ? 'PASS' : 'FAIL'} | ${r.detail.replace(/\|/g, '\\|')} |`),
+  ...results.map(
+    (r) => `| ${r.name} | ${r.ok ? 'PASS' : 'FAIL'} | ${r.detail.replace(/\|/g, '\\|')} |`,
+  ),
   ``,
   GENERATED_END,
 ]

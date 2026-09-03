@@ -1,0 +1,104 @@
+---
+title: Persistence
+description: Save and restore layouts as JSON, validate on load, and version the stored shape.
+---
+
+# Persistence
+
+A layout is JSON already. Persistence is deciding _which_ layout to save, validating what you load, and versioning the envelope.
+
+## What to save
+
+Save the source layout, not a projected copy of it. In React that is the layout you hold in controlled state, or `useGridSourceLayout()` when uncontrolled. `onLayoutChange` hands you exactly that after every accepted change; `onCommit` tells you when a gesture ended, which is the moment to write.
+
+```tsx
+import { useEffect, useRef } from 'react'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
+
+type Data = { label: string }
+type Stored = { version: 1; savedAt: string; layout: GridLayout<Data> }
+
+const KEY = 'dashboard-layout'
+
+function save(layout: GridLayout<Data>) {
+  const stored: Stored = { version: 1, savedAt: new Date().toISOString(), layout }
+  localStorage.setItem(KEY, JSON.stringify(stored))
+}
+
+export function PersistedDashboard({
+  layout,
+  onChange,
+}: {
+  layout: GridLayout<Data>
+  onChange: (next: GridLayout<Data>) => void
+}) {
+  const latest = useRef(layout)
+  useEffect(() => {
+    latest.current = layout
+  }, [layout])
+  return (
+    <GridProvider<Data>
+      layout={layout}
+      onLayoutChange={onChange}
+      onCommit={() => save(latest.current)}
+      gap={12}
+    >
+      <GridCanvas style={{ height: 480 }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+`onCommit` runs after `onLayoutChange`, so by the time it fires the parent state has the new layout; the ref above bridges the render gap. For programmatic changes (`place`, `remove`, `update`) `onCommit` does not fire; save from `onLayoutChange` when `detail.reason` is one of those.
+
+## Loading
+
+Never trust stored geometry: screens change, minimums change, and hand edits happen. Normalize, then validate.
+
+```ts
+import { findLayoutViolations, normalizeLayout, type GridLayout } from 'gridla'
+
+type Data = { label: string }
+type Stored = { version: 1; savedAt: string; layout: GridLayout<Data> }
+
+export function load(fallback: GridLayout<Data>): GridLayout<Data> {
+  const raw = localStorage.getItem('dashboard-layout')
+  if (!raw) return fallback
+  let stored: Stored
+  try {
+    stored = JSON.parse(raw) as Stored
+  } catch {
+    return fallback
+  }
+  if (stored.version !== 1) return fallback
+  const layout = normalizeLayout(stored.layout)
+  return findLayoutViolations(layout).length === 0 ? layout : fallback
+}
+```
+
+`normalizeLayout` fills canvas defaults and clamps every item to bounds and constraints. `findLayoutViolations` catches overlaps that clamping cannot fix. A stricter option is `enforceMinimumGaps` to repair spacing, or `applyPreset` to rebuild the layout from the stored ids when the geometry is beyond saving.
+
+## Size independence
+
+The saved layout carries the canvas size it was rendered at. When it is restored on a different screen the provider projects it onto the new size, so nothing else is needed. If you want stored layouts to share one authoring size regardless of where they were saved, project before saving:
+
+```ts
+import { projectLayout, type GridLayout } from 'gridla'
+
+const AUTHORING = { width: 1200, height: 720 }
+
+export function canonical<T>(layout: GridLayout<T>): GridLayout<T> {
+  return projectLayout(layout, AUTHORING, { gap: 12 })
+}
+```
+
+## Versioning the envelope
+
+Put a `version` next to the layout, not inside it. The layout shape itself is part of Gridla's public contract and changes only with a minor release during 0.x (see [migration](../guides/migration)); your envelope can evolve independently. Keep `data` serializable, since it is stored verbatim.

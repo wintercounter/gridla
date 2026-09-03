@@ -1,0 +1,100 @@
+---
+title: Projection
+description: How projectLayout re-fits a layout to another canvas size with the chain engine or the segment engine.
+---
+
+import { Demo } from '../../theme/components/Demo'
+import { Figure } from '../../theme/components/Figure'
+
+# Projection
+
+`projectLayout(layout, targetCanvas, options)` returns a new layout whose items keep their relationships (rows, columns, alignment, fixed sizes) while filling the target canvas. It is the function that makes a pixel layout responsive.
+
+```ts
+import { projectLayout, type GridLayout } from 'gridla'
+
+declare const authored: GridLayout // authored at 1200 × 720
+
+const rendered = projectLayout(authored, { width: 900, height: 540 }, { gap: 12 })
+```
+
+`targetCanvas` is a `Partial<GridCanvas>`; missing fields come from the source canvas. Two engines are available through `options.strategy`.
+
+## Chain (default)
+
+Items that overlap on the perpendicular axis form a _chain_: items sharing vertical extent form a horizontal chain, items sharing horizontal extent a vertical one. Within a chain:
+
+- fixed-axis items keep their pixel size;
+- gaps equal to `options.gap` stay exactly that size;
+- empty space scales with the canvas;
+- free items absorb the remainder proportionally to their authored size.
+
+A second pass restores configured gaps, anchors fixed items that touch a canvas edge to that edge, and snaps edges that were identical in the source to identical values in the target, so aligned items stay aligned after rounding.
+
+<Figure caption="A horizontal chain projected from 960px to 640px with a 12px gap. The fixed rail keeps 240px; the two free items share what is left in proportion.">
+  <svg viewBox="0 0 640 170" role="img" aria-label="Chain projection example">
+    <text className="g-fig-ink" x="16" y="20">
+      source · 960
+    </text>
+    <rect className="g-fig-box" x="16" y="30" width="480" height="50" rx="4" />
+    <rect className="g-fig-accent-fill" x="16" y="30" width="120" height="50" rx="4" />
+    <text className="g-fig-muted" x="24" y="60">
+      rail · 240 fixed
+    </text>
+    <rect className="g-fig-line" x="142" y="30" width="228" height="50" rx="4" />
+    <text className="g-fig-muted" x="150" y="60">
+      chart · 456
+    </text>
+    <rect className="g-fig-line" x="376" y="30" width="120" height="50" rx="4" />
+    <text className="g-fig-muted" x="384" y="60">
+      note · 240
+    </text>
+    <text className="g-fig-ink" x="16" y="110">
+      target · 640
+    </text>
+    <rect className="g-fig-box" x="16" y="120" width="320" height="50" rx="4" />
+    <rect className="g-fig-accent-fill" x="16" y="120" width="120" height="50" rx="4" />
+    <text className="g-fig-muted" x="24" y="150">
+      240
+    </text>
+    <rect className="g-fig-line" x="142" y="120" width="121" height="50" rx="4" />
+    <text className="g-fig-muted" x="150" y="150">
+      chart · 242
+    </text>
+    <rect className="g-fig-line" x="269" y="120" width="67" height="50" rx="4" />
+    <text className="g-fig-muted" x="277" y="150">
+      134
+    </text>
+  </svg>
+</Figure>
+
+The chain engine is what nested layouts use to render each container, and what `GridProvider` uses on every measurement. It costs roughly two to three times the segment engine on the same input (see [performance](../guides/performance)).
+
+Lower-level pieces are exported for custom pipelines: `scaleItems` (fractional flex projection), `preserveGaps` (the second pass; mutates in place), `projectItemsByChain` (both together), `projectFloatingRect` (ratio-scale a rect that is not part of any chain), `roundItemRects`, and `syncFixedDimensions`.
+
+## Segments
+
+Every distinct item edge along an axis becomes a _stop_. The segments between stops are either fixed (empty, or covered only by fixed-size items) or flexible. Flexible segments scale to absorb the difference between the source and target span; fixed segments keep their pixels. A normalization pass then resolves any overlaps that per-item clamping introduced.
+
+```ts
+import { projectLayout, type GridLayout } from 'gridla'
+
+declare const sparse: GridLayout
+
+const projected = projectLayout(sparse, { width: 640 }, { strategy: 'segments' })
+```
+
+Segments are simpler, cheaper, and work well for sparse layouts where items do not form obvious rows and columns. They do not take a `gap` option; authored spacing scales with everything else unless it sits between fixed items. The engine also writes projected `minW`/`maxW`/`minH`/`maxH` onto each item so constraints scale with the canvas.
+
+## Properties you can rely on
+
+- **Identity at the same size.** Projecting a layout onto a canvas equal to its own returns the same geometry (clamped to bounds). This is what lets a committed rendered layout become the next source without drift.
+- **Padding is preserved in pixels.** Both engines work inside the padded area and translate back.
+- **Locked items are respected by the chain engine** when redistributing space; they are still scaled when the whole chain must fit.
+- **Scrollable canvases grow.** Projection alone does not change `height`; call `fitCanvasToContent(canvas, items)` afterwards (the React provider does) to extend a scrollable canvas below its last item.
+
+## Choosing a target size
+
+Measure the element and round to whole pixels. Projecting on every `ResizeObserver` callback is fine at typical item counts: 128 items project in about 1.6ms with chains and 1ms with segments on a desktop CPU. For very large layouts, throttle to animation frames.
+
+<Demo id="responsive-projection" title="Responsive projection across container sizes" />

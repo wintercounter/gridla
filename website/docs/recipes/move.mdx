@@ -1,0 +1,104 @@
+---
+title: Move
+description: Move an item programmatically or interactively, read the strategy, and handle rejection.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Move
+
+## Core
+
+```ts
+import { moveItem, type GridLayout } from 'gridla'
+
+export function moveTo(layout: GridLayout, itemId: string, x: number, y: number): GridLayout {
+  const result = moveItem({
+    layout,
+    itemId,
+    position: { x, y },
+    options: { gap: 12, snapDistance: 24 },
+  })
+  if (!result.accepted) return layout // nothing changed; result.layout === input geometry
+  return result.layout
+}
+```
+
+`position` is the item's requested top-left in canvas coordinates. The solver infers intent from the overlap with siblings and returns the first strategy that applies; see [solver behavior](../concepts/solver) for the order. The result is a complete new layout, so during a drag you paint `result.layout` on every pointer move and keep the last accepted one on release.
+
+To move without alignment snapping (for example while a modifier key is held), pass `snap: false`. Bounds, gap, and constraints still apply.
+
+### Reading the strategy
+
+```ts
+import { moveItem, type GridLayout, type SolveStrategy } from 'gridla'
+
+const LABEL: Partial<Record<SolveStrategy, string>> = {
+  swap: 'Swapped places',
+  'push-x': 'Pushed the row aside',
+  'push-y': 'Pushed the column down',
+  free: 'Dropped in open space',
+  rejected: 'No room here',
+}
+
+export function describeMove(layout: GridLayout, itemId: string, x: number, y: number): string {
+  const result = moveItem({ layout, itemId, position: { x, y } })
+  return LABEL[result.strategy] ?? result.strategy
+}
+```
+
+For logging every solve without touching call sites, pass `onTrace` once:
+
+```ts
+import { moveItem, type GridLayout, type TraceEvent } from 'gridla'
+
+const trace: TraceEvent[] = []
+declare const layout: GridLayout
+
+moveItem({
+  layout,
+  itemId: 'chart',
+  position: { x: 0, y: 0 },
+  options: { onTrace: (event) => trace.push(event) },
+})
+```
+
+## React
+
+`GridCanvas` already handles pointer moves. For programmatic moves use the actions:
+
+```tsx
+import { useGridActions, useGridLayout } from 'gridla/react'
+
+export function NudgeButtons({ itemId }: { itemId: string }) {
+  const actions = useGridActions()
+  const layout = useGridLayout()
+  const item = layout.items.find((entry) => entry.id === itemId)
+  if (!item) return null
+  const nudge = (dx: number, dy: number) =>
+    actions.move(itemId, { x: item.x + dx, y: item.y + dy }, { snap: false })
+  return (
+    <div role="group" aria-label={`Move ${itemId}`}>
+      <button type="button" onClick={() => nudge(-8, 0)}>
+        Left
+      </button>
+      <button type="button" onClick={() => nudge(8, 0)}>
+        Right
+      </button>
+      <button type="button" onClick={() => nudge(0, -8)}>
+        Up
+      </button>
+      <button type="button" onClick={() => nudge(0, 8)}>
+        Down
+      </button>
+    </div>
+  )
+}
+```
+
+`actions.move` runs the solver on the _rendered_ layout, emits `onLayoutChange` with `reason: 'move'` and the strategy, and returns `false` when rejected. The arrow keys do exactly this by default; see [keyboard controls](./keyboard).
+
+<Demo
+  id="programmatic-operations"
+  title="Programmatic move, resize, place, and rejection results"
+/>

@@ -1,0 +1,91 @@
+---
+title: Resize
+description: Resize by dragging an edge or by setting a rectangle; add built-in or custom resize handles in React.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Resize
+
+## Core
+
+Two forms. Interactive resizing passes the dragged `edge` and a pixel `delta`; the opposite edge stays anchored.
+
+```ts
+import { resizeItem, type GridLayout, type GridResizeEdge } from 'gridla'
+
+export function dragEdge(
+  layout: GridLayout,
+  itemId: string,
+  edge: GridResizeEdge,
+  dx: number,
+  dy: number,
+): GridLayout {
+  const result = resizeItem({ layout, itemId, edge, delta: { x: dx, y: dy }, options: { gap: 12 } })
+  return result.accepted ? result.layout : layout
+}
+```
+
+Programmatic resizing passes a `rect`; missing fields keep their current values. `edge` is optional here and only informs snapping.
+
+```ts
+import { resizeItem, type GridLayout } from 'gridla'
+
+export function setSize(layout: GridLayout, itemId: string, w: number, h: number): GridLayout {
+  const result = resizeItem({ layout, itemId, rect: { w, h }, options: { gap: 12, snap: false } })
+  return result.accepted ? result.layout : layout
+}
+```
+
+What happens: the requested rectangle is clamped to bounds and constraints, the moving edge snaps to nearby sibling and canvas edges, and neighbors that the new rectangle _newly_ collides with are trimmed on the facing side down to their minimums (`resize-shrink-neighbors`). A collision with a locked item, a ghost, or a neighbor that cannot shrink enough rejects the resize.
+
+`resizeRect(item, edge, delta, bounds)` gives the constrained rectangle without considering siblings; useful for a cursor-tracked outline while the solver decides where things land.
+
+## React
+
+Built-in handles: list the edges you want and style them by class.
+
+```tsx
+import { GridItem } from 'gridla/react'
+
+export function Card({ id }: { id: string }) {
+  return (
+    <GridItem
+      id={id}
+      resizeEdges={['n', 's', 'e', 'w', 'ne', 'nw', 'se', 'sw']}
+      resizeHandleClassName="handle"
+    >
+      {id}
+    </GridItem>
+  )
+}
+```
+
+The handles are 10px `div`s straddling each edge or corner, with the matching resize cursor. Custom handles: use the render prop and spread `getResizeHandleProps(edge)` on your own element.
+
+```tsx
+import type { GridResizeEdge } from 'gridla'
+import { GridItem } from 'gridla/react'
+
+const EDGES: GridResizeEdge[] = ['e', 's', 'se']
+
+export function CardWithChrome({ id }: { id: string }) {
+  return (
+    <GridItem id={id} draggable={false}>
+      {({ dragHandleProps, getResizeHandleProps, isSelected }) => (
+        <>
+          <header {...dragHandleProps}>{id}</header>
+          {isSelected &&
+            EDGES.map((edge) => (
+              <span key={edge} className={`grip grip-${edge}`} {...getResizeHandleProps(edge)} />
+            ))}
+        </>
+      )}
+    </GridItem>
+  )
+}
+```
+
+Programmatic resize uses `actions.resize(itemId, { edge, delta } | { rect }, options)`. Alt + arrow keys resize the south-east corner by `keyboardStep` pixels out of the box.
+
+<Demo id="custom-renderer" title="Custom item renderer and custom selection and resize chrome" />

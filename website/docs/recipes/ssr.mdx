@@ -1,0 +1,62 @@
+---
+title: Server rendering
+description: Render a Gridla layout on the server with React and hydrate without layout jumps.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Server rendering
+
+The core never touches the DOM, and `gridla/react` does not read browser globals at import time, so both import cleanly in Node. `GridProvider` renders items at their source coordinates when no size has been measured, which is what `renderToString` produces.
+
+```tsx
+import { renderToString } from 'react-dom/server'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
+
+export function renderDashboard(layout: GridLayout): string {
+  return renderToString(
+    <GridProvider defaultLayout={layout}>
+      <GridCanvas style={{ height: layout.canvas.height }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id}>
+            {item.id}
+          </GridItem>
+        ))}
+      </GridCanvas>
+    </GridProvider>,
+  )
+}
+```
+
+The markup contains each item's `transform: translate(x, y)` in source coordinates. On the client, `GridCanvas` measures itself after mount and the provider projects the layout onto the measured size.
+
+## Avoiding the jump
+
+If the element's width differs from the source canvas width, items move after hydration. Three ways to avoid a visible jump:
+
+1. **Author at the rendered width.** When the canvas has a known width (a fixed-width column, a print layout), save layouts at that width so projection is the identity.
+2. **Turn responsiveness off.** `responsive={false}` sizes the canvas element to the layout and never projects; the page scrolls instead of reflowing.
+3. **Hide until measured.** Read `state.size` and fade the canvas in once it is non-null.
+
+```tsx
+import type { ReactNode } from 'react'
+import { useGridStore } from 'gridla/react'
+
+export function MeasuredFade({ children }: { children: ReactNode }) {
+  const measured = useGridStore((state) => state.size !== null)
+  return (
+    <div style={{ opacity: measured ? 1 : 0, transition: 'opacity 120ms ease-out' }}>
+      {children}
+    </div>
+  )
+}
+```
+
+Do the projection on the server instead when you know the viewport (for example from a hint header): `projectLayout(layout, { width })` before rendering. The core is the same code on both sides, so the result matches what the client would compute.
+
+## Frameworks
+
+Nothing here is framework-specific. In a React Server Components setup, the provider and canvas are client components (they use hooks and events); the layout is plain data and can be produced in a server component and passed down.
+
+<Demo id="ssr" title="Server-render and import-safe React example" height="24rem" />

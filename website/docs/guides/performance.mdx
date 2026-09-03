@@ -1,0 +1,58 @@
+---
+title: Performance
+description: What the solvers and projection cost at 8 to 512 items, how they scale, and how to keep interactions smooth.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Performance
+
+The repository ships micro-benchmarks for every hot path (`bun run bench` at the root). They run on deterministic fixtures, warm up for 100ms, sample for 500ms, and report median, p95, and throughput. A `budget.json` of medians times 2.5 guards CI against algorithmic blow-ups.
+
+## Indicative numbers
+
+Taken on a desktop CPU (Intel Core i9-12900KF under WSL2, Bun 1.3.14). Expect different absolute values elsewhere; the ratios are what matter.
+
+| Case                          |  8 items |       32 |      128 |      512 |
+| ----------------------------- | -------: | -------: | -------: | -------: |
+| `moveItem` free drop          | 0.003 ms | 0.045 ms |  1.35 ms |    37 ms |
+| `moveItem` chain insert       | 0.002 ms | 0.018 ms |  0.10 ms |   1.4 ms |
+| `moveItem` push cascade       | 0.003 ms | 0.036 ms |  0.57 ms |    11 ms |
+| `moveItem` swap (packed)      | 0.004 ms | 0.017 ms |  0.17 ms |   1.5 ms |
+| `resizeItem` east edge        | 0.001 ms | 0.002 ms | 0.008 ms | 0.035 ms |
+| `placeItem` position (packed) | 0.009 ms | 0.034 ms |  0.28 ms |   3.5 ms |
+| `placeItem` pointer (packed)  |  0.04 ms |  0.58 ms |    21 ms |  1355 ms |
+| `projectLayout` chain         | 0.025 ms |  0.13 ms |   1.6 ms |    15 ms |
+| `projectLayout` segments      | 0.015 ms | 0.066 ms |   1.0 ms |   5.6 ms |
+| `compactLayout`               | 0.001 ms | 0.003 ms | 0.008 ms | 0.031 ms |
+| `applyGap`                    | 0.022 ms |  0.12 ms |   1.0 ms |    12 ms |
+
+Nested: `flattenLayout` of an 85-node tree takes 0.4 ms and of a 341-node tree 1.1 ms; `transferItem` between two 8-item containers 0.027 ms.
+
+## Scaling
+
+Growth from 128 to 512 items (linear would be 4x, quadratic 16x, cubic 64x):
+
+- `placeItem` pointer form: about 64x. The fallbacks re-solve against every sibling for every candidate. Pointer drops into dense layouts above roughly 100 items will be noticeable; use the position form or pre-compute a slot when you can.
+- `moveItem` free drop: about 28x. Even a drop in open space runs the reorder, swap, and insert attempts first, each scanning all siblings.
+- `moveItem` push cascade: about 19x, quadratic in the chain length.
+- `applyGap`, chain projection, segment projection: 5-12x, between linear and quadratic. Chain projection is consistently 2-3x the cost of segments on the same input.
+- `resizeItem`, `compactLayout`, `flattenLayout`: linear.
+
+In practice: a dashboard of 30-60 items solves in well under a millisecond per pointer move on a desktop CPU and comfortably on a phone. Hundreds of items in one canvas need care; thousands should be split into nested containers, which keeps each solve local.
+
+## Keeping interactions smooth
+
+- **Solve on the rendered layout, once per pointer move.** That is what the adapter does. Do not solve on both pointer move and animation frame.
+- **Position with `transform`.** `GridItem` does by default; it keeps layout work off the main thread. Siblings can transition `transform`, `width`, and `height` in 120-220ms; the active item should not transition at all.
+- **Subscribe narrowly.** `useGridItemView` rerenders an item only when its own rect or flags change. Avoid `useGridVisibleLayout` in per-item components.
+- **Contain the canvas.** `contain: layout paint` on the canvas element (with an intrinsic-size fallback) limits style and layout work to the canvas during a drag.
+- **Prefer segments for sparse layouts** when you project often and do not need exact gaps.
+- **Throttle projection** to animation frames if you project on every `ResizeObserver` callback with very large layouts.
+- **Nest.** A nested container solves only its own children. `flattenLayout` is linear, so deep trees are cheap to render.
+
+## Measuring your own case
+
+`bun run benchmarks/run.ts --filter moveItem` runs a subset; `--json results.json` writes results; `--check` compares against the budget. The fixtures (`dashboardLayout`, `packedLayout`, `collisionChainLayout`, `nestedTree`, and more) are seeded, so numbers are comparable between commits on one machine. See `benchmarks/README.md` in the repository for the full table and the fixture shapes.
+
+<Demo id="stress" title="High item count stress and performance visualization" />

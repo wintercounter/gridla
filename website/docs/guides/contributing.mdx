@@ -1,0 +1,69 @@
+---
+title: Contributor notes
+description: Repository layout, the rules the core follows, how tests are organized, and the commands that gate a change.
+---
+
+# Contributor notes
+
+## Repository layout
+
+```text
+packages/gridla/          the published package
+  src/core/               model, geometry, projection/, solver/, nested/, presets, instrumentation
+  src/react/              provider, store, hooks, components, interaction, transfer
+  src/index.ts            re-exports core          → 'gridla'
+  src/react.ts            re-exports react         → 'gridla/react'
+tests/
+  unit/                   smoke tests
+  compatibility/          behavior fixtures ported from the original engine
+  invariants/             property tests (fast-check)
+  react/                  provider, interaction, SSR tests
+  e2e/                    Playwright scenarios
+  package/                consumer projects that install the built package
+benchmarks/               micro-benchmarks and the regression budget
+examples/                 vanilla and React basics plus the shared demo kit
+website/                  this site (Rspress); docs/api is generated
+assets/                   hand-authored SVG mark, wordmark, favicon, social card
+```
+
+Bun workspaces tie it together. The root `package.json` scripts are the entry points.
+
+## Rules for the core
+
+1. **Pure functions over plain objects.** Inputs are never mutated; outputs are new objects. No classes in the public API.
+2. **No environment.** Nothing under `src/core` may reference the DOM, timers, `globalThis`, or React. The SSR test imports both entry points in a bare process to enforce it.
+3. **Deterministic.** Same input, same output, same strategy. Randomness has no place in a solver.
+4. **Strategies are explicit.** Every solver path ends in a named `SolveStrategy`; adding a path means adding a name to the union and a fixture that reaches it.
+5. **Neutral naming.** Ids, fixtures, and comments use generic layout words (`header`, `chart`, `sidebar`, `stat-1`, `group-a`). No product names, page names, or ticket numbers anywhere in the public repository.
+6. **Document exports.** The API reference is generated from JSDoc on exported declarations. An export without a doc comment shows up as a gap in the reference (the generator prints the list). Write the comment where the declaration is.
+
+## Rules for the React adapter
+
+- Headless. Components render structure and data attributes, never visual styles beyond geometry.
+- Minimal rerenders. State lives in the external store; components subscribe to slices with equality functions. A drag must not rerender the item list.
+- Every gesture path is a thin wrapper over a core solver call with the rendered layout.
+
+## Tests
+
+| Suite          | Command                         | Purpose                                                                                                          |
+| -------------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Unit and React | `bun test packages tests/react` | Module behavior, provider semantics, SSR.                                                                        |
+| Compatibility  | `bun test tests/compatibility`  | Ported behavior fixtures; the reference for "what the solver does".                                              |
+| Invariants     | `bun test tests/invariants`     | Properties such as "results never overlap" and "projection at the same size is identity", over random layouts.   |
+| Package        | `bun run test:package`          | Builds and installs the package into consumer projects; checks types with `@arethetypeswrong/cli` and `publint`. |
+| Browser        | `bun run test:e2e`              | Playwright scenarios against the gallery and studio.                                                             |
+| Benchmarks     | `bun run bench --check`         | Median budgets.                                                                                                  |
+
+`bun run check` runs formatting, lint, type check, and the unit suites; it is what CI runs first.
+
+## Toolchain
+
+Rslib builds the package, Rsbuild builds the examples, Rspress builds this site, Oxlint and Oxfmt lint and format, TypeScript 7 type-checks, Bun runs unit tests, Playwright runs browser tests. Changesets drive versions and changelogs: every user-facing change adds a changeset file (`bun run changeset`).
+
+## Making a change
+
+1. Add or adjust a fixture first (see [adding solver fixtures](./solver-fixtures)).
+2. Make the change in the core; keep the strategy names accurate.
+3. Run `bun run check` and `bun run bench --check`.
+4. If an export changed, update its JSDoc, then run `bun run generate` inside `website/` and commit the regenerated `docs/api`.
+5. Add a changeset. Breaking changes go under a "Breaking" heading with a before/after.

@@ -1,0 +1,43 @@
+---
+title: Migration and versioning
+description: How Gridla versions during 0.x, what counts as a breaking change, and how to move between versions.
+---
+
+# Migration and versioning
+
+Gridla follows semantic versioning with the usual 0.x caveat, spelled out so it is not a surprise.
+
+## Policy during 0.x
+
+| Release         | May contain                                                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Patch (`0.1.x`) | Bug fixes, performance work, documentation, and additions that do not change existing behavior or types.                                                                                 |
+| Minor (`0.x.0`) | New features, and **breaking changes** to the public API or to solver behavior. Every breaking change is listed under a "Breaking" heading in the changelog with a before/after snippet. |
+| `1.0.0`         | The point after which breaking changes require a major version.                                                                                                                          |
+
+"Public API" means everything exported from `gridla` and `gridla/react`, the `GridLayout` JSON shape, and the documented behavior of each solver strategy. Internal modules, test helpers, and the demo kit are not covered.
+
+A change in _which_ strategy a given input resolves to is treated as breaking even when the resulting geometry is valid, because applications and tests key on strategies. Fixture tests in the repository pin these; see [adding solver fixtures](./solver-fixtures).
+
+## Reading the changelog
+
+Versions and changelogs are produced with Changesets. Each entry names the affected entry point, the change, and, when relevant, the migration step. Read the [changelog](./changelog) before upgrading across a minor version.
+
+## Upgrading
+
+1. Update the package and run your type checker. Type-level changes surface immediately.
+2. Search the changelog for "Breaking" and apply each listed step.
+3. Re-run any layout fixtures you keep (stored layouts, snapshot tests). If a stored layout no longer validates, run it through `normalizeLayout` and `findLayoutViolations`.
+4. If you depend on specific strategies (for example, analytics keyed on `result.strategy`), compare against the `SolveStrategy` union, which is exported and exhaustive.
+
+## Stored layouts
+
+The `GridLayout` shape is part of the API. Fields are only ever added with defaults; a layout saved by an older 0.x version loads in a newer one without a conversion step. Should a field ever be removed or renamed, the changelog will include a conversion function.
+
+## Deprecations
+
+Before removing an export, a minor release marks it `@deprecated` in JSDoc (which surfaces in editors and in this reference) and documents the replacement. Removal happens no earlier than the next minor release.
+
+## Current version
+
+`0.1.0` is the first public release. There is nothing to migrate from yet; this page exists so the rules are in place before they are needed.

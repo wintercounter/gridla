@@ -1,0 +1,106 @@
+---
+title: Controlled state
+description: Own the layout and selection in React, react to GridChangeDetail, and apply external updates.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Controlled state
+
+`GridProvider` is controlled when you pass `layout`; it never stores the layout itself and reports every accepted change through `onLayoutChange`. If you do not adopt a change, nothing changes: the provider re-renders from the prop you gave it.
+
+```tsx
+import { useCallback, useState } from 'react'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, type GridChangeDetail } from 'gridla/react'
+
+type Data = { label: string }
+
+export function Editor({ initial }: { initial: GridLayout<Data> }) {
+  const [layout, setLayout] = useState(initial)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [history, setHistory] = useState<GridLayout<Data>[]>([])
+
+  const handleChange = useCallback((next: GridLayout<Data>, detail: GridChangeDetail) => {
+    setLayout((current) => {
+      if (detail.reason !== 'set') setHistory((stack) => [...stack, current])
+      return next
+    })
+  }, [])
+
+  const undo = () => {
+    setHistory((stack) => {
+      const previous = stack.at(-1)
+      if (previous) setLayout(previous)
+      return stack.slice(0, -1)
+    })
+  }
+
+  return (
+    <>
+      <button type="button" onClick={undo} disabled={history.length === 0}>
+        Undo
+      </button>
+      <GridProvider<Data>
+        layout={layout}
+        onLayoutChange={handleChange}
+        selectedId={selectedId}
+        onSelectedIdChange={setSelectedId}
+        gap={12}
+      >
+        <GridCanvas style={{ height: 480 }}>
+          {layout.items.map((item) => (
+            <GridItem key={item.id} id={item.id}>
+              {item.data?.label}
+            </GridItem>
+          ))}
+        </GridCanvas>
+      </GridProvider>
+    </>
+  )
+}
+```
+
+## GridChangeDetail
+
+Every `onLayoutChange` call carries a detail:
+
+| Field      | Value                                                                             |
+| ---------- | --------------------------------------------------------------------------------- |
+| `reason`   | `'move'`, `'resize'`, `'place'`, `'remove'`, `'update'`, `'transfer'`, or `'set'` |
+| `itemId`   | The item the operation targeted, when there is one.                               |
+| `strategy` | The solver strategy for move, resize, place, and transfer.                        |
+
+`onCommit` fires with the same detail but only for interactive gestures that committed (pointer release) and for incoming transfers; programmatic actions do not trigger it. Use it to debounce saves without reacting to every keyboard nudge.
+
+## Selection
+
+Selection is controlled the same way with `selectedId` and `onSelectedIdChange`. Pointer down on an item selects it before any drag starts; `actions.select(null)` clears it. Uncontrolled selection works out of the box when you omit `selectedId`.
+
+## The layout you get back
+
+The layout passed to `onLayoutChange` is expressed in the canvas size it was rendered at (the measured element size when `responsive` is on). That is by design: it is a valid layout, and rendering it again at the same size is the identity. If you need it in an authoring size, project it: `projectLayout(next, { width: 1200, height: 720 })`.
+
+## External updates
+
+Set the prop and the provider re-projects. To go through the same pipeline as an interactive change (so `onLayoutChange` fires with `reason: 'set'`), call `actions.setLayout(next)` instead. `actions.update(itemId, patch)` patches constraints, policy, or data on one item and re-clamps its geometry, emitting `reason: 'update'`.
+
+```tsx
+import { useGridActions } from 'gridla/react'
+
+export function LockToggle({ itemId, locked }: { itemId: string; locked: boolean }) {
+  const actions = useGridActions()
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        actions.update(itemId, { policy: { movement: locked ? 'movable' : 'locked' } })
+      }
+    >
+      {locked ? 'Unlock' : 'Lock'}
+    </button>
+  )
+}
+```
+
+<Demo id="react-controlled" title="React controlled state and persistence callbacks" />

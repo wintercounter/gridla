@@ -1,0 +1,205 @@
+---
+title: Nesting
+description: Trees of layouts. GridNode, tree adapters, flattenLayout, queries, coordinate conversion, and compaction.
+---
+
+import { Demo } from '../../theme/components/Demo'
+import { Figure } from '../../theme/components/Figure'
+
+# Nesting
+
+A nested layout is a tree in which any node may carry a layout for its children. Containment and reflow stay a math problem: each container's layout is projected into the rectangle its parent assigned it. Nothing in the core knows or cares how you render the tree.
+
+## GridNode
+
+`GridNode` is the normalized tree shape. You do not have to use it; see [adapters](#adapters).
+
+```ts
+import type { GridNode } from 'gridla'
+
+const page: GridNode = {
+  id: 'page',
+  gap: 12,
+  layout: {
+    canvas: {
+      width: 1200,
+      height: 800,
+      padding: { top: 16, right: 16, bottom: 16, left: 16 },
+      heightMode: 'bounded',
+    },
+    items: [
+      { id: 'header', x: 16, y: 16, w: 1168, h: 72, sizeMode: 'fixed-h', fixedHeight: 72 },
+      { id: 'group-a', x: 16, y: 100, w: 760, h: 684 },
+      { id: 'sidebar', x: 788, y: 100, w: 396, h: 684 },
+    ],
+  },
+  children: [
+    { id: 'header', behavior: { locked: true } },
+    {
+      id: 'group-a',
+      gap: 8,
+      layout: {
+        canvas: {
+          width: 760,
+          height: 684,
+          padding: { top: 0, right: 0, bottom: 0, left: 0 },
+          heightMode: 'bounded',
+        },
+        items: [
+          { id: 'chart', x: 0, y: 0, w: 760, h: 420 },
+          { id: 'stat-1', x: 0, y: 428, w: 376, h: 256 },
+          { id: 'stat-2', x: 384, y: 428, w: 376, h: 256 },
+        ],
+      },
+      children: [{ id: 'chart' }, { id: 'stat-1' }, { id: 'stat-2' }],
+    },
+    { id: 'sidebar', behavior: { container: true, acceptsChildren: true } },
+  ],
+}
+```
+
+A node's `layout` positions its _children_ by id; the children list carries their own subtrees. `gap` is kept fixed when the container is projected and used when its children are solved. `padding` overrides `layout.canvas.padding` for rendering.
+
+`behavior` flags:
+
+| Flag              | Effect                                                                                                                                                |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `container`       | Treat the node as a container even without children. Defaults to `layout !== undefined`.                                                              |
+| `acceptsChildren` | Whether items may be dropped into the node. Defaults to `container`. A drop target without an authored layout gets an empty canvas sized to its rect. |
+| `contained`       | Direct children cannot leave, and outside items cannot enter.                                                                                         |
+| `locked`          | The subtree is a wall: nothing inside moves, nothing outside enters.                                                                                  |
+| `scrollable`      | Keeps its height during compaction; content scrolls instead.                                                                                          |
+
+## flattenLayout
+
+`flattenLayout(root, rootRect, options)` walks the tree and returns a `FlatLayout`: every node as a `FlatItem` with a `rect` in root coordinates, plus `itemsById` and `childrenByParentId` maps. Items are in paint order (parents before children), which is also z-order for hit testing.
+
+```ts
+import { flattenLayout, type GridNode } from 'gridla'
+
+declare const page: GridNode
+
+const flat = flattenLayout(page, { x: 0, y: 0, w: 1440, h: 900 })
+for (const item of flat.items) {
+  // item.rect is where to paint it, in root pixels
+  // item.layout is the container's projected layout (null for leaves)
+  // item.canonicalRect is the node's authored entry in its parent's layout
+}
+```
+
+For each container, the authored layout is projected into the container's rendered rect with `renderLayoutForRect` (chain projection with the node's gap). The projected entries become the children's `sizing`, their rects are offset by the parent's root rect, and the walk recurses.
+
+<Figure caption="flattenLayout projects each container's authored layout into the rect its parent assigned, then offsets children into root coordinates.">
+  <svg viewBox="0 0 640 200" role="img" aria-label="Diagram of nested projection">
+    <rect className="g-fig-box" x="16" y="24" width="280" height="160" rx="6" />
+    <text className="g-fig-ink" x="16" y="16">
+      page · authored 1200 × 800
+    </text>
+    <rect className="g-fig-line" x="28" y="36" width="256" height="24" rx="3" />
+    <rect className="g-fig-accent-fill" x="28" y="68" width="160" height="104" rx="3" />
+    <rect className="g-fig-line" x="196" y="68" width="88" height="104" rx="3" />
+    <text className="g-fig-muted" x="36" y="86">
+      group-a
+    </text>
+    <path className="g-fig-line" d="M300 120 H340" />
+    <rect className="g-fig-box" x="352" y="24" width="272" height="160" rx="6" />
+    <text className="g-fig-ink" x="352" y="16">
+      group-a · projected into its rect
+    </text>
+    <rect className="g-fig-line" x="364" y="36" width="248" height="76" rx="3" />
+    <text className="g-fig-muted" x="372" y="56">
+      chart
+    </text>
+    <rect className="g-fig-line" x="364" y="120" width="120" height="52" rx="3" />
+    <text className="g-fig-muted" x="372" y="140">
+      stat-1
+    </text>
+    <rect className="g-fig-line" x="492" y="120" width="120" height="52" rx="3" />
+    <text className="g-fig-muted" x="500" y="140">
+      stat-2
+    </text>
+  </svg>
+</Figure>
+
+### Adapters
+
+`flattenLayout` reads any tree shape through a `GridTreeAdapter`: `getId`, `getChildren`, `getLayout`, and optional `getBehavior`, `getGap`, `getPadding`. The default adapter is `gridNodeAdapter`. With your own adapter there is no conversion step, and `FlatItem.node` is your original node.
+
+```ts
+import { flattenLayout, type GridLayout, type GridTreeAdapter } from 'gridla'
+
+type Block = {
+  key: string
+  blocks?: Block[]
+  grid?: GridLayout
+  frozen?: boolean
+  spacing?: number
+}
+
+const adapter: GridTreeAdapter<Block> = {
+  getId: (block) => block.key,
+  getChildren: (block) => block.blocks ?? [],
+  getLayout: (block) => block.grid,
+  getBehavior: (block) => ({ locked: block.frozen }),
+  getGap: (block) => block.spacing,
+}
+
+declare const root: Block
+const flat = flattenLayout(root, { x: 0, y: 0, w: 1200, h: 800 }, { adapter })
+```
+
+## Queries
+
+- `hitTest(flat, point)`: deepest item whose rect contains the point (last in paint order wins).
+- `findContainerAt(flat, point, { inset, sourceId })`: deepest container that accepts children and contains the point. `inset` keeps edge brushes from switching targets; the container the interaction started in wins without an inset.
+- `getAncestors`, `getDescendants`: walk up or down.
+- `isInsideLockedSubtree`, `findFirstUnlockedAncestor`, `isDirectChildOfContained`: the policy questions a drag controller asks before it starts.
+- `markLockedItems(items, flat)`: stamp `policy.movement: 'locked'` on items whose node is locked so the solvers treat them as walls.
+
+## Solving inside a container
+
+Solve in the container's rendered layout, then persist with `toRenderedLayout`, which rebases the canvas to the container's rendered size so the next render at that size is the identity.
+
+```ts
+import {
+  flattenLayout,
+  markLockedItems,
+  moveItem,
+  toRenderedLayout,
+  type GridLayout,
+  type GridNode,
+} from 'gridla'
+
+declare const page: GridNode
+
+export function moveInside(
+  containerId: string,
+  itemId: string,
+  position: { x: number; y: number },
+): GridLayout | null {
+  const flat = flattenLayout(page, { x: 0, y: 0, w: 1440, h: 900 })
+  const container = flat.itemsById.get(containerId)
+  if (!container?.layout) return null
+  const items = markLockedItems(container.layout.items, flat)
+  const result = moveItem({
+    layout: { canvas: container.layout.canvas, items: [...items] },
+    itemId,
+    position,
+    options: { gap: container.gap },
+  })
+  if (!result.accepted) return null
+  return toRenderedLayout(container, result.layout.items)
+}
+```
+
+To paint a preview while dragging, `projectItemsToRoot(container, result.layout.items)` converts the solver's items back to root rects using the same pipeline `flattenLayout` uses. Pass the full solver result so gap preservation sees every neighbor.
+
+## Moving between containers
+
+`transferItem` works on two `GridLayout`s, so between containers it is: convert the root pointer into the target's local coordinates, scale the item's size with `scaleSizeBetweenContainers`, and pass the target container's `layout` as the target. See the [transfer recipe](../recipes/transfer).
+
+## Compaction
+
+`compactLayout(layout, { isRigid })` shrinks items vertically until a bounded canvas fits. Authored gaps between rows are preserved, flexible items shrink proportionally down to `minH`, and rigid items (fixed-height, or anything `isRigid` returns true for) keep their height. Horizontal geometry is untouched. `fits` is `false` when rigid heights, minimums, and gaps exceed the canvas; the returned layout is still the best effort.
+
+<Demo id="nested-groups" title="Nested groups with coordinate inspection" />

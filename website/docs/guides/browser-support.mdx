@@ -1,0 +1,33 @@
+---
+title: Browser support
+description: Which browsers and runtimes Gridla targets, and which platform features it depends on.
+---
+
+# Browser support
+
+Gridla targets the last two versions of evergreen browsers (Chrome, Edge, Firefox, Safari) and compiles to ES2022 syntax. There are no polyfills in the package and no runtime dependencies.
+
+## Core
+
+The core uses only language features: objects, arrays, `Map`, `Set`, `Math`. It runs anywhere ES2022 runs, including Node 20.19+, Bun, Deno, and web workers. It never references `window`, `document`, or timers.
+
+## React adapter
+
+| Feature                   | Used for                                        | Notes                                                       |
+| ------------------------- | ----------------------------------------------- | ----------------------------------------------------------- |
+| Pointer Events            | Move and resize gestures, pointer capture       | Mouse, touch, and pen through one API.                      |
+| `ResizeObserver`          | Measuring the canvas                            | Guarded; when absent the layout renders at its source size. |
+| `touch-action: none`      | Preventing scroll during drags on touch devices | Set by `GridCanvas` inline.                                 |
+| `useSyncExternalStore`    | Store subscriptions                             | Requires React 18 or newer.                                 |
+| `getBoundingClientRect`   | Client-to-canvas conversion                     |                                                             |
+| `document.getSelection()` | Clearing a text selection when a drag starts    | Guarded for non-DOM environments.                           |
+
+Nothing requires `IntersectionObserver`, `requestIdleCallback`, `structuredClone`, or CSS features beyond `transform`.
+
+## Module format
+
+ESM only, with `exports` for `.` and `./react`. Bundlers that understand the `exports` field (Vite, Rsbuild, webpack 5, esbuild, Bun) resolve both entry points; Node 20.19+ can `require()` ESM if a CommonJS consumer needs to.
+
+## Testing matrix
+
+The repository runs unit and compatibility tests in Bun with a DOM shim, React tests with Testing Library, and browser scenarios with Playwright. The demo gallery is checked at 360px width, with keyboard only, and in both themes.

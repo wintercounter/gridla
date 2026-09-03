@@ -1,0 +1,77 @@
+---
+pageType: custom
+title: Gridla
+description: Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and an optional React adapter.
+---
+
+import { Tab, Tabs } from '@rspress/core/theme'
+import { CodeSection, Features, Hero, HomeLinks, HomePage } from '../theme/components/Home'
+
+<HomePage>
+
+<Hero />
+
+<CodeSection>
+
+<Tabs groupId="flavor" values={[{ label: 'Vanilla', value: 'vanilla' }, { label: 'React', value: 'react' }]}>
+<Tab value="vanilla">
+
+```ts
+import { moveItem, type GridLayout } from 'gridla'
+
+const layout: GridLayout = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360 },
+    { id: 'note', x: 660, y: 0, w: 300, h: 360 },
+  ],
+}
+
+const result = moveItem({ layout, itemId: 'note', position: { x: 0, y: 0 }, options: { gap: 12 } })
+result.strategy // 'swap'
+result.layout.items // chart and note exchanged places; inputs untouched
+```
+
+</Tab>
+<Tab value="react">
+
+```tsx
+import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
+import type { GridLayout } from 'gridla'
+
+export function Dashboard({
+  layout,
+  onChange,
+}: {
+  layout: GridLayout
+  onChange: (next: GridLayout) => void
+}) {
+  return (
+    <GridProvider layout={layout} onLayoutChange={onChange} gap={12}>
+      <GridCanvas style={{ height: 480 }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.id}
+          </GridItem>
+        ))}
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+</Tab>
+</Tabs>
+
+</CodeSection>
+
+<Features />
+
+<HomeLinks />
+
+</HomePage>

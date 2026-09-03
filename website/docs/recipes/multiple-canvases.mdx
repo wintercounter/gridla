@@ -1,0 +1,63 @@
+---
+title: Multiple canvases and transfer scope
+description: Independent providers on one page, shared transfer scopes, acceptance rules, and nested canvases.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Multiple canvases
+
+Each `GridProvider` is independent: its own layout, selection, gestures, and options. Put as many on a page as you need. They only interact when you wrap them in a `GridTransferScope`.
+
+```tsx
+import { useState } from 'react'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, GridTransferScope } from 'gridla/react'
+
+function Lane({ layout, onChange }: { layout: GridLayout; onChange: (next: GridLayout) => void }) {
+  return (
+    <GridProvider layout={layout} onLayoutChange={onChange} gap={8}>
+      <GridCanvas style={{ height: 240 }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id}>
+            {item.id}
+          </GridItem>
+        ))}
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+
+export function Lanes({ initial }: { initial: GridLayout[] }) {
+  const [lanes, setLanes] = useState(initial)
+  return (
+    <GridTransferScope>
+      {lanes.map((lane, index) => (
+        <Lane
+          key={index}
+          layout={lane}
+          onChange={(next) => setLanes((all) => all.map((l, i) => (i === index ? next : l)))}
+        />
+      ))}
+    </GridTransferScope>
+  )
+}
+```
+
+## Acceptance rules
+
+`acceptTransfers` on a provider is `true` by default. Set it to `false` to make a canvas a source only, or to a predicate `(item, sourceId) => boolean` to decide per item. The predicate runs on every pointer move over the canvas, so keep it cheap.
+
+## Scale differences
+
+Canvases can be rendered at different scales (a 1200px layout in a 600px element next to a 400px layout in a 400px element). The scope converts the dragged item's size through on-screen pixels so it keeps the same visual size when it crosses over, then the target's `placeItem` clamps it to fit. Pass `size` explicitly through the core `transferItem` if you need different behavior.
+
+## Nested canvases
+
+A `GridProvider` may render inside a `GridItem` of another provider, and both may share a scope. While the pointer is still inside the source canvas, only its descendants can become targets; siblings and ancestors wait until the pointer leaves. Among candidates, the deepest element wins, then the smallest. This is what makes "drag out of a group into the page, or into a sibling group" work without special cases.
+
+## Identifying canvases
+
+Provider ids are generated with `useId()` and exposed through `useGridContext().id`; `onTransferOut(itemId, targetId)` and `onTransferIn(item, sourceId)` use them. Keep your own map from provider id to lane if you need names.
+
+<Demo id="multiple-grids" title="Multiple independent grids and shared-provider boundaries" />

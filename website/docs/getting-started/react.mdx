@@ -1,0 +1,157 @@
+---
+title: React quickstart
+description: A draggable, resizable canvas with GridProvider, GridCanvas, and GridItem from gridla/react.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# React quickstart
+
+`gridla/react` is a headless adapter: it owns layout and gesture state, measures the canvas, wires pointer and keyboard input, and positions items. Appearance is yours.
+
+## Uncontrolled
+
+Give `GridProvider` a `defaultLayout` and it keeps the state for you.
+
+```tsx
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/react'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+export function Dashboard() {
+  return (
+    <GridProvider defaultLayout={initial} gap={12} snapDistance={24}>
+      <GridCanvas style={{ height: 480 }}>
+        {initial.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+What each piece does:
+
+- `GridProvider` holds the source layout, projects it onto the measured canvas size (`responsive` is `true` by default), and runs the solvers during gestures. `gap`, `snapDistance`, `snap`, and `onTrace` are the same `SolveOptions` the core takes.
+- `GridCanvas` renders a `div` with `position: relative`, measures itself with `ResizeObserver`, and attaches the pointer and keyboard handlers. Give it a height.
+- `GridItem` renders a `div` positioned with `transform` and sets `data-gridla-active`, `data-gridla-selected`, and `data-gridla-shifted` attributes for styling. `resizeEdges` adds built-in resize handles.
+- `GridPreviewOutline` renders a box where the active item will land when released, and nothing when there is no gesture.
+
+Render the children from a stable list of ids (here the initial layout); `GridItem` subscribes to its own geometry, so the list itself does not need to rerender during a drag.
+
+## Controlled
+
+Pass `layout` and `onLayoutChange` to keep the state yourself. The callback receives the next layout after every accepted change, expressed in the canvas size it was rendered at.
+
+```tsx
+import { useState } from 'react'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider } from 'gridla/react'
+
+type Data = { label: string }
+
+export function Dashboard({ initial }: { initial: GridLayout<Data> }) {
+  const [layout, setLayout] = useState(initial)
+  return (
+    <GridProvider<Data> layout={layout} onLayoutChange={setLayout} gap={12}>
+      <GridCanvas style={{ height: 480 }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+The second callback argument is a `GridChangeDetail` with the `reason` (`move`, `resize`, `place`, `remove`, `update`, `transfer`, `set`), the `itemId`, and the solver `strategy`. Use it to decide what to persist. See [controlled state](../recipes/controlled-state) and [persistence](../recipes/persistence).
+
+## Styling
+
+Items are unstyled `div`s. A minimal stylesheet:
+
+```css
+[data-gridla-item] {
+  border: 1px solid #8884;
+  border-radius: 6px;
+  background: white;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-gridla-item][data-gridla-active] {
+  transition: none;
+  z-index: 2;
+}
+[data-gridla-item][data-gridla-selected] {
+  outline: 2px solid #3b82f6;
+}
+[data-gridla-preview] {
+  border: 2px dashed #e0562f;
+  border-radius: 6px;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-gridla-item] {
+    transition: none;
+  }
+}
+```
+
+The active item follows the pointer without a transition; siblings animate to where the solver put them. Keep durations short (120-220ms) and animate `transform` and size only.
+
+## Actions
+
+`useGridActions()` returns imperative actions that go through the same solvers: `move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, and `cancel`.
+
+```tsx
+import { useGridActions } from 'gridla/react'
+
+export function AddButton() {
+  const actions = useGridActions<{ label: string }>()
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        actions.place(
+          { id: `note-${Date.now()}`, w: 220, h: 140, minW: 80, minH: 60, data: { label: 'Note' } },
+          { pointer: { x: 480, y: 300 } },
+        )
+      }
+    >
+      Add note
+    </button>
+  )
+}
+```
+
+`place`, `move`, and `resize` return `false` when the solver rejected the request.
+
+## Try it
+
+<Demo id="react-uncontrolled" title="React uncontrolled GridProvider" />
+
+## Next
+
+- [Custom rendering](../recipes/custom-rendering): render props, drag handles, and your own resize chrome.
+- [Keyboard controls](../recipes/keyboard): what the built-in handlers do and how to extend them.
+- [Multiple canvases](../recipes/multiple-canvases): `GridTransferScope` for dragging between providers.

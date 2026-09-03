@@ -1,0 +1,19 @@
+---
+title: Playground
+description: Edit a layout as JSON, watch it render, and export it. Powered by the gallery's import/export demo.
+---
+
+import { AppLink } from '../theme/components/AppLink'
+import { Demo } from '../theme/components/Demo'
+
+# Playground
+
+The playground is the gallery's import/export demo: paste or edit a `GridLayout` as JSON, drag items around, switch presets, and copy the result. Layout state is encoded in the URL so a specific arrangement can be shared.
+
+<Demo id="import-export" title="Layout import, export, and presets" height="40rem" />
+
+<AppLink app="gallery" demo="import-export">
+  Open the playground full size
+</AppLink>
+
+A native playground with live solver controls and a code panel is planned for a later release. Until then, the <AppLink app="studio">studio</AppLink> is the place to build a full nested layout, and every gallery demo has a copyable code example.

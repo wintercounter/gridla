@@ -1,0 +1,133 @@
+---
+title: Custom rendering
+description: Render props, drag handles, absolute positioning, custom previews, and a canvas element of your own.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Custom rendering
+
+The React adapter is headless. `GridItem` renders a `div` with geometry and data attributes; everything inside is yours. When even that is too much, the hooks let you position elements however you like.
+
+## Render prop
+
+Pass a function as `children` to receive a `GridItemRenderProps`: the item's `rect`, `baseRect`, and `activeRect`, the flags `isActive`, `isSelected`, `isShifted`, `isTransferring`, the current `interaction`, plus `dragHandleProps` and `getResizeHandleProps(edge)`.
+
+```tsx
+import { GridItem } from 'gridla/react'
+
+export function Card({ id, title }: { id: string; title: string }) {
+  return (
+    <GridItem id={id} draggable={false} className="card">
+      {({ rect, isActive, isShifted, dragHandleProps, getResizeHandleProps }) => (
+        <>
+          <header className="card-head" {...dragHandleProps}>
+            <span>{title}</span>
+            <code>
+              {rect.w}×{rect.h}
+            </code>
+          </header>
+          <div className="card-body" data-shifted={isShifted ? '' : undefined}>
+            {isActive ? 'moving…' : null}
+          </div>
+          <span className="grip" {...getResizeHandleProps('se')} />
+        </>
+      )}
+    </GridItem>
+  )
+}
+```
+
+`draggable={false}` makes only elements carrying `dragHandleProps` start a move, so buttons and inputs inside the card keep working.
+
+## Positioning
+
+`GridItem` positions with `transform: translate()` by default, which keeps layout work off the main thread during gestures. Pass `positioning="absolute"` to use `left`/`top` instead, for example when a child relies on `position: sticky`. `followPointer={false}` renders the solved preview rectangle instead of the cursor-tracked one while dragging, for a "snap as you go" feel.
+
+## Custom preview
+
+`GridPreviewOutline` is a `div` with `data-gridla-preview`. For anything richer read the preview yourself:
+
+```tsx
+import { useGridPreview } from 'gridla/react'
+
+export function StrategyBadge() {
+  const preview = useGridPreview()
+  if (!preview) return null
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: preview.item.x,
+        top: preview.item.y - 20,
+        pointerEvents: 'none',
+      }}
+    >
+      {preview.strategy}
+      {preview.shiftedSiblings ? ' · siblings moved' : ''}
+    </div>
+  )
+}
+```
+
+## Subscribing without GridItem
+
+`useGridItemView(id)` gives one item's view with minimal rerenders; `useGridVisibleLayout()` gives the whole layout that should be painted right now (the preview during a gesture, otherwise the rendered layout). `useGridStore(selector, isEqual)` is the general form.
+
+```tsx
+import { useGridItemView } from 'gridla/react'
+
+export function Ghost({ id }: { id: string }) {
+  const view = useGridItemView(id)
+  return (
+    <svg
+      style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+      width="100%"
+      height="100%"
+    >
+      <rect
+        x={view.rect.x}
+        y={view.rect.y}
+        width={view.rect.w}
+        height={view.rect.h}
+        fill="none"
+        stroke="currentColor"
+        strokeDasharray="4 4"
+      />
+    </svg>
+  )
+}
+```
+
+## Your own canvas element
+
+`GridCanvas` does three things: measures itself, feeds the size to the provider, and attaches the handlers. Reproduce them to use any element.
+
+```tsx
+import { useEffect, useRef, type ReactNode } from 'react'
+import { applyMeasuredSize, useElementSize, useGridContext, useGridInteraction } from 'gridla/react'
+
+export function SectionCanvas({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLElement | null>(null)
+  const { store, config } = useGridContext()
+  const size = useElementSize(ref, config.responsive)
+  useEffect(() => {
+    applyMeasuredSize(store, size, config)
+  }, [store, size, config])
+  const handlers = useGridInteraction(ref)
+  return (
+    <section
+      ref={ref}
+      tabIndex={0}
+      style={{ position: 'relative', height: 480, touchAction: 'none' }}
+      {...handlers}
+    >
+      {children}
+    </section>
+  )
+}
+```
+
+Elements inside must carry the attributes from `GRID_DATA`: `data-gridla-item` with the id, `data-gridla-drag-handle` on drag surfaces, and `data-gridla-resize-handle` plus `data-gridla-edge` on resize handles. `GridItem` sets these for you; a fully custom item sets them by hand.
+
+<Demo id="custom-renderer" title="Custom item renderer and custom selection and resize chrome" />
