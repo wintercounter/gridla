@@ -290,4 +290,90 @@ describe('transfer scope', () => {
     expect(container.querySelector('[data-testid="left-outline"]')).not.toBeNull()
     act(() => pointer('pointerup', leftCanvas, 200, 50))
   })
+
+  it('keeps the outer target when its preview pushes the source canvas under the pointer', () => {
+    // Root: a group item hosting its own canvas, then free space below it.
+    const { getByTestId, container } = render(
+      <GridTransferScope>
+        <GridProvider
+          defaultLayout={{
+            canvas: { width: 400, height: 600, padding, heightMode: 'bounded' },
+            items: [createItem('group', { w: 400, h: 200 }, 0, 0)],
+          }}
+          responsive={false}
+        >
+          <GridCanvas data-testid="root">
+            <GridItem id="group" data-testid="group" draggable={false}>
+              <GridProvider
+                defaultLayout={{
+                  canvas: { width: 400, height: 200, padding, heightMode: 'bounded' },
+                  items: [createItem('a', { w: 100, h: 100 }, 0, 0)],
+                }}
+                responsive={false}
+              >
+                <GridCanvas data-testid="inner">
+                  <GridItem id="a" data-testid="inner-a" />
+                </GridCanvas>
+              </GridProvider>
+            </GridItem>
+            <GridPreviewOutline data-testid="root-outline" />
+          </GridCanvas>
+        </GridProvider>
+      </GridTransferScope>,
+    )
+    const root = getByTestId('root')
+    const group = getByTestId('group')
+    const inner = getByTestId('inner')
+    mockRect(root, { x: 0, y: 0, w: 400, h: 600 })
+    // The group and its canvas slide towards the root preview's pushed
+    // position; freeze them half-way, as a transition would.
+    const slidY = () => {
+      const match = /translate\([^,]+,\s*(-?[\d.]+)px/.exec(group.style.transform ?? '')
+      return match ? Number(match[1]) / 2 : 0
+    }
+    const slidingRect = (base: { x: number; y: number; w: number; h: number }) => ({
+      configurable: true,
+      value: () => {
+        const y = base.y + slidY()
+        return {
+          x: base.x,
+          y,
+          left: base.x,
+          top: y,
+          right: base.x + base.w,
+          bottom: y + base.h,
+          width: base.w,
+          height: base.h,
+          toJSON: () => ({}),
+        }
+      },
+    })
+    Object.defineProperty(
+      group,
+      'getBoundingClientRect',
+      slidingRect({ x: 0, y: 0, w: 400, h: 200 }),
+    )
+    Object.defineProperty(
+      inner,
+      'getBoundingClientRect',
+      slidingRect({ x: 0, y: 0, w: 400, h: 200 }),
+    )
+    const a = getByTestId('inner-a')
+    act(() => pointer('pointerdown', a, 50, 50))
+    // Just below the group: root space. The root preview places the item at the
+    // pointer and pushes the group down, so the inner canvas now covers y=220.
+    act(() => pointer('pointermove', inner, 50, 220))
+    expect(container.querySelector('[data-testid="root-outline"]')).not.toBeNull()
+    expect(slidY()).toBeGreaterThan(20)
+    // The sliding source canvas now covers the pointer; further moves at the
+    // same spot must not hand the pointer back to it.
+    act(() => pointer('pointermove', inner, 51, 221))
+    expect(container.querySelector('[data-testid="root-outline"]')).not.toBeNull()
+    expect(slidY()).toBeGreaterThan(20)
+    act(() => pointer('pointermove', inner, 50, 220))
+    expect(container.querySelector('[data-testid="root-outline"]')).not.toBeNull()
+    expect(a.getAttribute('data-gridla-transferring')).toBe('')
+    act(() => pointer('pointerup', inner, 50, 220))
+    expect(root.querySelectorAll('[data-gridla-item]').length).toBe(2)
+  })
 })
