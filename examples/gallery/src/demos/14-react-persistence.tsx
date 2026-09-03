@@ -61,7 +61,9 @@ function readStored(): GridLayout<Data> | null {
 export function ReactPersistenceDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
   const initial = useMemo(() => dashboardLayout(12), [])
-  const [layout, setLayout] = useState<GridLayout<Data>>(() => readStored() ?? initial)
+  const [layout, setLayout] = useState<GridLayout<Data>>(() =>
+    applyGap(readStored() ?? initial, state.gap),
+  )
   const [savedAt, setSavedAt] = useState<string | null>(() =>
     readStored() ? 'earlier session' : null,
   )

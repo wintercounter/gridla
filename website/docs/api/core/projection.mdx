@@ -33,11 +33,12 @@ import type { ApplyGapOptions, ProjectionStrategy, ProjectOptions } from 'gridla
 
 ### applyGap
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L605">core/projection/segments.ts:605</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L626">core/projection/segments.ts:626</a></span>
 
 Re-space every chain of adjacent items so neighbors sit exactly `gap`
 pixels apart. Rows and columns keep their structure; canvas-spanning chains
-keep filling the canvas.
+keep filling the canvas. The current spacing is read from the layout, so no
+scale has to be declared for the common case.
 
 ```ts
 export function applyGap<T>(
@@ -166,16 +167,16 @@ export function syncFixedDimensions<T>(items: readonly GridItem<T>[]): GridItem<
 
 ### ApplyGapOptions
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L591">core/projection/segments.ts:591</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L611">core/projection/segments.ts:611</a></span>
 
 Options for [`applyGap`](#applygap).
 
 ```ts
 export type ApplyGapOptions = {
   /**
-   * Gap values the detector treats as an existing gap between neighbors.
-   * Defaults to `[0, 1, 6, 12, 18]`. Add your own spacing scale here when it
-   * differs.
+   * Extra distances the detector treats as spacing between neighbors. Every
+   * neighbor distance up to 64px found in the layout is recognized on its own;
+   * list larger distances here when they are spacing rather than white space.
    */
   recognizedGaps?: readonly number[]
 }
@@ -183,7 +184,7 @@ export type ApplyGapOptions = {
 
 | Member | Type | Description |
 | --- | --- | --- |
-| `recognizedGaps?` | `ReadonlyArray\<number\>` | Gap values the detector treats as an existing gap between neighbors. Defaults to `[0, 1, 6, 12, 18]`. Add your own spacing scale here when it differs. |
+| `recognizedGaps?` | `ReadonlyArray\<number\>` | Extra distances the detector treats as spacing between neighbors. Every neighbor distance up to 64px found in the layout is recognized on its own; list larger distances here when they are spacing rather than white space. |
 
 ### ProjectionStrategy
 

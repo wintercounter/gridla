@@ -58,7 +58,7 @@ const DEFAULTS = {
 
 export function ProgrammaticOpsDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
-  const [layout, setLayout] = useState<GridLayout<Data>>(() => dashboardLayout(12))
+  const [layout, setLayout] = useState<GridLayout<Data>>(() => dashboardLayout(state.gap))
   const [counter, setCounter] = useState(0)
   const op = state.op as Op
   const options = useMemo(

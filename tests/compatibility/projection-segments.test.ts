@@ -417,3 +417,51 @@ describe('segment projection', () => {
     expect(feedA.y + feedA.h).toBe(1024)
   })
 })
+
+describe('applyGap detects the authored spacing', () => {
+  const canvas = normalizeCanvas({
+    width: 960,
+    height: 600,
+    padding: { top: 16, right: 16, bottom: 16, left: 16 },
+    heightMode: 'bounded',
+  })
+  // A 16px dashboard: 16 is not in the historical recognized list.
+  const authored: GridLayout = {
+    canvas,
+    items: [
+      item('chart', 16, 16, 600, 280),
+      item('stat-1', 632, 16, 312, 132),
+      item('stat-2', 632, 164, 312, 132),
+      item('table', 16, 312, 928, 272),
+    ],
+  }
+
+  it('re-spaces both axes without recognizedGaps', () => {
+    const spaced = applyGap(authored, 32)
+    const chart = byId(spaced.items, 'chart')
+    const stat1 = byId(spaced.items, 'stat-1')
+    const stat2 = byId(spaced.items, 'stat-2')
+    const table = byId(spaced.items, 'table')
+    expect(stat1.x - (chart.x + chart.w)).toBe(32)
+    expect(stat2.y - (stat1.y + stat1.h)).toBe(32)
+    expect(table.y - (chart.y + chart.h)).toBe(32)
+    expect(table.y - (stat2.y + stat2.h)).toBe(32)
+    // Canvas-spanning chains still fill the canvas.
+    expect(stat1.x + stat1.w).toBe(944)
+    expect(table.y + table.h).toBe(584)
+    // The column and the tall neighbor stay aligned.
+    expect(stat2.y + stat2.h).toBe(chart.y + chart.h)
+  })
+
+  it('is stable at the authored gap', () => {
+    expect(applyGap(authored, 16).items).toEqual(authored.items)
+  })
+
+  it('leaves deliberate white space alone', () => {
+    const sparse: GridLayout = {
+      canvas,
+      items: [item('a', 16, 16, 300, 100), item('b', 416, 16, 300, 100)],
+    }
+    expect(applyGap(sparse, 8).items).toEqual(sparse.items)
+  })
+})

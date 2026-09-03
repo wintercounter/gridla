@@ -105,7 +105,7 @@ function sameLayout(a: GridLayout, b: GridLayout) {
 export function ReactPresetsDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
   const initial = useMemo(() => dashboardLayout(12), [])
-  const [layout, setLayout] = useState<GridLayout<Data>>(initial)
+  const [layout, setLayout] = useState<GridLayout<Data>>(() => applyGap(initial, state.gap))
   const [text, setText] = useState('')
   const [message, setMessage] = useState<string | null>(null)
   const exported = useMemo(() => JSON.stringify(layout, null, 2), [layout])

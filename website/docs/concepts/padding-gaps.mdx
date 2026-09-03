@@ -41,13 +41,18 @@ In nested layouts a gap can also be a _lane_: a 1px authored gap between rows mu
 
 ### Changing the gap of an existing layout
 
-`applyGap(layout, gap, options)` re-spaces every chain of adjacent items so neighbors sit exactly `gap` pixels apart. Rows and columns keep their structure and canvas-spanning chains keep filling the canvas. The detector recognizes existing gaps of `0, 1, 6, 12, 18` pixels by default; pass `recognizedGaps` when your spacing scale differs.
+`applyGap(layout, gap, options)` re-spaces every chain of adjacent items so neighbors sit exactly `gap` pixels apart. Rows and columns keep their structure and canvas-spanning chains keep filling the canvas. The detector reads the spacing from the layout itself: any distance of up to 64 pixels between neighbors counts as a gap, so an authored 16px dashboard re-spaces without configuration. Larger distances are treated as deliberate white space and left alone; list them in `recognizedGaps` when they are spacing too.
 
 ```ts
-import { applyGap, inferGap, type GridLayout } from 'gridla'
+import { applyGap, type GridLayout } from 'gridla'
 
 export function respace(layout: GridLayout, gap: number): GridLayout {
-  return applyGap(layout, gap, { recognizedGaps: [0, 1, 4, 8, 12, 16, 24, inferGap(layout.items)] })
+  return applyGap(layout, gap)
+}
+
+// A layout whose rows sit 96px apart on purpose still re-spaces when told so.
+export function respaceWide(layout: GridLayout, gap: number): GridLayout {
+  return applyGap(layout, gap, { recognizedGaps: [96] })
 }
 ```
 
