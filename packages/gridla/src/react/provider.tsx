@@ -264,6 +264,29 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
         configRef.current,
         snapOverride === undefined ? undefined : { snap: snapOverride },
       )
+    const lastSnapRef = { current: undefined as boolean | undefined }
+    const solveMove = (
+      state: GridState<TData>,
+      position: GridPoint,
+      snapOverride: boolean | undefined,
+    ): GridPreview<TData> | null => {
+      const { interaction, layout } = state
+      if (!interaction) return state.preview
+      const result = moveItem({
+        layout,
+        itemId: interaction.itemId,
+        position,
+        options: opts(snapOverride),
+      })
+      if (!result.accepted) return state.preview
+      return {
+        layout: result.layout,
+        item: result.item,
+        strategy: result.strategy,
+        shiftedSiblings: result.shiftedSiblings,
+        accepted: true,
+      }
+    }
     const findRendered = (itemId: string) => {
       const { layout } = store.getSnapshot()
       return layout.items.find((item) => item.id === itemId) ?? null
@@ -318,37 +341,21 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
       },
       updateMove: (pointer, modifiers) => {
         const state = store.getSnapshot()
-        const { interaction, layout } = state
+        const { interaction } = state
         if (!interaction || interaction.mode !== 'move') return
         const position = {
           x: pointer.x - interaction.grabOffset.x,
           y: pointer.y - interaction.grabOffset.y,
         }
         const activeRect: GridRect = { ...interaction.origin, ...position }
+        lastSnapRef.current = modifiers.snap
         // While another canvas previews the item, this canvas shows its base
         // layout with no preview; only the active item follows the pointer.
         if (state.transferring) {
           store.set({ ...state, activeRect, preview: null })
           return
         }
-        const result = moveItem({
-          layout,
-          itemId: interaction.itemId,
-          position,
-          options: opts(modifiers.snap),
-        })
-        const preview: GridPreview<TData> = {
-          layout: result.layout,
-          item: result.item,
-          strategy: result.strategy,
-          shiftedSiblings: result.shiftedSiblings,
-          accepted: result.accepted,
-        }
-        store.set({
-          ...state,
-          activeRect,
-          preview: result.accepted ? preview : state.preview,
-        })
+        store.set({ ...state, activeRect, preview: solveMove(state, position, modifiers.snap) })
       },
       updateResize: (pointer, modifiers) => {
         const state = store.getSnapshot()
@@ -387,8 +394,13 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
         const state = store.getSnapshot()
         if (state.transferring === transferring) return
         // Entering another canvas drops this canvas' own move preview so
-        // siblings settle back and the outline disappears here.
-        store.set({ ...state, transferring, preview: transferring ? null : state.preview })
+        // siblings settle back and the outline disappears here; coming back
+        // re-solves at the current pointer so the preview needs no extra move.
+        const preview =
+          transferring || !state.activeRect || state.interaction?.mode !== 'move'
+            ? null
+            : solveMove(state, state.activeRect, lastSnapRef.current)
+        store.set({ ...state, transferring, preview })
       },
       commit: () => {
         const state = store.getSnapshot()
