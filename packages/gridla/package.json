@@ -1,6 +1,6 @@
 {
   "name": "gridla",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Pixel-based grid and nested-layout engine with move, resize, place, and transfer solving. Framework-neutral core with an optional React adapter.",
   "keywords": [
     "dashboard",
