@@ -35,7 +35,7 @@ for (const entry of entries) {
     external: entry.external,
   })
   if (!build.success) {
-    console.error(build.logs.map((log) => String(log)).join('\n'))
+    console.error(build.logs.map((log) => log.message).join('\n'))
     process.exit(1)
   }
   const code = await build.outputs[0].text()
