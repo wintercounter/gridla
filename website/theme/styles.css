@@ -1280,7 +1280,6 @@ kbd {
 }
 
 .g-tabs {
-  max-width: 52rem;
   min-width: 0;
 }
 
@@ -1335,9 +1334,11 @@ kbd {
   opacity: 1;
 }
 
+/* One row, always: the strip scrolls sideways instead of wrapping. */
 .g-tabs-bar {
   display: inline-flex;
-  gap: var(--g-space-1);
+  flex-wrap: nowrap;
+  gap: 2px;
   padding: var(--g-space-1);
   border: var(--g-border-w) solid var(--g-line-strong);
   border-radius: var(--g-radius-2);
@@ -1348,19 +1349,11 @@ kbd {
   white-space: nowrap;
 }
 
-/* With room to spare, the strip wraps instead of scrolling. */
-@media (min-width: 48rem) {
-  .g-tabs-bar {
-    display: flex;
-    flex-wrap: wrap;
-  }
-}
-
 .g-tabs-bar button {
   display: inline-flex;
   align-items: center;
-  gap: 0.55em;
-  padding: 0.5em 0.9em;
+  gap: 0.45em;
+  padding: 0.5em 0.7em;
   border: 0;
   border-radius: var(--g-radius-1);
   background: transparent;
@@ -1400,9 +1393,21 @@ kbd {
   opacity: 1;
 }
 
-.g-tabs-panel pre,
-.g-tabs-panel .rp-code-block {
+/* The panels hold bare shiki output (no Rspress code-block wrapper), so the
+   surface, border, and scrolling come from here. */
+.g-tabs-panel pre {
   margin: 0;
+  padding: var(--g-space-4) var(--g-space-5);
+  overflow-x: auto;
+  border: var(--rp-code-block-border);
+  border-radius: var(--g-radius-2);
+  background: var(--rp-code-block-bg);
+  font: 400 var(--g-text-sm) / 1.6 var(--g-font-mono);
+}
+
+.g-tabs-panel pre code {
+  display: block;
+  min-width: max-content;
 }
 
 .g-tabs-panel:focus-visible {
