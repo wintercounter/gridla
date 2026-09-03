@@ -15,7 +15,6 @@ import { useGridContext } from './context'
 import { useGridItemView, useGridStore, type GridItemView } from './hooks'
 import { GRID_DATA, useGridInteraction, type UseGridInteractionOptions } from './interaction'
 import { useElementSize } from './measure'
-import { applyMeasuredSize } from './provider'
 
 // ---------------------------------------------------------------------------
 // GridCanvas
@@ -42,11 +41,11 @@ export const GridCanvas = forwardRef<HTMLDivElement, GridCanvasProps>(function G
 ) {
   const ref = useRef<HTMLDivElement | null>(null)
   useImperativeHandle(forwardedRef, () => ref.current as HTMLDivElement)
-  const { store, config } = useGridContext()
+  const { controller, config } = useGridContext()
   const size = useElementSize(ref, config.responsive)
   useLayoutEffect(() => {
-    applyMeasuredSize(store, size, config)
-  }, [store, size, config])
+    controller.setSize(size)
+  }, [controller, size])
 
   const handlers = useGridInteraction(ref, { onItemClick, onDeleteKey, enabled })
   const canvas = useGridStore((state) => state.layout.canvas)

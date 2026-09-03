@@ -126,6 +126,18 @@ export function studioPath() {
 }
 
 /**
+ * Where the adapter demo apps live relative to `baseURL`. In CI the base is
+ * the built site root and each adapter sits under `adapters/<name>/`. With
+ * GRIDLA_BASE_URL the base is assumed to be the adapter app itself (prefix
+ * ''); set GRIDLA_ADAPTERS_PREFIX to override either default.
+ */
+export function adapterPath(name: string) {
+  const prefix =
+    process.env.GRIDLA_ADAPTERS_PREFIX ?? (process.env.GRIDLA_BASE_URL ? '' : 'adapters/')
+  return prefix ? `${prefix}${name}/` : './'
+}
+
+/**
  * localStorage keys the studio persists under (see
  * examples/studio/src/hooks/persistence.ts): the explicit Save copy, the
  * autosaved draft, and the welcome flag.
@@ -222,6 +234,7 @@ export async function openStudioDocument(page: Page, document: unknown) {
 export const test = base.extend<{
   gallery: (demo: string, params?: Record<string, string | number | boolean>) => Promise<void>
   studio: () => Promise<void>
+  adapter: (name: string) => Promise<void>
 }>({
   gallery: async ({ page }, use) => {
     await use(async (demo, params) => {
@@ -232,6 +245,12 @@ export const test = base.extend<{
   studio: async ({ page }, use) => {
     await use(async () => {
       await gotoStudio(page)
+    })
+  },
+  adapter: async ({ page }, use) => {
+    await use(async (name) => {
+      await page.goto(adapterPath(name))
+      await expect(page.locator('[data-gridla-canvas]').first()).toBeVisible()
     })
   },
 })

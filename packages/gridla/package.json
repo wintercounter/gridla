@@ -45,6 +45,10 @@
       "types": "./dist/react.d.ts",
       "default": "./dist/react.js"
     },
+    "./interaction": {
+      "types": "./dist/interaction.d.ts",
+      "default": "./dist/interaction.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {

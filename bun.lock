@@ -29,6 +29,14 @@
         "typescript": "7.0.2",
       },
     },
+    "examples/adapters/vanilla-dom": {
+      "name": "gridla-adapter-vanilla-dom",
+      "version": "0.0.0",
+      "dependencies": {
+        "@gridla/demo-kit": "workspace:*",
+        "gridla": "workspace:*",
+      },
+    },
     "examples/gallery": {
       "name": "gridla-gallery",
       "version": "0.0.0",
@@ -96,6 +104,16 @@
       "optionalPeers": [
         "react",
       ],
+    },
+    "tests/package/consumers/preact-consumer": {
+      "name": "gridla-consumer-preact",
+      "devDependencies": {
+        "@types/node": "26.4.1",
+        "preact": "10.29.8",
+        "preact-render-to-string": "6.7.0",
+        "react": "npm:@preact/compat@18.3.2",
+        "react-dom": "npm:@preact/compat@18.3.2",
+      },
     },
     "tests/package/consumers/react-consumer": {
       "name": "gridla-consumer-react",
@@ -648,6 +666,10 @@
 
     "gridla": ["gridla@workspace:packages/gridla"],
 
+    "gridla-adapter-vanilla-dom": ["gridla-adapter-vanilla-dom@workspace:examples/adapters/vanilla-dom"],
+
+    "gridla-consumer-preact": ["gridla-consumer-preact@workspace:tests/package/consumers/preact-consumer"],
+
     "gridla-consumer-react": ["gridla-consumer-react@workspace:tests/package/consumers/react-consumer"],
 
     "gridla-consumer-vanilla-esm": ["gridla-consumer-vanilla-esm@workspace:tests/package/consumers/vanilla-esm"],
@@ -904,6 +926,10 @@
 
     "playwright-core": ["playwright-core@1.62.1", "", { "bin": { "playwright-core": "cli.js" } }, "sha512-wPYSwEBJY9GHraISXqyqtx0na0LpO3XEX7jNDhntbex7tzUS7kLnZsOlFruFJB4Hi/rhDMjXGqHewDZ68nYZVw=="],
 
+    "preact": ["preact@10.29.8", "", { "peerDependencies": { "preact-render-to-string": ">=5" }, "optionalPeers": ["preact-render-to-string"] }, "sha512-ej2aVZ+vZ8WO7tvlQWRM9N63A0KzF9q4mWJfDUHgYaIofWY9hu74QdnQrjoPMmZi2/nZ5gN0bJCQF49xQqx09Q=="],
+
+    "preact-render-to-string": ["preact-render-to-string@6.7.0", "", { "peerDependencies": { "preact": ">=10 || >= 11.0.0-0" } }, "sha512-Z4WR8fmLMRpdYqJ9i7vrlXSsSrxVJydwrkEXHapexfARbWfGb7vGcnvNQnIzN0cXciMVOlz/XLoiMCi9gUsy9Q=="],
+
     "pretty-format": ["pretty-format@27.5.1", "", { "dependencies": { "ansi-regex": "^5.0.1", "ansi-styles": "^5.0.0", "react-is": "^17.0.1" } }, "sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ=="],
 
     "property-information": ["property-information@7.2.0", "", {}, "sha512-IAtzIB6sUiWaJYrX9smp3V46pBGbBeLFRGdh25kg1334VcBlD8HzhPeNIWQH9zhGmo2itIe25EHt9dQP7G5hmg=="],
@@ -1103,6 +1129,10 @@
     "ajv-formats/ajv": ["ajv@8.20.0", "", { "dependencies": { "fast-deep-equal": "^3.1.3", "fast-uri": "^3.0.1", "json-schema-traverse": "^1.0.0", "require-from-string": "^2.0.2" } }, "sha512-Thbli+OlOj+iMPYFBVBfJ3OmCAnaSyNn4M1vz9T6Gka5Jt9ba/HIR56joy65tY6kx/FCF5VXNB819Y7/GUrBGA=="],
 
     "estree-util-to-js/source-map": ["source-map@0.7.6", "", {}, "sha512-i5uvt8C3ikiWeNZSVZNWcfZPItFQOsYTUAOkcUPGd8DqDy1uOUikjt5dG+uRlwyvR108Fb9DOd4GvXfT0N2/uQ=="],
+
+    "gridla-consumer-preact/react": ["@preact/compat@18.3.2", "", { "peerDependencies": { "preact": "*" } }, "sha512-5vSl55K5yLMvocT7PBKxDOHGgYPjMrKQqqr6roSNjIXcJOtSgDDMjpiCAF3s7klRdmGrN75b/Przmjw8gmlg/w=="],
+
+    "gridla-consumer-preact/react-dom": ["@preact/compat@18.3.2", "", { "peerDependencies": { "preact": "*" } }, "sha512-5vSl55K5yLMvocT7PBKxDOHGgYPjMrKQqqr6roSNjIXcJOtSgDDMjpiCAF3s7klRdmGrN75b/Przmjw8gmlg/w=="],
 
     "gridla-website/typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
 

@@ -32,6 +32,8 @@ const REQUIRED_FILES = [
   'dist/index.d.ts',
   'dist/react.js',
   'dist/react.d.ts',
+  'dist/interaction.js',
+  'dist/interaction.d.ts',
 ]
 const RECOMMENDED_FILES = ['README.md']
 const FORBIDDEN_ENTRY = [
@@ -194,10 +196,17 @@ let packageRoot = ''
 await check('build', () => {
   const result = runOrFail(['bun', 'run', '--filter', 'gridla', 'build'])
   console.log(indent(tail(result.output, 8)))
-  for (const file of ['index.js', 'index.d.ts', 'react.js', 'react.d.ts']) {
+  for (const file of [
+    'index.js',
+    'index.d.ts',
+    'react.js',
+    'react.d.ts',
+    'interaction.js',
+    'interaction.d.ts',
+  ]) {
     if (!existsSync(path.join(DIST, file))) fail(`build did not produce dist/${file}`)
   }
-  record('build', 'pass', 'rslib build produced dist/{index,react}.{js,d.ts}')
+  record('build', 'pass', 'rslib build produced dist/{index,react,interaction}.{js,d.ts}')
 })
 
 await check('publint', () => {
@@ -348,9 +357,14 @@ await check('source maps', () => {
   record('source maps', 'pass', `${maps.length} maps, ${sourceCount} relative sources`)
 })
 
-await check('core entry is React-free', () => {
+await check('core and interaction entries are React-free', () => {
   if (!packageRoot) fail('no extracted tarball')
-  const graph = localModuleGraph(path.join(packageRoot, 'dist/index.js'))
+  const graph = [
+    ...new Set([
+      ...localModuleGraph(path.join(packageRoot, 'dist/index.js')),
+      ...localModuleGraph(path.join(packageRoot, 'dist/interaction.js')),
+    ]),
+  ]
   const problems: string[] = []
   for (const file of graph) {
     const code = readFileSync(file, 'utf8')
@@ -364,7 +378,7 @@ await check('core entry is React-free', () => {
   }
   if (problems.length > 0) fail(problems.join('\n'))
   const files = graph.map((file) => path.relative(packageRoot, file)).join(', ')
-  record('core entry is React-free', 'pass', `checked ${files}`)
+  record('core and interaction entries are React-free', 'pass', `checked ${files}`)
 })
 
 await check('react entry keeps React external', () => {
@@ -396,7 +410,14 @@ await check('react entry keeps React external', () => {
   )
 })
 
-type Fixture = { name: string; runs: string[][]; needsReact: boolean; typecheck: boolean }
+type Fixture = {
+  name: string
+  runs: string[][]
+  needsReact: boolean
+  typecheck: boolean
+  /** Package name `react` must resolve to inside the fixture (e.g. a preact/compat alias). */
+  reactAlias?: string
+}
 const FIXTURES: Fixture[] = [
   {
     name: 'vanilla-esm',
@@ -408,6 +429,13 @@ const FIXTURES: Fixture[] = [
     typecheck: false,
   },
   { name: 'react-consumer', runs: [['bun', 'main.tsx']], needsReact: true, typecheck: true },
+  {
+    name: 'preact-consumer',
+    runs: [['bun', 'main.tsx']],
+    needsReact: false,
+    typecheck: true,
+    reactAlias: '@preact/compat',
+  },
 ]
 
 /**
@@ -470,6 +498,25 @@ async function verifyFixture(fixture: Fixture): Promise<void> {
       }
       console.log(`    react ${actual} from ${Bun.fileURLToPath(resolvedReact)}`)
     }
+    if (fixture.reactAlias) {
+      // The adapter's external `react` import must land on the alias the fixture
+      // declares rather than the workspace React. The path is the store realpath
+      // under an isolated install, so only the manifest name is compared.
+      let resolvedReact: string
+      try {
+        resolvedReact = resolveFrom(dir, 'react/package.json', 'bun')
+      } catch {
+        fail(
+          `react alias is not installed for ${fixture.name}; run \`bun install\` at the repo root`,
+        )
+      }
+      const file = Bun.fileURLToPath(resolvedReact)
+      const manifest = readJson<{ name: string; version: string }>(file)
+      if (manifest.name !== fixture.reactAlias) {
+        fail(`${fixture.name} resolves react to ${manifest.name}, expected ${fixture.reactAlias}`)
+      }
+      console.log(`    react -> ${manifest.name} ${manifest.version} from ${file}`)
+    }
 
     for (const cmd of fixture.runs) {
       const result = runOrFail(cmd, { cwd: dir })
@@ -483,10 +530,15 @@ async function verifyFixture(fixture: Fixture): Promise<void> {
     await check(`typecheck: ${fixture.name}`, () => {
       if (!tarball) fail('no tarball (pack failed)')
       const dir = path.join(CONSUMERS, fixture.name)
-      const result = run(['bunx', 'tsc', '-p', 'tsconfig.json', '--noEmit'], { cwd: dir })
+      // A fixture may split its runtime tsconfig from the one used for types
+      // (path mappings that tsc needs but Bun must not apply at runtime).
+      const project = existsSync(path.join(dir, 'tsconfig.typecheck.json'))
+        ? 'tsconfig.typecheck.json'
+        : 'tsconfig.json'
+      const result = run(['bunx', 'tsc', '-p', project, '--noEmit'], { cwd: dir })
       if (result.code !== 0)
-        fail(`tsc (nodenext) failed against the packed types\n${indent(result.output)}`)
-      record(`typecheck: ${fixture.name}`, 'pass', 'tsc --moduleResolution nodenext')
+        fail(`tsc (nodenext, ${project}) failed against the packed types\n${indent(result.output)}`)
+      record(`typecheck: ${fixture.name}`, 'pass', `tsc --moduleResolution nodenext (${project})`)
     })
   }
 }

@@ -6,8 +6,9 @@
  * budget from the current sizes (plus headroom).
  */
 import { gzipSync } from 'node:zlib'
-import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, resolve } from 'node:path'
 
 const root = resolve(import.meta.dir, '..')
 const dist = resolve(root, 'packages/gridla/dist')
@@ -23,12 +24,19 @@ type Entry = { name: string; file: string; external: string[] }
 const entries: Entry[] = [
   { name: 'gridla', file: 'index.js', external: [] },
   { name: 'gridla/react', file: 'react.js', external: ['react', 'react/jsx-runtime', 'react-dom'] },
+  { name: 'gridla/interaction', file: 'interaction.js', external: [] },
 ]
 
+// Bundle through a wrapper that re-exports the entry. Bun drops the bodies of
+// an entry file that consists only of `export { ... } from './chunk.js'`
+// (as `dist/interaction.js` does), so measuring the file directly is wrong.
+const wrappers = mkdtempSync(join(tmpdir(), 'gridla-size-'))
 const results: Record<string, { min: number; gzip: number }> = {}
 for (const entry of entries) {
+  const wrapper = join(wrappers, `${entry.name.replace(/\W+/g, '-')}.js`)
+  writeFileSync(wrapper, `export * from ${JSON.stringify(resolve(dist, entry.file))}\n`)
   const build = await Bun.build({
-    entrypoints: [resolve(dist, entry.file)],
+    entrypoints: [wrapper],
     minify: true,
     target: 'browser',
     format: 'esm',
@@ -41,6 +49,7 @@ for (const entry of entries) {
   const code = await build.outputs[0].text()
   results[entry.name] = { min: code.length, gzip: gzipSync(code).length }
 }
+rmSync(wrappers, { recursive: true, force: true })
 
 type Budget = Record<string, { gzip: number }>
 const budget: Budget = existsSync(budgetPath) ? JSON.parse(readFileSync(budgetPath, 'utf8')) : {}

@@ -7,6 +7,7 @@ export default defineConfig({
     entry: {
       index: './src/index.ts',
       react: './src/react.ts',
+      interaction: './src/interaction.ts',
     },
     tsconfigPath: './tsconfig.build.json',
   },

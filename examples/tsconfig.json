@@ -17,6 +17,8 @@
     "react-basics/src",
     "gallery/src",
     "studio/src",
-    "*/rsbuild.config.ts"
+    "adapters/*/src",
+    "*/rsbuild.config.ts",
+    "adapters/*/rsbuild.config.ts"
   ]
 }

@@ -71,7 +71,7 @@ export default defineConfig({
       {
         text: 'Guide',
         link: '/getting-started/install',
-        activeMatch: '^/(getting-started|concepts|recipes|guides)/',
+        activeMatch: '^/(getting-started|adapters|concepts|recipes|guides)/',
         position: 'left',
       },
       { text: 'API', link: '/api/', activeMatch: '^/api/', position: 'left' },
@@ -89,6 +89,15 @@ export default defineConfig({
             { text: 'Nested', link: '/api/core/nested' },
             { text: 'Presets', link: '/api/core/presets' },
             { text: 'Instrumentation', link: '/api/core/instrumentation' },
+          ],
+        },
+        {
+          text: 'Interaction',
+          items: [
+            { text: 'Controller', link: '/api/interaction/controller' },
+            { text: 'Pointer gesture', link: '/api/interaction/gesture' },
+            { text: 'Transfer scope', link: '/api/interaction/transfer' },
+            { text: 'Types', link: '/api/interaction/types' },
           ],
         },
         {
@@ -111,6 +120,10 @@ export default defineConfig({
             { text: 'Vanilla quickstart', link: '/getting-started/vanilla' },
             { text: 'React quickstart', link: '/getting-started/react' },
           ],
+        },
+        {
+          text: 'Adapters',
+          items: [{ text: 'Overview', link: '/adapters/' }],
         },
         {
           text: 'Concepts',
