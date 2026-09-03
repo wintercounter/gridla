@@ -21,7 +21,15 @@ export async function itemRect(page: Page, itemId: string) {
 export async function settle(page: Page) {
   const canvas = page.locator('[data-gridla-canvas]').first()
   await expect
-    .poll(() => canvas.evaluate((element) => element.getAnimations({ subtree: true }).length))
+    .poll(() =>
+      canvas.evaluate(
+        (element) =>
+          element.getAnimations({ subtree: true }).filter((animation) => {
+            const timing = animation.effect?.getComputedTiming()
+            return animation.playState === 'running' && Number.isFinite(timing?.activeDuration ?? 0)
+          }).length,
+      ),
+    )
     .toBe(0)
 }
 
