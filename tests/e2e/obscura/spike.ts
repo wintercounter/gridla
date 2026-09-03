@@ -379,14 +379,12 @@ await probe(
     await p.evaluate(() => {
       ;(window as unknown as Record<string, unknown>).__events = []
       for (const t of ['mousedown', 'mousemove', 'mouseup'])
-        document
-          .getElementById('box')!
-          .addEventListener(t, (e) =>
-            (window as unknown as Record<string, unknown>).__events.push({
-              type: t,
-              x: (e as MouseEvent).clientX,
-            }),
-          )
+        document.getElementById('box')!.addEventListener(t, (e) =>
+          (window as unknown as Record<string, unknown>).__events.push({
+            type: t,
+            x: (e as MouseEvent).clientX,
+          }),
+        )
     })
     const s = await p.context().newCDPSession(p)
     try {

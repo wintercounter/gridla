@@ -21,6 +21,11 @@ export type StudioNode = {
   children?: StudioNode[]
   /** Gap between children (groups only). */
   gap?: number
+  /**
+   * Scrollable groups grow to fit their content; this is the floor. The
+   * stored `layout.canvas.height` is always the settled value.
+   */
+  minHeight?: number
   /** Hidden nodes stay in the document but leave the solver and the canvas. */
   hidden?: boolean
 }
@@ -68,6 +73,34 @@ export function isGroup(node: StudioNode): boolean {
   return node.kind === 'group' || node.layout !== undefined
 }
 
+/**
+ * Keep a scrollable canvas exactly as tall as its content (or its floor).
+ * The provider re-projects the layout onto the measured element size; if the
+ * element is taller than the stored canvas, heights scale up, the canvas
+ * grows to fit, and the cycle repeats. Settling the height here keeps the
+ * measured size equal to the stored size so no vertical rescale happens.
+ */
+export function settleHeights(root: StudioNode): StudioNode {
+  const layout = root.layout
+  let next = root
+  if (layout && layout.canvas.heightMode === 'scrollable') {
+    const bottom = layout.items.reduce((max, item) => Math.max(max, item.y + item.h), 0)
+    const height = Math.max(root.minHeight ?? 0, Math.round(bottom + layout.canvas.padding.bottom))
+    if (height !== layout.canvas.height) {
+      next = { ...root, layout: { ...layout, canvas: { ...layout.canvas, height } } }
+    }
+  }
+  const children = next.children
+  if (!children) return next
+  let changed = false
+  const settled = children.map((child) => {
+    const updated = settleHeights(child)
+    if (updated !== child) changed = true
+    return updated
+  })
+  return changed ? { ...next, children: settled } : next
+}
+
 export function emptyGroupLayout(width = 600, height = 320): GridLayout {
   return { canvas: canvas(width, height, 12), items: [] }
 }
@@ -82,6 +115,7 @@ export function createDocument(name = 'Untitled layout', width = 1200): StudioDo
       kind: 'group',
       props: { title: 'Page', tone: 'plain' },
       gap: 16,
+      minHeight: 720,
       layout: { canvas: canvas(width, 720, 24, 'scrollable'), items: [] },
       children: [],
     },

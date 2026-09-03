@@ -108,6 +108,7 @@ function page(name: string, height: number, gap: number, children: Placed[]): St
   doc.root = {
     ...doc.root,
     gap,
+    minHeight: height,
     layout: {
       canvas: { width: 1200, height, padding: padding(24), heightMode: 'scrollable' },
       items: children.map((child) => child.item),

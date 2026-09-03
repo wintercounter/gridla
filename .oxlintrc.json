@@ -81,6 +81,7 @@
     "**/dist/**",
     "**/doc_build/**",
     "**/node_modules/**",
-    "**/.rspress/**"
+    "**/.rspress/**",
+    "tests/e2e/obscura/spike.ts"
   ]
 }

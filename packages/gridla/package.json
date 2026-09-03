@@ -2,37 +2,40 @@
   "name": "gridla",
   "version": "0.1.0",
   "description": "Pixel-based grid and nested-layout engine with move, resize, place, and transfer solving. Framework-neutral core with an optional React adapter.",
+  "keywords": [
+    "dashboard",
+    "drag",
+    "grid",
+    "layout",
+    "nested-layout",
+    "page-builder",
+    "react",
+    "resize",
+    "responsive",
+    "typescript"
+  ],
+  "homepage": "https://wintercounter.github.io/gridla/",
+  "bugs": {
+    "url": "https://github.com/wintercounter/gridla/issues"
+  },
   "license": "MIT",
   "author": "Viktor Vincze <wintercounter@gmail.com>",
-  "homepage": "https://wintercounter.github.io/gridla/",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/wintercounter/gridla.git",
     "directory": "packages/gridla"
   },
-  "bugs": {
-    "url": "https://github.com/wintercounter/gridla/issues"
-  },
-  "keywords": [
-    "grid",
-    "layout",
-    "drag",
-    "resize",
-    "dashboard",
-    "page-builder",
-    "nested-layout",
-    "responsive",
-    "react",
-    "typescript"
-  ],
-  "type": "module",
-  "sideEffects": false,
   "files": [
     "dist",
     "README.md",
     "LICENSE",
     "CHANGELOG.md"
   ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -44,24 +47,14 @@
     },
     "./package.json": "./package.json"
   },
-  "types": "./dist/index.d.ts",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
-  "engines": {
-    "node": ">=20.19"
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   },
   "scripts": {
     "build": "rslib build",
     "dev": "rslib build --watch",
     "test": "bun test src"
-  },
-  "peerDependencies": {
-    "react": ">=18.0.0"
-  },
-  "peerDependenciesMeta": {
-    "react": {
-      "optional": true
-    }
   },
   "devDependencies": {
     "@microsoft/api-extractor": "7.59.0",
@@ -75,8 +68,15 @@
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },
-  "publishConfig": {
-    "access": "public",
-    "provenance": true
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=20.19"
   }
 }
