@@ -787,8 +787,8 @@ describe('compactLayout', () => {
     // Binding R = 0.3.
     const result = compactLayout({ canvas, items })
     expect(result.fits).toBe(true)
-    const flex = result.layout.items.find((it) => it.id === 'flex')
-    const fixed = result.layout.items.find((it) => it.id === 'fixed')
+    const flex = result.layout.items.find((entry) => entry.id === 'flex')
+    const fixed = result.layout.items.find((entry) => entry.id === 'fixed')
     expect(fixed?.h).toBe(600)
     expect(flex?.h).toBeGreaterThanOrEqual(100)
     expect((fixed?.y ?? 0) + (fixed?.h ?? 0)).toBeLessThanOrEqual(721)
@@ -819,12 +819,9 @@ describe('compactLayout', () => {
       item({ h: 400, id: 'scroll', y: 0 }),
       item({ h: 400, id: 'flex', minH: 100, y: 400 }),
     ]
-    const result = compactLayout(
-      { canvas, items },
-      { isRigid: (entry) => entry.id === 'scroll' },
-    )
+    const result = compactLayout({ canvas, items }, { isRigid: (entry) => entry.id === 'scroll' })
     expect(result.fits).toBe(true)
-    const scroll = result.layout.items.find((it) => it.id === 'scroll')
+    const scroll = result.layout.items.find((entry) => entry.id === 'scroll')
     // Scrollable item keeps its authored height.
     expect(scroll?.h).toBe(400)
   })
@@ -1185,7 +1182,8 @@ describe('scaleItems + preserveGaps', () => {
     // Diagnostic: scaleItems alone walks the Y-chain in linear order,
     // so the four "top row" items end up at four DIFFERENT y values.
     // This is what produced the reported scramble.
-    const findById = (list: GridItem[], id: string): GridItem => list.find((item) => item.id === id)!
+    const findById = (list: GridItem[], id: string): GridItem =>
+      list.find((item) => item.id === id)!
     const scrambledTopYs = new Set([
       findById(projected, 'chart').y,
       findById(projected, 'panel-a').y,

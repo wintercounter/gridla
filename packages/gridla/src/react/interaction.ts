@@ -292,10 +292,10 @@ export function useGridInteraction<TData = unknown>(
       if (!move) return
       event.preventDefault()
       if (event.altKey) {
-        actions.resize(selectedId, { edge: 'se', delta: move })
+        actions.resize(selectedId, { edge: 'se', delta: move }, { snap: false })
         return
       }
-      actions.move(selectedId, { x: item.x + move.x, y: item.y + move.y })
+      actions.move(selectedId, { x: item.x + move.x, y: item.y + move.y }, { snap: false })
     },
     [actions, config.keyboardStep, finish, store],
   )

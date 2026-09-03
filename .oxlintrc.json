@@ -63,7 +63,8 @@
       ],
       "rules": {
         "no-console": "off",
-        "typescript/no-non-null-assertion": "off"
+        "typescript/no-non-null-assertion": "off",
+        "react/globals": "off"
       }
     }
   ],
