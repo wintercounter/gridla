@@ -38,6 +38,8 @@ A hook or component from `gridla/react` was used outside a provider. `GridTransf
 - The pointer is still inside the source canvas element. Siblings and ancestors only become targets after the pointer leaves the source; descendants can win immediately.
 - The target could not place the item at all (which is rare, since the pointer form of `placeItem` falls through to an overlapping placement).
 
+While a target previews the item, the source shows its base layout: no outline, no pushed siblings, only the active item following the pointer (flagged with `data-gridla-transferring`). The source preview returns on the first move back inside it.
+
 ## Items overlap after a pointer placement
 
 The pointer form of `placeItem` never rejects; as a last resort it returns `pointer-overlap` so a preview can be drawn. Check `result.strategy` (or `findLayoutViolations(result.layout)`) before committing.

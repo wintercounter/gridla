@@ -228,4 +228,67 @@ describe('transfer scope', () => {
     expect(transferOut).toHaveBeenCalledTimes(1)
     expect(transferIn).toHaveBeenCalledTimes(1)
   })
+
+  it('drops the source preview while the target previews the item', () => {
+    const { getByTestId, container } = render(
+      <GridTransferScope>
+        <GridProvider
+          defaultLayout={{
+            canvas: { width: 400, height: 400, padding, heightMode: 'bounded' },
+            items: [
+              createItem('a', { w: 100, h: 100 }, 0, 0),
+              createItem('b', { w: 100, h: 100 }, 150, 0),
+            ],
+          }}
+          responsive={false}
+        >
+          <GridCanvas data-testid="left">
+            <GridItem id="a" data-testid="left-a" />
+            <GridItem id="b" data-testid="left-b" />
+            <GridPreviewOutline data-testid="left-outline" />
+          </GridCanvas>
+        </GridProvider>
+        <GridProvider
+          defaultLayout={{
+            canvas: { width: 400, height: 400, padding, heightMode: 'bounded' },
+            items: [],
+          }}
+          responsive={false}
+        >
+          <GridCanvas data-testid="right">
+            <GridPreviewOutline data-testid="right-outline" />
+          </GridCanvas>
+        </GridProvider>
+      </GridTransferScope>,
+    )
+    const leftCanvas = getByTestId('left')
+    const rightCanvas = getByTestId('right')
+    mockRect(leftCanvas, { x: 0, y: 0, w: 400, h: 400 })
+    mockRect(rightCanvas, { x: 500, y: 0, w: 400, h: 400 })
+    const a = getByTestId('left-a')
+    const b = getByTestId('left-b')
+    const restingB = b.getAttribute('style')
+
+    // Dragging over b inside the source pushes it and shows the source outline.
+    act(() => pointer('pointerdown', a, 50, 50))
+    act(() => pointer('pointermove', leftCanvas, 200, 50))
+    expect(container.querySelector('[data-testid="left-outline"]')).not.toBeNull()
+    expect(b.getAttribute('style')).not.toBe(restingB)
+
+    // Once the pointer previews in the target, the source shows its base layout.
+    act(() => pointer('pointermove', leftCanvas, 700, 200))
+    expect(a.getAttribute('data-gridla-transferring')).toBe('')
+    expect(container.querySelector('[data-testid="left-outline"]')).toBeNull()
+    expect(container.querySelector('[data-testid="right-outline"]')).not.toBeNull()
+    expect(b.getAttribute('style')).toBe(restingB)
+    expect(b.hasAttribute('data-gridla-shifted')).toBe(false)
+
+    // Coming back re-enables the source preview on the next move.
+    act(() => pointer('pointermove', leftCanvas, 200, 50))
+    act(() => pointer('pointermove', leftCanvas, 200, 50))
+    expect(a.hasAttribute('data-gridla-transferring')).toBe(false)
+    expect(container.querySelector('[data-testid="right-outline"]')).toBeNull()
+    expect(container.querySelector('[data-testid="left-outline"]')).not.toBeNull()
+    act(() => pointer('pointerup', leftCanvas, 200, 50))
+  })
 })
