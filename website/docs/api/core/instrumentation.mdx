@@ -10,26 +10,21 @@ description: Instrumentation exports of gridla. Generated from the source declar
 Optional tracing. Pass `onTrace` in [`SolveOptions`](/api/core/solvers#solveoptions) and every solve reports the strategy it used, so you can build debug overlays or log interaction paths without the core owning a logger.
 
 ```ts
-import {} from 'gridla'
+import {  } from 'gridla'
 import type { SolveStrategy, TraceCallback, TraceEvent } from 'gridla'
 ```
 
-| Export                            | Kind | Summary                                                                                                                                                               |
-| --------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`SolveStrategy`](#solvestrategy) | type | Names of the strategies a solver may report.                                                                                                                          |
-| [`TraceCallback`](#tracecallback) | type | Receives a `TraceEvent` for every solve.                                                                                                                              |
-| [`TraceEvent`](#traceevent)       | type | One record per solve: the operation, the strategy that produced the result, whether it was accepted, and the active item's resulting rectangle in canvas coordinates. |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`SolveStrategy`](#solvestrategy) | type | Names of the strategies a solver may report. |
+| [`TraceCallback`](#tracecallback) | type | Receives a `TraceEvent` for every solve. |
+| [`TraceEvent`](#traceevent) | type | One record per solve: the operation, the strategy that produced the result, whether it was accepted, and the active item's resulting rectangle in canvas coordinates. |
 
 ## Types
 
 ### SolveStrategy
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L8">
-    core/instrumentation.ts:8
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L8">core/instrumentation.ts:8</a></span>
 
 Names of the strategies a solver may report.
 
@@ -70,12 +65,7 @@ export type SolveStrategy =
 
 ### TraceCallback
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L58">
-    core/instrumentation.ts:58
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L58">core/instrumentation.ts:58</a></span>
 
 Receives a [`TraceEvent`](#traceevent) for every solve. Pass it as `SolveOptions.onTrace`.
 
@@ -85,12 +75,7 @@ export type TraceCallback = (event: TraceEvent) => void
 
 ### TraceEvent
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L46">
-    core/instrumentation.ts:46
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/instrumentation.ts#L46">core/instrumentation.ts:46</a></span>
 
 One record per solve: the operation, the strategy that produced the result,
 whether it was accepted, and the active item's resulting rectangle in canvas
@@ -109,13 +94,13 @@ export type TraceEvent = {
 }
 ```
 
-| Member      | Type            | Description |
-| ----------- | --------------- | ----------- | ---------- | ----------- | --- |
-| `operation` | `"resize" \\    | "move" \\   | "place" \\ | "transfer"` |     |
-| `strategy`  | `SolveStrategy` |             |
-| `itemId`    | `string`        |             |
-| `accepted`  | `boolean`       |             |
-| `x?`        | `number`        |             |
-| `y?`        | `number`        |             |
-| `w?`        | `number`        |             |
-| `h?`        | `number`        |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `operation` | `"resize" \\| "move" \\| "place" \\| "transfer"` |  |
+| `strategy` | `SolveStrategy` |  |
+| `itemId` | `string` |  |
+| `accepted` | `boolean` |  |
+| `x?` | `number` |  |
+| `y?` | `number` |  |
+| `w?` | `number` |  |
+| `h?` | `number` |  |

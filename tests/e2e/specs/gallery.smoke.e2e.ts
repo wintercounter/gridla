@@ -46,8 +46,7 @@ const ALIASES: Record<string, string> = {
  * A demo stage is labelled either by the demo frame's stage label, by a
  * core stage's accessible name, or by a React canvas' accessible name.
  */
-const LABELLED_STAGE =
-  '.gd-stage-label, .gl-stage[aria-label], [data-gridla-canvas][aria-label]'
+const LABELLED_STAGE = '.gd-stage-label, .gl-stage[aria-label], [data-gridla-canvas][aria-label]'
 
 test.describe('gallery @smoke', () => {
   for (const demo of DEMOS) {

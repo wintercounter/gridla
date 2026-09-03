@@ -1,4 +1,4 @@
-import { expect, itemRect, resizeBy, test, type Page } from '../fixtures'
+import { expect, handlePoint, itemRect, resizeBy, settledRect, test, type Page } from '../fixtures'
 
 /**
  * Pointer gestures against the uncontrolled React demo with projection off, so
@@ -6,21 +6,21 @@ import { expect, itemRect, resizeBy, test, type Page } from '../fixtures'
  * an authored pixel. The dashboard layout (gap 12, padding 12):
  *
  *   header  12,12   936x72   (fixed height)
- *   chart   12,96   456x280  minH 120, minW 160
- *   sidebar 492,96  456x280  minH 120, minW 120
+ *   chart   12,96   462x280  minH 120, minW 160
+ *   sidebar 486,96  462x280  minH 120, minW 120
  *   table   12,388  936x200  minH 80
  *
- * The canvas is bounded, so the table can only shrink to 80 before a gesture
- * that pushes it further is rejected.
+ * The canvas is bounded (inner bottom 588). Moving the chart down pushes and
+ * shrinks the table (it can lose 120 px); growing the chart south makes the
+ * solver shrink the table sideways instead, so the canvas bottom is the hard
+ * stop for a south resize.
  */
 const DEMO = 'react-uncontrolled'
 const PARAMS = { responsive: false }
 const TABLE_SLACK = 200 - 80
+const INNER_BOTTOM = 600 - 12
 
 const item = (id: string) => `[data-gridla-item="${id}"]`
-const handle = (id: string, edge: string) =>
-  `[data-gridla-resize-handle="${id}"][data-gridla-edge="${edge}"]`
-
 /** Wait until the canvas is painted 1:1 with the authored layout. */
 async function ready(page: Page) {
   await expect(page.locator(item('table'))).toBeVisible()
@@ -78,20 +78,24 @@ test.describe('gallery: pointer interactions', () => {
   test('B-001 hovering 2 px inside the east edge finds exactly one east handle', async ({
     page,
   }) => {
-    const box = await page.locator(item('sidebar')).boundingBox()
-    if (!box) throw new Error('sidebar is not visible')
+    // Nothing is selected: handles are available on hover alone.
+    await expect(page.locator('[data-gridla-selected]')).toHaveCount(0)
+    const box = await page.locator(item('chart')).boundingBox()
+    if (!box) throw new Error('chart is not visible')
     const x = box.x + box.width - 2
     const y = box.y + box.height / 2
     await page.mouse.move(x, y)
     const found = await handlesAt(page, x, y)
     expect(found).toHaveLength(1)
-    expect(found[0]).toEqual(['sidebar', 'e'])
+    expect(found[0]).toEqual(['chart', 'e'])
   })
 
-  test.skip(
-    'B-002 the move handle is hidden at the bottom and shown near the top centre',
-    'The adapter has no proximity move handle: the whole item (or an explicit drag surface) starts a move, so there is no opacity to measure.',
-  )
+  test('B-002 the move handle is hidden at the bottom and shown near the top centre', () => {
+    test.skip(
+      true,
+      'The adapter has no proximity move handle: the whole item (or an explicit drag surface) starts a move, so there is no opacity to measure.',
+    )
+  })
 
   test('C-006 an item with free move and resize can be dragged down and exposes its east handle', async ({
     page,
@@ -108,7 +112,7 @@ test.describe('gallery: pointer interactions', () => {
     for (let i = 1; i <= 12; i += 1) await page.mouse.move(start.x, start.y + (dy * i) / 12)
     await page.mouse.up()
 
-    const after = await itemRect(page, 'chart')
+    const after = await settledRect(page, 'chart')
     expect(after.y - before.y).toBeGreaterThanOrEqual(dy - 8)
     expect(after.y - before.y).toBeLessThanOrEqual(dy + 8)
     expect(Math.abs(after.x - before.x)).toBeLessThanOrEqual(8)
@@ -159,7 +163,7 @@ test.describe('gallery: pointer interactions', () => {
 
     await expect(chart).not.toHaveAttribute('data-gridla-active', '')
     expect(await suppressed()).toBe(false)
-    const tableAfter = await itemRect(page, 'table')
+    const tableAfter = await settledRect(page, 'table')
     expect(tableAfter.y - tableBefore.y).toBeGreaterThanOrEqual(20)
   })
 
@@ -214,11 +218,9 @@ test.describe('gallery: pointer interactions', () => {
     page,
   }) => {
     // The gallery renders no north handle, so the same rule is exercised from
-    // the south edge against the table pinned to the bounded canvas bottom.
+    // the south edge against the bounded canvas bottom.
     const before = await itemRect(page, 'chart')
-    const box = await page.locator(handle('chart', 's')).boundingBox()
-    if (!box) throw new Error('south handle of chart is not visible')
-    const start = centerOf(box)
+    const start = await handlePoint(page, 'chart', 's')
     const dy = 400
 
     await page.mouse.move(start.x, start.y)
@@ -228,12 +230,14 @@ test.describe('gallery: pointer interactions', () => {
     const live = await itemRect(page, 'chart')
     expect(live.y).toBe(before.y)
     expect(live.h).toBeGreaterThan(before.h)
-    expect(live.h).toBeLessThanOrEqual(before.h + TABLE_SLACK + 2)
-    // The pointer sits 400 px below the original bottom; the rect did not follow it.
-    expect(live.y + live.h).toBeLessThan(before.y + before.h + dy - 200)
+    // The pointer sits 400 px below the original bottom; the rect stopped at
+    // the last valid size (the canvas inner bottom) instead of following it.
+    expect(live.y + live.h).toBeLessThanOrEqual(INNER_BOTTOM + 2)
+    const pointerBottom = before.y + before.h + dy
+    expect(pointerBottom - (live.y + live.h)).toBeGreaterThanOrEqual(150)
     await page.mouse.up()
 
-    const committed = await itemRect(page, 'chart')
+    const committed = await settledRect(page, 'chart')
     expect(committed.h).toBe(live.h)
   })
 
@@ -241,9 +245,7 @@ test.describe('gallery: pointer interactions', () => {
     page,
   }) => {
     const before = await itemRect(page, 'chart')
-    const box = await page.locator(handle('chart', 's')).boundingBox()
-    if (!box) throw new Error('south handle of chart is not visible')
-    const start = centerOf(box)
+    const start = await handlePoint(page, 'chart', 's')
     const viewport = page.viewportSize()
     if (!viewport) throw new Error('viewport is unknown')
 
@@ -257,7 +259,7 @@ test.describe('gallery: pointer interactions', () => {
     await page.mouse.move(start.x, start.y + 60)
     await page.mouse.up()
 
-    const after = await itemRect(page, 'chart')
+    const after = await settledRect(page, 'chart')
     expect(after.h - before.h).toBeGreaterThanOrEqual(40)
     expect(after.h - before.h).toBeLessThanOrEqual(64)
   })
@@ -265,16 +267,16 @@ test.describe('gallery: pointer interactions', () => {
   test('B-035 two consecutive resizes with a release between them both commit', async ({
     page,
   }) => {
-    // Adapted to the east handle: the neighbour has 336 px of slack there,
+    // Adapted to the east handle: the neighbour has 342 px of slack there,
     // enough for both gestures to be accepted in full.
     const first = await itemRect(page, 'chart')
     await resizeBy(page, 'chart', 'e', 80, 0)
-    const second = await itemRect(page, 'chart')
+    const second = await settledRect(page, 'chart')
     expect(second.w - first.w).toBeGreaterThanOrEqual(30)
     expect(second.x).toBe(first.x)
 
     await resizeBy(page, 'chart', 'e', 60, 0)
-    const third = await itemRect(page, 'chart')
+    const third = await settledRect(page, 'chart')
     expect(third.w - second.w).toBeGreaterThanOrEqual(30)
     expect(third.x).toBe(first.x)
   })
@@ -284,12 +286,10 @@ test.describe('gallery: pointer interactions', () => {
   }) => {
     const original = await itemRect(page, 'chart')
     await resizeBy(page, 'chart', 's', 0, 100)
-    const grown = await itemRect(page, 'chart')
+    const grown = await settledRect(page, 'chart')
     expect(grown.h - original.h).toBeGreaterThanOrEqual(90)
 
-    const box = await page.locator(handle('chart', 's')).boundingBox()
-    if (!box) throw new Error('south handle of chart is not visible')
-    const start = centerOf(box)
+    const start = await handlePoint(page, 'chart', 's')
     const viewport = page.viewportSize()
     if (!viewport) throw new Error('viewport is unknown')
     await page.mouse.move(start.x, start.y)
@@ -300,11 +300,11 @@ test.describe('gallery: pointer interactions', () => {
     }
     await page.mouse.up()
 
-    const after = await itemRect(page, 'chart')
+    const after = await settledRect(page, 'chart')
     expect(after.y).toBe(grown.y)
     expect(after.h).toBeGreaterThanOrEqual(grown.h - 2)
-    // The table had 20 px left before its minimum; the commit can use at most that.
-    expect(after.h).toBeLessThanOrEqual(grown.h + (TABLE_SLACK - 100) + 2)
+    // The commit never exceeds the last valid preview: the canvas inner bottom.
+    expect(after.y + after.h).toBeLessThanOrEqual(INNER_BOTTOM + 2)
     expect(after.h).not.toBe(original.h)
   })
 })

@@ -14,6 +14,23 @@ export async function itemRect(page: Page, itemId: string) {
   }
 }
 
+/**
+ * Wait until no CSS transition or animation runs inside the first canvas.
+ * Demo items animate committed geometry, so read rects only once settled.
+ */
+export async function settle(page: Page) {
+  const canvas = page.locator('[data-gridla-canvas]').first()
+  await expect
+    .poll(() => canvas.evaluate((element) => element.getAnimations({ subtree: true }).length))
+    .toBe(0)
+}
+
+/** `itemRect` after the canvas has settled. */
+export async function settledRect(page: Page, itemId: string) {
+  await settle(page)
+  return itemRect(page, itemId)
+}
+
 /** Rectangle of the drop preview relative to its canvas, or null when no preview is shown. */
 export async function previewRect(page: Page) {
   const preview = page.locator('[data-gridla-preview]').first()
@@ -43,10 +60,36 @@ export async function dragBy(page: Page, target: Locator, dx: number, dy: number
   await page.mouse.up()
 }
 
-/** Drag a resize handle of an item by a delta. */
+/**
+ * Drag a resize handle of an item by a delta. Handles straddle the item edge
+ * and items may clip overflow, so the press lands on the part of the handle
+ * that lies inside the item.
+ */
 export async function resizeBy(page: Page, itemId: string, edge: string, dx: number, dy: number) {
+  const { x: sx, y: sy } = await handlePoint(page, itemId, edge)
+  await page.mouse.move(sx, sy)
+  await page.mouse.down()
+  const steps = 12
+  for (let i = 1; i <= steps; i += 1) {
+    await page.mouse.move(sx + (dx * i) / steps, sy + (dy * i) / steps)
+  }
+  await page.mouse.up()
+}
+
+/** Client point on a resize handle that lies inside its item (see `resizeBy`). */
+export async function handlePoint(page: Page, itemId: string, edge: string) {
   const handle = page.locator(`[data-gridla-resize-handle="${itemId}"][data-gridla-edge="${edge}"]`)
-  await dragBy(page, handle, dx, dy)
+  const item = page.locator(`[data-gridla-item="${itemId}"]`).first()
+  const [hb, ib] = await Promise.all([handle.boundingBox(), item.boundingBox()])
+  if (!hb || !ib) throw new Error(`resize handle ${edge} of ${itemId} is not visible`)
+  const left = Math.max(hb.x, ib.x)
+  const top = Math.max(hb.y, ib.y)
+  const right = Math.min(hb.x + hb.width, ib.x + ib.width)
+  const bottom = Math.min(hb.y + hb.height, ib.y + ib.height)
+  return {
+    x: right > left ? (left + right) / 2 : hb.x + hb.width / 2,
+    y: bottom > top ? (top + bottom) / 2 : hb.y + hb.height / 2,
+  }
 }
 
 /**
@@ -83,3 +126,4 @@ export const test = base.extend<{
 })
 
 export { expect }
+export type { Page }

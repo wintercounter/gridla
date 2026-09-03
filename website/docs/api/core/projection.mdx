@@ -10,45 +10,30 @@ description: Projection exports of gridla. Generated from the source declaration
 Re-fit a layout to a different canvas size. [`projectLayout`](#projectlayout) is the entry point; the chain and segment engines and the gap utilities are exported for advanced use.
 
 ```ts
-import {
-  applyGap,
-  preserveGaps,
-  projectFloatingRect,
-  projectItemsByChain,
-  projectItemsBySegments,
-  projectLayout,
-  roundItemRects,
-  scaleItems,
-  syncFixedDimensions,
-} from 'gridla'
+import { applyGap, preserveGaps, projectFloatingRect, projectItemsByChain, projectItemsBySegments, projectLayout, roundItemRects, scaleItems, syncFixedDimensions } from 'gridla'
 import type { ApplyGapOptions, ProjectionStrategy, ProjectOptions } from 'gridla'
 ```
 
-| Export                                              | Kind     | Summary                                                                                         |
-| --------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------------- |
-| [`applyGap`](#applygap)                             | function | Re-space every chain of adjacent items so neighbors sit exactly `gap` pixels apart.             |
-| [`ApplyGapOptions`](#applygapoptions)               | type     | Options for `applyGap`.                                                                         |
-| [`preserveGaps`](#preservegaps)                     | function | Restore configured gaps and canvas-edge anchors after `scaleItems`, then round to whole pixels. |
-| [`projectFloatingRect`](#projectfloatingrect)       | function | Ratio-scale a free-floating rect within the padded inner area of one canvas to another.         |
-| [`ProjectionStrategy`](#projectionstrategy)         | type     | Engine used by `projectLayout`: `chain` (default) or `segments`.                                |
-| [`projectItemsByChain`](#projectitemsbychain)       | function | Full chain projection: scale, then preserve gaps.                                               |
-| [`projectItemsBySegments`](#projectitemsbysegments) | function | Project items from one canvas to another with the segment engine.                               |
-| [`projectLayout`](#projectlayout)                   | function | Project a layout onto a different canvas size.                                                  |
-| [`ProjectOptions`](#projectoptions)                 | type     | Options for `projectLayout`.                                                                    |
-| [`roundItemRects`](#rounditemrects)                 | function | Round every item's rect to whole pixels.                                                        |
-| [`scaleItems`](#scaleitems)                         | function | Flex/fill projection of items from `sourceCanvas` to `targetCanvas`.                            |
-| [`syncFixedDimensions`](#syncfixeddimensions)       | function | Pin `w`/`h` and min/max to `fixedWidth`/`fixedHeight` when the size mode fixes that axis.       |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`applyGap`](#applygap) | function | Re-space every chain of adjacent items so neighbors sit exactly `gap` pixels apart. |
+| [`ApplyGapOptions`](#applygapoptions) | type | Options for `applyGap`. |
+| [`preserveGaps`](#preservegaps) | function | Restore configured gaps and canvas-edge anchors after `scaleItems`, then round to whole pixels. |
+| [`projectFloatingRect`](#projectfloatingrect) | function | Ratio-scale a free-floating rect within the padded inner area of one canvas to another. |
+| [`ProjectionStrategy`](#projectionstrategy) | type | Engine used by `projectLayout`: `chain` (default) or `segments`. |
+| [`projectItemsByChain`](#projectitemsbychain) | function | Full chain projection: scale, then preserve gaps. |
+| [`projectItemsBySegments`](#projectitemsbysegments) | function | Project items from one canvas to another with the segment engine. |
+| [`projectLayout`](#projectlayout) | function | Project a layout onto a different canvas size. |
+| [`ProjectOptions`](#projectoptions) | type | Options for `projectLayout`. |
+| [`roundItemRects`](#rounditemrects) | function | Round every item's rect to whole pixels. |
+| [`scaleItems`](#scaleitems) | function | Flex/fill projection of items from `sourceCanvas` to `targetCanvas`. |
+| [`syncFixedDimensions`](#syncfixeddimensions) | function | Pin `w`/`h` and min/max to `fixedWidth`/`fixedHeight` when the size mode fixes that axis. |
 
 ## Functions
 
 ### applyGap
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L605">
-    core/projection/segments.ts:605
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L605">core/projection/segments.ts:605</a></span>
 
 Re-space every chain of adjacent items so neighbors sit exactly `gap`
 pixels apart. Rows and columns keep their structure; canvas-spanning chains
@@ -64,12 +49,7 @@ export function applyGap<T>(
 
 ### preserveGaps
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L859">
-    core/projection/chain.ts:859
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L859">core/projection/chain.ts:859</a></span>
 
 Restore configured gaps and canvas-edge anchors after [`scaleItems`](#scaleitems), then
 round to whole pixels. Mutates `scaled` in place.
@@ -86,12 +66,7 @@ export function preserveGaps<T>(
 
 ### projectFloatingRect
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L387">
-    core/projection/chain.ts:387
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L387">core/projection/chain.ts:387</a></span>
 
 Ratio-scale a free-floating rect within the padded inner area of one canvas
 to another. Used for items that do not participate in chains.
@@ -106,12 +81,7 @@ export function projectFloatingRect(
 
 ### projectItemsByChain
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L906">
-    core/projection/chain.ts:906
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L906">core/projection/chain.ts:906</a></span>
 
 Full chain projection: scale, then preserve gaps.
 
@@ -126,12 +96,7 @@ export function projectItemsByChain<T>(
 
 ### projectItemsBySegments
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L278">
-    core/projection/segments.ts:278
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L278">core/projection/segments.ts:278</a></span>
 
 Project items from one canvas to another with the segment engine.
 
@@ -145,12 +110,7 @@ export function projectItemsBySegments<T>(
 
 ### projectLayout
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L32">
-    core/projection/index.ts:32
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L32">core/projection/index.ts:32</a></span>
 
 Project a layout onto a different canvas size. The result is a new layout
 whose items keep their relationships (rows, columns, alignment, fixed sizes)
@@ -166,12 +126,7 @@ export function projectLayout<T>(
 
 ### roundItemRects
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L919">
-    core/projection/chain.ts:919
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L919">core/projection/chain.ts:919</a></span>
 
 Round every item's rect to whole pixels.
 
@@ -181,12 +136,7 @@ export function roundItemRects<T>(items: readonly GridItem<T>[]): GridItem<T>[]
 
 ### scaleItems
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L354">
-    core/projection/chain.ts:354
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L354">core/projection/chain.ts:354</a></span>
 
 Flex/fill projection of items from `sourceCanvas` to `targetCanvas`.
 Returns fractional positions; call [`preserveGaps`](#preservegaps) afterwards to snap gaps
@@ -203,12 +153,7 @@ export function scaleItems<T>(
 
 ### syncFixedDimensions
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L27">
-    core/projection/chain.ts:27
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/chain.ts#L27">core/projection/chain.ts:27</a></span>
 
 Pin `w`/`h` and min/max to `fixedWidth`/`fixedHeight` when the size mode
 fixes that axis. Items without explicit fixed dimensions pass through.
@@ -221,12 +166,7 @@ export function syncFixedDimensions<T>(items: readonly GridItem<T>[]): GridItem<
 
 ### ApplyGapOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L591">
-    core/projection/segments.ts:591
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/segments.ts#L591">core/projection/segments.ts:591</a></span>
 
 Options for [`applyGap`](#applygap).
 
@@ -241,18 +181,13 @@ export type ApplyGapOptions = {
 }
 ```
 
-| Member            | Type                      | Description                                                                                                                                            |
-| ----------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Member | Type | Description |
+| --- | --- | --- |
 | `recognizedGaps?` | `ReadonlyArray\<number\>` | Gap values the detector treats as an existing gap between neighbors. Defaults to `[0, 1, 6, 12, 18]`. Add your own spacing scale here when it differs. |
 
 ### ProjectionStrategy
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L10">
-    core/projection/index.ts:10
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L10">core/projection/index.ts:10</a></span>
 
 Engine used by [`projectLayout`](#projectlayout): `chain` (default) or `segments`. See
 `ProjectOptions.strategy` for how they differ.
@@ -263,12 +198,7 @@ export type ProjectionStrategy = 'chain' | 'segments'
 
 ### ProjectOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L13">
-    core/projection/index.ts:13
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/projection/index.ts#L13">core/projection/index.ts:13</a></span>
 
 Options for [`projectLayout`](#projectlayout).
 
@@ -288,7 +218,7 @@ export type ProjectOptions = {
 }
 ```
 
-| Member      | Type                 | Description                                                                                                                                                                                                                                                                                                                                                  |
-| ----------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Member | Type | Description |
+| --- | --- | --- |
 | `strategy?` | `ProjectionStrategy` | `chain` (default): rows and columns of items are treated as flex chains. Fixed-size items and configured gaps keep their pixel size, empty space scales, free items fill the remainder proportionally. `segments`: every item edge becomes a stop; segments covered by free items scale, everything else stays fixed. Simpler and useful for sparse layouts. |
-| `gap?`      | `number`             | Gap between items that the chain strategy keeps at exactly this pixel size.                                                                                                                                                                                                                                                                                  |
+| `gap?` | `number` | Gap between items that the chain strategy keeps at exactly this pixel size. |

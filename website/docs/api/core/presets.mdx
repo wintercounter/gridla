@@ -14,22 +14,17 @@ import { applyPreset } from 'gridla'
 import type { LayoutPreset, PresetOptions } from 'gridla'
 ```
 
-| Export                            | Kind     | Summary                                                                                                                                           |
-| --------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`applyPreset`](#applypreset)     | function | Rebuild `layout.items` so the given ids tile the canvas as rows, columns, or a grid.                                                              |
-| [`LayoutPreset`](#layoutpreset)   | type     | Arrangement produced by `applyPreset`: full-width rows stacked vertically, full-height columns side by side, or a grid with a fixed column count. |
-| [`PresetOptions`](#presetoptions) | type     | Options for `applyPreset`.                                                                                                                        |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`applyPreset`](#applypreset) | function | Rebuild `layout.items` so the given ids tile the canvas as rows, columns, or a grid. |
+| [`LayoutPreset`](#layoutpreset) | type | Arrangement produced by `applyPreset`: full-width rows stacked vertically, full-height columns side by side, or a grid with a fixed column count. |
+| [`PresetOptions`](#presetoptions) | type | Options for `applyPreset`. |
 
 ## Functions
 
 ### applyPreset
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L42">
-    core/presets.ts:42
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L42">core/presets.ts:42</a></span>
 
 Rebuild `layout.items` so the given ids tile the canvas as rows, columns,
 or a grid. Ids keep their constraints; new ids use `defaultSize`.
@@ -47,12 +42,7 @@ export function applyPreset<T = unknown>(
 
 ### LayoutPreset
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L13">
-    core/presets.ts:13
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L13">core/presets.ts:13</a></span>
 
 Arrangement produced by [`applyPreset`](#applypreset): full-width rows stacked vertically,
 full-height columns side by side, or a grid with a fixed column count.
@@ -63,12 +53,7 @@ export type LayoutPreset = 'rows' | 'columns' | 'grid'
 
 ### PresetOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L16">
-    core/presets.ts:16
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/presets.ts#L16">core/presets.ts:16</a></span>
 
 Options for [`applyPreset`](#applypreset).
 
@@ -83,8 +68,8 @@ export type PresetOptions = {
 }
 ```
 
-| Member         | Type           | Description                                                                |
-| -------------- | -------------- | -------------------------------------------------------------------------- |
-| `gap?`         | `number`       | Spacing between cells. Defaults to the smallest gap already in the layout. |
-| `columns?`     | `number`       | Column count for `grid`. Defaults to 2.                                    |
-| `defaultSize?` | `GridItemSize` | Fallback size for ids that are not in the layout yet.                      |
+| Member | Type | Description |
+| --- | --- | --- |
+| `gap?` | `number` | Spacing between cells. Defaults to the smallest gap already in the layout. |
+| `columns?` | `number` | Column count for `grid`. Defaults to 2. |
+| `defaultSize?` | `GridItemSize` | Fallback size for ids that are not in the layout yet. |

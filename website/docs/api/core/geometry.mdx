@@ -10,93 +10,53 @@ description: Geometry exports of gridla. Generated from the source declarations.
 Rectangle math, normalization, bounds and clamping, content extent, validation, and gap enforcement. These are the building blocks the solvers are made of, exported so you can build your own.
 
 ```ts
-import {
-  boundsFromCanvas,
-  canPlaceItem,
-  canvasesEqual,
-  canvasInnerHeight,
-  canvasInnerRect,
-  canvasInnerWidth,
-  clampItem,
-  cloneItems,
-  contentBottom,
-  contentRight,
-  createItem,
-  enforceMinimumGaps,
-  findLayoutViolations,
-  fitCanvasToContent,
-  inferGap,
-  itemArea,
-  itemBottom,
-  itemRight,
-  layoutIsValid,
-  normalizeCanvas,
-  normalizeItem,
-  normalizeItems,
-  normalizeLayout,
-  normalizePadding,
-  overlapArea,
-  pointInRect,
-  rectsOverlap,
-  rectsViolateGap,
-  rectToEdges,
-  rectToViewportEdges,
-  resizeRect,
-  roundItem,
-  toCanvasItem,
-  toInnerItem,
-} from 'gridla'
+import { boundsFromCanvas, canPlaceItem, canvasesEqual, canvasInnerHeight, canvasInnerRect, canvasInnerWidth, clampItem, cloneItems, contentBottom, contentRight, createItem, enforceMinimumGaps, findLayoutViolations, fitCanvasToContent, inferGap, itemArea, itemBottom, itemRight, layoutIsValid, normalizeCanvas, normalizeItem, normalizeItems, normalizeLayout, normalizePadding, overlapArea, pointInRect, rectsOverlap, rectsViolateGap, rectToEdges, rectToViewportEdges, resizeRect, roundItem, toCanvasItem, toInnerItem } from 'gridla'
 import type { LayoutViolation } from 'gridla'
 ```
 
-| Export                                          | Kind     | Summary                                                                                                                                                      |
-| ----------------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| [`boundsFromCanvas`](#boundsfromcanvas)         | function | Derive solver bounds from a canvas.                                                                                                                          |
-| [`canPlaceItem`](#canplaceitem)                 | function | True when `item` fits inside bounds (within one pixel) and does not violate `gap` against any solid sibling.                                                 |
-| [`canvasesEqual`](#canvasesequal)               | function | True when two canvases have the same width, height, and padding on every side.                                                                               |
-| [`canvasInnerHeight`](#canvasinnerheight)       | function | Height of the canvas inside its top and bottom padding, in pixels.                                                                                           |
-| [`canvasInnerRect`](#canvasinnerrect)           | function | The area inside the canvas padding as a rectangle in canvas coordinates: origin at the padding offset, size from `canvasInnerWidth` and `canvasInnerHeight`. |
-| [`canvasInnerWidth`](#canvasinnerwidth)         | function | Width of the canvas inside its left and right padding, in pixels.                                                                                            |
-| [`clampItem`](#clampitem)                       | function | Fit an item inside bounds without moving it more than necessary.                                                                                             |
-| [`cloneItems`](#cloneitems)                     | function | Shallow-copy every item into a new array.                                                                                                                    |
-| [`contentBottom`](#contentbottom)               | function | Lowest bottom edge among the items, in canvas coordinates.                                                                                                   |
-| [`contentRight`](#contentright)                 | function | Rightmost right edge among the items, in canvas coordinates.                                                                                                 |
-| [`createItem`](#createitem)                     | function | Build a `GridItem` from an id, a size (with optional constraints), and a top-left position (default `0, 0`).                                                 |
-| [`enforceMinimumGaps`](#enforceminimumgaps)     | function | Push and trim items so that no two neighbors sit closer than `gap`.                                                                                          |
-| [`findLayoutViolations`](#findlayoutviolations) | function | Report bounds and overlap violations.                                                                                                                        |
-| [`fitCanvasToContent`](#fitcanvastocontent)     | function | For scrollable canvases, grow `height` so every item fits.                                                                                                   |
-| [`inferGap`](#infergap)                         | function | Smallest positive distance between any two neighboring items, or 0.                                                                                          |
-| [`itemArea`](#itemarea)                         | function | Area of a rectangle in square pixels (`w * h`).                                                                                                              |
-| [`itemBottom`](#itembottom)                     | function | Bottom edge of a rectangle (`y + h`).                                                                                                                        |
-| [`itemRight`](#itemright)                       | function | Right edge of a rectangle (`x + w`).                                                                                                                         |
-| [`layoutIsValid`](#layoutisvalid)               | function | True when every item in the layout can be placed.                                                                                                            |
-| [`LayoutViolation`](#layoutviolation)           | type     | One problem reported by `findLayoutViolations`: an item outside the canvas bounds, or two solid items that overlap.                                          |
-| [`normalizeCanvas`](#normalizecanvas)           | function | Fill in defaults and clamp a canvas so it is at least one pixel larger than its padding on both axes.                                                        |
-| [`normalizeItem`](#normalizeitem)               | function | Round an item and fit it inside a canvas, honoring min/max constraints and the canvas height mode.                                                           |
-| [`normalizeItems`](#normalizeitems)             | function | Apply `normalizeItem` to every item: round its geometry and clamp it into the canvas.                                                                        |
-| [`normalizeLayout`](#normalizelayout)           | function | Normalize a whole layout: canvas defaults plus every item clamped to it.                                                                                     |
-| [`normalizePadding`](#normalizepadding)         | function | Fill in missing sides with `0`, round each side to a whole pixel, and clamp negative values to `0`.                                                          |
-| [`overlapArea`](#overlaparea)                   | function | Area shared by two rectangles in square pixels.                                                                                                              |
-| [`pointInRect`](#pointinrect)                   | function | True when the point lies inside the rectangle.                                                                                                               |
-| [`rectsOverlap`](#rectsoverlap)                 | function | True when two rectangles share area.                                                                                                                         |
-| [`rectsViolateGap`](#rectsviolategap)           | function | True when two rectangles are closer than `gap` on both axes.                                                                                                 |
-| [`rectToEdges`](#recttoedges)                   | function | Convert an `x`/`y`/`w`/`h` rectangle into `top`/`right`/`bottom`/`left` edges.                                                                               |
-| [`rectToViewportEdges`](#recttoviewportedges)   | function | Offset a rect by a container origin, producing viewport edges.                                                                                               |
-| [`resizeRect`](#resizerect)                     | function | Compute the rectangle produced by dragging one edge or corner of an item by a pixel delta.                                                                   |
-| [`roundItem`](#rounditem)                       | function | Round an item's geometry and constraints to whole pixels.                                                                                                    |
-| [`toCanvasItem`](#tocanvasitem)                 | function | Translate an item from inner coordinates back to canvas coordinates.                                                                                         |
-| [`toInnerItem`](#toinneritem)                   | function | Translate an item from canvas coordinates to padding-relative inner coordinates.                                                                             |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`boundsFromCanvas`](#boundsfromcanvas) | function | Derive solver bounds from a canvas. |
+| [`canPlaceItem`](#canplaceitem) | function | True when `item` fits inside bounds (within one pixel) and does not violate `gap` against any solid sibling. |
+| [`canvasesEqual`](#canvasesequal) | function | True when two canvases have the same width, height, and padding on every side. |
+| [`canvasInnerHeight`](#canvasinnerheight) | function | Height of the canvas inside its top and bottom padding, in pixels. |
+| [`canvasInnerRect`](#canvasinnerrect) | function | The area inside the canvas padding as a rectangle in canvas coordinates: origin at the padding offset, size from `canvasInnerWidth` and `canvasInnerHeight`. |
+| [`canvasInnerWidth`](#canvasinnerwidth) | function | Width of the canvas inside its left and right padding, in pixels. |
+| [`clampItem`](#clampitem) | function | Fit an item inside bounds without moving it more than necessary. |
+| [`cloneItems`](#cloneitems) | function | Shallow-copy every item into a new array. |
+| [`contentBottom`](#contentbottom) | function | Lowest bottom edge among the items, in canvas coordinates. |
+| [`contentRight`](#contentright) | function | Rightmost right edge among the items, in canvas coordinates. |
+| [`createItem`](#createitem) | function | Build a `GridItem` from an id, a size (with optional constraints), and a top-left position (default `0, 0`). |
+| [`enforceMinimumGaps`](#enforceminimumgaps) | function | Push and trim items so that no two neighbors sit closer than `gap`. |
+| [`findLayoutViolations`](#findlayoutviolations) | function | Report bounds and overlap violations. |
+| [`fitCanvasToContent`](#fitcanvastocontent) | function | For scrollable canvases, grow `height` so every item fits. |
+| [`inferGap`](#infergap) | function | Smallest positive distance between any two neighboring items, or 0. |
+| [`itemArea`](#itemarea) | function | Area of a rectangle in square pixels (`w * h`). |
+| [`itemBottom`](#itembottom) | function | Bottom edge of a rectangle (`y + h`). |
+| [`itemRight`](#itemright) | function | Right edge of a rectangle (`x + w`). |
+| [`layoutIsValid`](#layoutisvalid) | function | True when every item in the layout can be placed. |
+| [`LayoutViolation`](#layoutviolation) | type | One problem reported by `findLayoutViolations`: an item outside the canvas bounds, or two solid items that overlap. |
+| [`normalizeCanvas`](#normalizecanvas) | function | Fill in defaults and clamp a canvas so it is at least one pixel larger than its padding on both axes. |
+| [`normalizeItem`](#normalizeitem) | function | Round an item and fit it inside a canvas, honoring min/max constraints and the canvas height mode. |
+| [`normalizeItems`](#normalizeitems) | function | Apply `normalizeItem` to every item: round its geometry and clamp it into the canvas. |
+| [`normalizeLayout`](#normalizelayout) | function | Normalize a whole layout: canvas defaults plus every item clamped to it. |
+| [`normalizePadding`](#normalizepadding) | function | Fill in missing sides with `0`, round each side to a whole pixel, and clamp negative values to `0`. |
+| [`overlapArea`](#overlaparea) | function | Area shared by two rectangles in square pixels. |
+| [`pointInRect`](#pointinrect) | function | True when the point lies inside the rectangle. |
+| [`rectsOverlap`](#rectsoverlap) | function | True when two rectangles share area. |
+| [`rectsViolateGap`](#rectsviolategap) | function | True when two rectangles are closer than `gap` on both axes. |
+| [`rectToEdges`](#recttoedges) | function | Convert an `x`/`y`/`w`/`h` rectangle into `top`/`right`/`bottom`/`left` edges. |
+| [`rectToViewportEdges`](#recttoviewportedges) | function | Offset a rect by a container origin, producing viewport edges. |
+| [`resizeRect`](#resizerect) | function | Compute the rectangle produced by dragging one edge or corner of an item by a pixel delta. |
+| [`roundItem`](#rounditem) | function | Round an item's geometry and constraints to whole pixels. |
+| [`toCanvasItem`](#tocanvasitem) | function | Translate an item from inner coordinates back to canvas coordinates. |
+| [`toInnerItem`](#toinneritem) | function | Translate an item from canvas coordinates to padding-relative inner coordinates. |
 
 ## Functions
 
 ### boundsFromCanvas
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L300">
-    core/geometry.ts:300
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L301">core/geometry.ts:301</a></span>
 
 Derive solver bounds from a canvas. `height` becomes `null` for `scrollable`
 canvases so items may extend below the visible height.
@@ -107,12 +67,7 @@ export function boundsFromCanvas(canvas: GridCanvas): GridBounds
 
 ### canPlaceItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L481">
-    core/geometry.ts:481
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L482">core/geometry.ts:482</a></span>
 
 True when `item` fits inside bounds (within one pixel) and does not violate
 `gap` against any solid sibling.
@@ -128,12 +83,7 @@ export function canPlaceItem(
 
 ### canvasesEqual
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L188">
-    core/geometry.ts:188
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L189">core/geometry.ts:189</a></span>
 
 True when two canvases have the same width, height, and padding on every side.
 `heightMode` is not compared.
@@ -144,12 +94,7 @@ export function canvasesEqual(a: GridCanvas, b: GridCanvas): boolean
 
 ### canvasInnerHeight
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L167">
-    core/geometry.ts:167
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L168">core/geometry.ts:168</a></span>
 
 Height of the canvas inside its top and bottom padding, in pixels. Never less than `1`.
 
@@ -159,12 +104,7 @@ export function canvasInnerHeight(canvas: GridCanvas): number
 
 ### canvasInnerRect
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L175">
-    core/geometry.ts:175
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L176">core/geometry.ts:176</a></span>
 
 The area inside the canvas padding as a rectangle in canvas coordinates:
 origin at the padding offset, size from [`canvasInnerWidth`](#canvasinnerwidth) and [`canvasInnerHeight`](#canvasinnerheight).
@@ -175,12 +115,7 @@ export function canvasInnerRect(canvas: GridCanvas): GridRect
 
 ### canvasInnerWidth
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L162">
-    core/geometry.ts:162
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L163">core/geometry.ts:163</a></span>
 
 Width of the canvas inside its left and right padding, in pixels. Never less than `1`.
 
@@ -190,12 +125,7 @@ export function canvasInnerWidth(canvas: GridCanvas): number
 
 ### clampItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L321">
-    core/geometry.ts:321
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L322">core/geometry.ts:322</a></span>
 
 Fit an item inside bounds without moving it more than necessary. Sizes are
 clamped from the current position first; the position only shifts when the
@@ -207,12 +137,7 @@ export function clampItem<T>(item: GridItem<T>, bounds: GridBounds): GridItem<T>
 
 ### cloneItems
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L115">
-    core/geometry.ts:115
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L116">core/geometry.ts:116</a></span>
 
 Shallow-copy every item into a new array. `data` is shared, not cloned.
 
@@ -222,12 +147,7 @@ export function cloneItems<T>(items: readonly GridItem<T>[]): GridItem<T>[]
 
 ### contentBottom
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L418">
-    core/geometry.ts:418
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L419">core/geometry.ts:419</a></span>
 
 Lowest bottom edge among the items, in canvas coordinates. Returns the top
 padding when there are no items.
@@ -238,12 +158,7 @@ export function contentBottom(items: readonly GridRect[], canvas: GridCanvas): n
 
 ### contentRight
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L426">
-    core/geometry.ts:426
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L427">core/geometry.ts:427</a></span>
 
 Rightmost right edge among the items, in canvas coordinates. Returns the left
 padding when there are no items.
@@ -254,12 +169,7 @@ export function contentRight(items: readonly GridRect[], canvas: GridCanvas): nu
 
 ### createItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L452">
-    core/geometry.ts:452
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L453">core/geometry.ts:453</a></span>
 
 Build a [`GridItem`](/api/react/components#griditem) from an id, a size (with optional constraints), and a
 top-left position (default `0, 0`). `w` and `h` are clamped to [`MIN_ITEM_SIZE`](/api/core/model#min_item_size);
@@ -277,12 +187,7 @@ export function createItem<T = unknown>(
 
 ### enforceMinimumGaps
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L596">
-    core/geometry.ts:596
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L598">core/geometry.ts:598</a></span>
 
 Push and trim items so that no two neighbors sit closer than `gap`. Items
 are processed left-to-right, then top-to-bottom, and clamped to bounds.
@@ -297,12 +202,7 @@ export function enforceMinimumGaps<T>(
 
 ### findLayoutViolations
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L523">
-    core/geometry.ts:523
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L524">core/geometry.ts:524</a></span>
 
 Report bounds and overlap violations. Ghost items and pairs of locked items
 are exempt from the overlap check.
@@ -313,12 +213,7 @@ export function findLayoutViolations(layout: GridLayout): LayoutViolation[]
 
 ### fitCanvasToContent
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L434">
-    core/geometry.ts:434
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L435">core/geometry.ts:435</a></span>
 
 For scrollable canvases, grow `height` so every item fits. Bounded canvases
 are returned unchanged.
@@ -329,12 +224,7 @@ export function fitCanvasToContent(canvas: GridCanvas, items: readonly GridRect[
 
 ### inferGap
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L621">
-    core/geometry.ts:621
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L623">core/geometry.ts:623</a></span>
 
 Smallest positive distance between any two neighboring items, or 0.
 
@@ -344,12 +234,7 @@ export function inferGap(items: readonly GridRect[]): number
 
 ### itemArea
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L34">
-    core/geometry.ts:34
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L35">core/geometry.ts:35</a></span>
 
 Area of a rectangle in square pixels (`w * h`).
 
@@ -359,12 +244,7 @@ export function itemArea(item: Pick<GridRect, 'w' | 'h'>): number
 
 ### itemBottom
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L29">
-    core/geometry.ts:29
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L30">core/geometry.ts:30</a></span>
 
 Bottom edge of a rectangle (`y + h`).
 
@@ -374,12 +254,7 @@ export function itemBottom(item: Pick<GridRect, 'y' | 'h'>): number
 
 ### itemRight
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L24">
-    core/geometry.ts:24
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L25">core/geometry.ts:25</a></span>
 
 Right edge of a rectangle (`x + w`).
 
@@ -389,27 +264,21 @@ export function itemRight(item: Pick<GridRect, 'x' | 'w'>): number
 
 ### layoutIsValid
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L503">
-    core/geometry.ts:503
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L504">core/geometry.ts:504</a></span>
 
 True when every item in the layout can be placed.
 
 ```ts
-export function layoutIsValid(items: readonly GridItem[], bounds: GridBounds, gap: number): boolean
+export function layoutIsValid(
+  items: readonly GridItem[],
+  bounds: GridBounds,
+  gap: number,
+): boolean
 ```
 
 ### normalizeCanvas
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L145">
-    core/geometry.ts:145
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L146">core/geometry.ts:146</a></span>
 
 Fill in defaults and clamp a canvas so it is at least one pixel larger than
 its padding on both axes.
@@ -423,12 +292,7 @@ export function normalizeCanvas(
 
 ### normalizeItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L230">
-    core/geometry.ts:230
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L231">core/geometry.ts:231</a></span>
 
 Round an item and fit it inside a canvas, honoring min/max constraints and
 the canvas height mode.
@@ -439,27 +303,20 @@ export function normalizeItem<T>(item: GridItem<T>, canvas: GridCanvas): GridIte
 
 ### normalizeItems
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L279">
-    core/geometry.ts:279
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L280">core/geometry.ts:280</a></span>
 
 Apply [`normalizeItem`](#normalizeitem) to every item: round its geometry and clamp it into the canvas.
 
 ```ts
-export function normalizeItems<T>(items: readonly GridItem<T>[], canvas: GridCanvas): GridItem<T>[]
+export function normalizeItems<T>(
+  items: readonly GridItem<T>[],
+  canvas: GridCanvas,
+): GridItem<T>[]
 ```
 
 ### normalizeLayout
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L287">
-    core/geometry.ts:287
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L288">core/geometry.ts:288</a></span>
 
 Normalize a whole layout: canvas defaults plus every item clamped to it.
 
@@ -469,12 +326,7 @@ export function normalizeLayout<T>(layout: GridLayout<T>): GridLayout<T>
 
 ### normalizePadding
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L132">
-    core/geometry.ts:132
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L133">core/geometry.ts:133</a></span>
 
 Fill in missing sides with `0`, round each side to a whole pixel, and clamp
 negative values to `0`.
@@ -485,12 +337,7 @@ export function normalizePadding(value: Partial<GridPadding> = {}): GridPadding
 
 ### overlapArea
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L60">
-    core/geometry.ts:60
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L61">core/geometry.ts:61</a></span>
 
 Area shared by two rectangles in square pixels. `0` when they do not overlap.
 
@@ -500,12 +347,7 @@ export function overlapArea(left: GridRect, right: GridRect): number
 
 ### pointInRect
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L93">
-    core/geometry.ts:93
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L94">core/geometry.ts:94</a></span>
 
 True when the point lies inside the rectangle. Edges are inclusive.
 
@@ -515,12 +357,7 @@ export function pointInRect(point: GridPoint, rect: GridRect): boolean
 
 ### rectsOverlap
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L39">
-    core/geometry.ts:39
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L40">core/geometry.ts:40</a></span>
 
 True when two rectangles share area. Touching edges do not count.
 
@@ -530,12 +367,7 @@ export function rectsOverlap(left: GridRect, right: GridRect): boolean
 
 ### rectsViolateGap
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L49">
-    core/geometry.ts:49
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L50">core/geometry.ts:50</a></span>
 
 True when two rectangles are closer than `gap` on both axes.
 
@@ -545,12 +377,7 @@ export function rectsViolateGap(left: GridRect, right: GridRect, gap: number): b
 
 ### rectToEdges
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L103">
-    core/geometry.ts:103
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L104">core/geometry.ts:104</a></span>
 
 Convert an `x`/`y`/`w`/`h` rectangle into `top`/`right`/`bottom`/`left` edges.
 
@@ -560,12 +387,7 @@ export function rectToEdges(rect: GridRect): GridEdges
 
 ### rectToViewportEdges
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L108">
-    core/geometry.ts:108
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L109">core/geometry.ts:109</a></span>
 
 Offset a rect by a container origin, producing viewport edges.
 
@@ -575,12 +397,7 @@ export function rectToViewportEdges(origin: GridPoint, rect: GridRect): GridEdge
 
 ### resizeRect
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L360">
-    core/geometry.ts:360
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L361">core/geometry.ts:361</a></span>
 
 Compute the rectangle produced by dragging one edge or corner of an item by
 a pixel delta. The opposite edge stays anchored. Constraints and bounds are
@@ -597,12 +414,7 @@ export function resizeRect<T>(
 
 ### roundItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L210">
-    core/geometry.ts:210
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L211">core/geometry.ts:211</a></span>
 
 Round an item's geometry and constraints to whole pixels.
 
@@ -612,12 +424,7 @@ export function roundItem<T>(item: GridItem<T>): GridItem<T>
 
 ### toCanvasItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L205">
-    core/geometry.ts:205
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L206">core/geometry.ts:206</a></span>
 
 Translate an item from inner coordinates back to canvas coordinates.
 
@@ -627,12 +434,7 @@ export function toCanvasItem<T>(item: GridItem<T>, canvas: GridCanvas): GridItem
 
 ### toInnerItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L200">
-    core/geometry.ts:200
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L201">core/geometry.ts:201</a></span>
 
 Translate an item from canvas coordinates to padding-relative inner coordinates.
 
@@ -644,22 +446,18 @@ export function toInnerItem<T>(item: GridItem<T>, canvas: GridCanvas): GridItem<
 
 ### LayoutViolation
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L515">
-    core/geometry.ts:515
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/geometry.ts#L516">core/geometry.ts:516</a></span>
 
 One problem reported by [`findLayoutViolations`](#findlayoutviolations): an item outside the canvas
 bounds, or two solid items that overlap.
 
 ```ts
 export type LayoutViolation =
-  { kind: 'out-of-bounds'; itemId: string } | { kind: 'overlap'; itemId: string; otherId: string }
+  | { kind: 'out-of-bounds'; itemId: string }
+  | { kind: 'overlap'; itemId: string; otherId: string }
 ```
 
-| Member   | Type                | Description |
-| -------- | ------------------- | ----------- | --- |
-| `kind`   | `"out-of-bounds" \\ | "overlap"`  |     |
-| `itemId` | `string`            |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `kind` | `"out-of-bounds" \\| "overlap"` |  |
+| `itemId` | `string` |  |

@@ -14,23 +14,18 @@ import { GRID_DATA, useGridInteraction } from 'gridla/react'
 import type { GridPointerHandlers, UseGridInteractionOptions } from 'gridla/react'
 ```
 
-| Export                                                    | Kind  | Summary                                                         |
-| --------------------------------------------------------- | ----- | --------------------------------------------------------------- |
-| [`GRID_DATA`](#grid_data)                                 | const | Data attributes the interaction hook looks for on pointer down. |
-| [`GridPointerHandlers`](#gridpointerhandlers)             | type  | Pointer and keyboard handlers returned by `useGridInteraction`. |
-| [`useGridInteraction`](#usegridinteraction)               | hook  | Pointer and keyboard orchestration for one canvas element.      |
-| [`UseGridInteractionOptions`](#usegridinteractionoptions) | type  | Options for `useGridInteraction`.                               |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`GRID_DATA`](#grid_data) | const | Data attributes the interaction hook looks for on pointer down. |
+| [`GridPointerHandlers`](#gridpointerhandlers) | type | Pointer and keyboard handlers returned by `useGridInteraction`. |
+| [`useGridInteraction`](#usegridinteraction) | hook | Pointer and keyboard orchestration for one canvas element. |
+| [`UseGridInteractionOptions`](#usegridinteractionoptions) | type | Options for `useGridInteraction`. |
 
 ## Hooks
 
 ### useGridInteraction
 
-<span className="g-api-meta">
-  hook ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L86">
-    react/interaction.ts:86
-  </a>
-</span>
+<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L86">react/interaction.ts:86</a></span>
 
 Pointer and keyboard orchestration for one canvas element. Attach the
 returned handlers to the element that contains the items; mark items with
@@ -38,7 +33,6 @@ returned handlers to the element that contains the items; mark items with
 resize handles with `data-gridla-resize-handle` + `data-gridla-edge`.
 
 Behavior:
-
 - press on a drag handle selects the item; moving past the threshold starts a move;
 - press on a resize handle starts a resize immediately;
 - Shift locks a move to the dominant axis; Ctrl/Cmd bypasses alignment snapping;
@@ -55,34 +49,19 @@ export function useGridInteraction<TData = unknown>(
 
 ### GRID_DATA
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L16">
-    react/interaction.ts:16
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L16">react/interaction.ts:16</a></span>
 
 Data attributes the interaction hook looks for on pointer down.
 
 ```ts
-export const GRID_DATA: {
-  readonly item: 'data-gridla-item'
-  readonly dragHandle: 'data-gridla-drag-handle'
-  readonly resizeHandle: 'data-gridla-resize-handle'
-  readonly edge: 'data-gridla-edge'
-}
+export const GRID_DATA: { readonly item: "data-gridla-item"; readonly dragHandle: "data-gridla-drag-handle"; readonly resizeHandle: "data-gridla-resize-handle"; readonly edge: "data-gridla-edge"; }
 ```
 
 ## Types
 
 ### GridPointerHandlers
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L53">
-    react/interaction.ts:53
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L53">react/interaction.ts:53</a></span>
 
 Pointer and keyboard handlers returned by [`useGridInteraction`](#usegridinteraction). Spread them
 onto the canvas element.
@@ -97,22 +76,17 @@ export type GridPointerHandlers = {
 }
 ```
 
-| Member            | Type                                             | Description |
-| ----------------- | ------------------------------------------------ | ----------- |
-| `onPointerDown`   | `(event: PointerEvent\<HTMLElement\>) =\> void`  |             |
-| `onPointerMove`   | `(event: PointerEvent\<HTMLElement\>) =\> void`  |             |
-| `onPointerUp`     | `(event: PointerEvent\<HTMLElement\>) =\> void`  |             |
-| `onPointerCancel` | `(event: PointerEvent\<HTMLElement\>) =\> void`  |             |
-| `onKeyDown`       | `(event: KeyboardEvent\<HTMLElement\>) =\> void` |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `onPointerDown` | `(event: PointerEvent\<HTMLElement\>) =\> void` |  |
+| `onPointerMove` | `(event: PointerEvent\<HTMLElement\>) =\> void` |  |
+| `onPointerUp` | `(event: PointerEvent\<HTMLElement\>) =\> void` |  |
+| `onPointerCancel` | `(event: PointerEvent\<HTMLElement\>) =\> void` |  |
+| `onKeyDown` | `(event: KeyboardEvent\<HTMLElement\>) =\> void` |  |
 
 ### UseGridInteractionOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L62">
-    react/interaction.ts:62
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/interaction.ts#L62">react/interaction.ts:62</a></span>
 
 Options for [`useGridInteraction`](#usegridinteraction). [`GridCanvas`](/api/react/components#gridcanvas) accepts the same fields as props.
 
@@ -130,8 +104,8 @@ export type UseGridInteractionOptions = {
 }
 ```
 
-| Member         | Type                          | Description                                                                                                           |
-| -------------- | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Member | Type | Description |
+| --- | --- | --- |
 | `onItemClick?` | `((itemId: string) =\> void)` | Called with the item id when a press does not turn into a drag (a click). Selection already happened on pointer down. |
-| `onDeleteKey?` | `((itemId: string) =\> void)` | Called when Delete or Backspace is pressed with an item selected.                                                     |
-| `enabled?`     | `boolean`                     | Set `false` to disable pointer-driven gestures. Default `true`.                                                       |
+| `onDeleteKey?` | `((itemId: string) =\> void)` | Called when Delete or Backspace is pressed with an item selected. |
+| `enabled?` | `boolean` | Set `false` to disable pointer-driven gestures. Default `true`. |
