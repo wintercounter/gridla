@@ -2288,3 +2288,234 @@ kbd {
 .g-api-meta a:hover {
   color: var(--g-accent-strong);
 }
+
+/* ---------------------------------------------------------------------------
+ * Styling guide demos (live gridla/react canvases inside the doc page)
+ * ------------------------------------------------------------------------- */
+
+.g-styling {
+  display: grid;
+  gap: var(--g-space-4);
+  margin-block: var(--g-space-5);
+}
+
+.g-styling-demo .g-mini-head h4 {
+  margin: 0 auto 0 0;
+  font: 600 var(--g-text-md) / 1.2 var(--g-font-display);
+  letter-spacing: -0.01em;
+}
+
+.g-styling-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--g-space-3) var(--g-space-5);
+}
+
+.g-styling-controls .g-mini-control {
+  flex: 1 1 14rem;
+}
+
+.g-styling-control-label {
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  color: var(--g-fg-muted);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.g-styling-segmented {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--g-space-2) var(--g-space-3);
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.g-styling-segmented legend {
+  float: left;
+  padding: 0;
+  margin-inline-end: var(--g-space-3);
+}
+
+.g-styling-segmented-track {
+  display: inline-flex;
+  padding: 2px;
+  border: var(--g-border-w) solid var(--g-line-strong);
+  border-radius: var(--g-radius-2);
+  background: var(--g-bg-sunken);
+}
+
+.g-styling-segmented-track button {
+  padding: 0.3em 0.65em;
+  border: 0;
+  border-radius: calc(var(--g-radius-2) - 2px);
+  background: transparent;
+  color: var(--g-fg-muted);
+  font: 500 var(--g-text-xs) / 1 var(--g-font-body);
+  cursor: pointer;
+  transition:
+    color var(--g-duration-fast) var(--g-ease-out),
+    background var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-styling-segmented-track button:hover {
+  color: var(--g-fg);
+}
+
+.g-styling-segmented-track button[aria-pressed='true'] {
+  background: var(--g-bg-raised);
+  color: var(--g-fg);
+  box-shadow: var(--g-shadow-1);
+}
+
+.g-styling-segmented-track button:focus-visible {
+  outline: none;
+  box-shadow: var(--g-focus);
+}
+
+.g-styling-check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--g-space-2);
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  color: var(--g-fg-muted);
+  cursor: pointer;
+}
+
+.g-styling-check input {
+  accent-color: var(--g-accent);
+  margin: 0;
+}
+
+.g-styling-stage {
+  height: 15rem;
+}
+
+/* Cards used by the demos: reveal grips on hover, selection, and canvas focus. */
+.g-styling-canvas[data-mode='hit'] .g-mini-handle {
+  background: var(--g-accent-soft);
+  outline: 1px dashed var(--g-accent);
+  outline-offset: -1px;
+}
+
+.g-styling-canvas[data-mode='grips'] .g-mini-handle::after,
+.g-styling-canvas[data-mode='corners'] .g-mini-handle::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: var(--g-select);
+  opacity: 0;
+  transition: opacity var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-styling-canvas[data-mode='corners'] .g-mini-handle::after {
+  border-radius: 50%;
+}
+
+.g-styling-canvas[data-mode='grips'] .g-mini-handle[data-gridla-edge='n']::after,
+.g-styling-canvas[data-mode='grips'] .g-mini-handle[data-gridla-edge='s']::after {
+  inset: 3px 30%;
+}
+
+.g-styling-canvas[data-mode='grips'] .g-mini-handle[data-gridla-edge='e']::after,
+.g-styling-canvas[data-mode='grips'] .g-mini-handle[data-gridla-edge='w']::after {
+  inset: 30% 3px;
+}
+
+.g-styling-canvas .g-mini-item:hover .g-mini-handle::after,
+.g-styling-canvas .g-mini-item[data-gridla-selected] .g-mini-handle::after,
+.g-styling-canvas:focus-visible .g-mini-item[data-gridla-selected] .g-mini-handle::after {
+  opacity: 1;
+}
+
+/* Locked row in the preview demo. */
+.g-mini-item[data-locked] {
+  cursor: default;
+  color: var(--g-fg-muted);
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0 6px,
+      color-mix(in oklch, var(--g-fg) 6%, transparent) 6px 7px
+    ),
+    var(--g-bg-raised);
+}
+
+/* Custom preview outline: color by strategy, red when rejected. */
+.g-styling-preview {
+  --g-preview: var(--g-accent);
+  border: 2px dashed var(--g-preview);
+  border-radius: var(--g-radius-2);
+  background: color-mix(in oklch, var(--g-preview) 12%, transparent);
+  transition: transform var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-styling-preview[data-strategy='swap'],
+.g-styling-preview[data-strategy='group-swap'] {
+  --g-preview: var(--g-select);
+}
+
+.g-styling-preview[data-strategy^='reorder'],
+.g-styling-preview[data-strategy^='insert'] {
+  --g-preview: var(--g-ok);
+}
+
+.g-styling-preview[data-strategy*='shrink'],
+.g-styling-preview[data-strategy*='trim'] {
+  --g-preview: var(--g-warn);
+}
+
+.g-styling-preview[data-rejected] {
+  --g-preview: oklch(55% 0.2 25);
+}
+
+.g-styling-preview::after {
+  content: attr(data-strategy);
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  padding: 1px 4px;
+  border-radius: var(--g-radius-1);
+  background: var(--g-bg-raised);
+  color: var(--g-preview);
+  font: 500 var(--g-text-xs) / 1.3 var(--g-font-mono);
+}
+
+.g-styling-preview[data-rejected]::after {
+  content: attr(data-strategy) ' · rejected';
+}
+
+/* Motion demo: transitions on transform only. */
+.g-styling-canvas[data-motion='siblings'] .g-mini-item,
+.g-styling-canvas[data-motion='all'] .g-mini-item {
+  transition:
+    transform var(--g-duration) var(--g-ease-out),
+    border-color var(--g-duration-fast) var(--g-ease-out),
+    box-shadow var(--g-duration-fast) var(--g-ease-out);
+}
+
+.g-styling-canvas[data-motion='siblings'] .g-mini-item[data-gridla-active] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .g-styling-canvas .g-mini-item,
+  .g-styling-preview {
+    transition: none;
+  }
+}
+
+.g-styling-stage .g-mini-item {
+  container-type: inline-size;
+}
+
+/* Narrow cards drop the size readout instead of clipping it. */
+@container (max-width: 110px) {
+  .g-mini-item-size {
+    display: none;
+  }
+}

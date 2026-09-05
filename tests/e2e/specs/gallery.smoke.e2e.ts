@@ -22,6 +22,7 @@ const DEMOS = [
   'react-ssr',
   'react-stress',
   'react-presets',
+  'styling',
 ]
 
 /** Alternate ids the documentation site links with, and the demo each resolves to. */

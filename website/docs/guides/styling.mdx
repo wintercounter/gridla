@@ -1,0 +1,651 @@
+---
+title: Styling
+description: Every adapter is headless. This page lists what Gridla puts on the DOM, every data attribute you can select, how to style and size resize handles, drag handles, the preview outline, motion, states, nested groups, dark mode, and a starter stylesheet.
+---
+
+import { StylingDemos } from '../../theme/components/StylingDemos'
+
+# Styling
+
+Gridla ships no visual styles. Every adapter renders plain elements with geometry as inline style and state as `data-gridla-*` attributes, and leaves color, borders, shadows, and motion to your stylesheet. The same attributes come out of every adapter, so the CSS on this page works with React, Vue, Svelte, Solid, Angular, Qwik, Web Components, and the DOM adapter alike.
+
+## What ships and what does not
+
+The adapters set inline styles for geometry only:
+
+| Element                | Inline styles set by the adapter                                                                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Canvas                 | `position: relative`, `box-sizing: border-box`, `touch-action: none`; `user-select: none` while a gesture runs; `width`/`height` when `responsive={false}`, `min-height` for a scrollable canvas. A responsive, bounded canvas has **no height of its own**: give it one. |
+| Item                   | `position: absolute`, `box-sizing: border-box`, `width`, `height`, and either `transform: translate(x, y)` (default) or `left`/`top` (`positioning="absolute"`); `z-index: 2` while active; `opacity: 0.4` while transferring to another canvas.                          |
+| Preview outline        | The same geometry as an item plus `pointer-events: none`.                                                                                                                                                                                                                 |
+| Built-in resize handle | `position: absolute`, `touch-action: none`, the edge cursor, and its size and placement, all through custom properties (see [Resize handles](#resize-handles)).                                                                                                           |
+
+Everything else is yours. Three rules keep the geometry honest:
+
+- **Do not change `box-sizing`.** Widths and heights are outer sizes; borders and padding live inside them.
+- **Clip or scroll the content.** An item is exactly as large as the layout says; use `overflow: hidden` or `overflow: auto` on the item so content never spills into a neighbor.
+- **Animate `transform`, not `width` and `height`.** The active item follows the pointer, siblings move to where the solver puts them. A `transform` transition on siblings runs on the compositor; animating size forces layout on every frame. `contain: layout paint` on items is a cheap win for large canvases.
+
+`positioning="transform"` (the default) keeps layout work off the main thread during gestures. Switch to `positioning="absolute"` only when a child depends on `left`/`top`, for example `position: sticky` content.
+
+## Attribute reference
+
+Every attribute below is emitted by every adapter. Boolean attributes are present with an empty value when true and absent otherwise, so select them with `[attr]`.
+
+| Attribute                                       | On                    | When                                                                                                      | Example                                                                    |
+| ----------------------------------------------- | --------------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| `data-gridla-canvas`                            | canvas                | always                                                                                                    | `[data-gridla-canvas] { background: #f6f5f1; }`                            |
+| `data-gridla-active` (canvas)                   | canvas                | while a gesture runs in this canvas                                                                       | `[data-gridla-canvas][data-gridla-active] { outline-color: transparent; }` |
+| `data-gridla-item="<id>"`                       | item                  | always; the value is the item id                                                                          | `[data-gridla-item] { border: 1px solid #8884; }`                          |
+| `data-gridla-active`                            | item                  | the item is being moved or resized                                                                        | `[data-gridla-item][data-gridla-active] { box-shadow: 0 8px 24px #0003; }` |
+| `data-gridla-selected`                          | item                  | the item is the selection (click, or arrow keys)                                                          | `[data-gridla-item][data-gridla-selected] { outline: 2px solid #3b82f6; }` |
+| `data-gridla-shifted`                           | item                  | a sibling the solver moved or resized to make room during a gesture                                       | `[data-gridla-item][data-gridla-shifted] { border-style: dashed; }`        |
+| `data-gridla-transferring`                      | item                  | the active item is being previewed in another canvas                                                      | `[data-gridla-item][data-gridla-transferring] { filter: grayscale(1); }`   |
+| `data-gridla-preview`                           | preview outline       | while the gesture has an accepted landing box (`GridPreviewOutline`, `preview: true`, `<gridla-preview>`) | `[data-gridla-preview] { border: 2px dashed #e0562f; }`                    |
+| `data-gridla-drag-handle="<id>"`                | item or a child of it | the whole item (`draggable` default) or your own handle (`dragHandleProps`)                               | `[data-gridla-drag-handle] { cursor: grab; }`                              |
+| `data-gridla-resize-handle="<id>"`              | handle                | built-in handles (`resizeEdges`) and your own (`getResizeHandleProps(edge)`)                              | `[data-gridla-resize-handle] { z-index: 1; }`                              |
+| `data-gridla-edge="n\|s\|e\|w\|ne\|nw\|se\|sw"` | handle                | together with `data-gridla-resize-handle`                                                                 | `[data-gridla-edge='se'] { cursor: nwse-resize; }`                         |
+| `data-gridla-dragging`                          | `<html>`              | while any gesture runs on the page                                                                        | `html[data-gridla-dragging] { user-select: none; }`                        |
+
+The Web Components adapter adds the tag names `gridla-canvas`, `gridla-item`, `gridla-preview`, and `gridla-transfer-scope` (or your prefix) on top of the same attributes. Custom elements are `display: inline` by default; the adapter sets `display: block` on the canvas, but give `gridla-item` a `display` if your content needs one.
+
+## Resize handles
+
+Built-in handles are empty `div`s the adapter appends to the item when you pass `resizeEdges`. They sit **inside** the item so they stay hit-testable when the item clips its overflow: corner handles are squares in the corners, edge handles run along a side and stop short of each corner so the two never overlap.
+
+```
+┌──┬───────────────┬──┐
+│nw│       n       │ne│    corners: size × size
+├──┼───────────────┼──┤    edges:   size thick, inset from each corner
+│  │               │  │
+│w │    content    │ e│    everything sits inside the item box
+│  │               │  │
+├──┼───────────────┼──┤
+│sw│       s       │se│
+└──┴───────────────┴──┘
+```
+
+The geometry is inline, but every length reads a custom property with a fallback, so CSS on the handle, the item, the canvas, or `:root` changes it without `!important`:
+
+| Custom property                 | Default                | Effect                                                         |
+| ------------------------------- | ---------------------- | -------------------------------------------------------------- |
+| `--gridla-handle-size`          | `10px`                 | Thickness of every handle; the side length of a corner handle. |
+| `--gridla-handle-inset`         | `--gridla-handle-size` | How far an edge handle stops short of the corners.             |
+| `--gridla-handle-cursor-<edge>` | the `*-resize` cursor  | Cursor of one edge, for example `--gridla-handle-cursor-se`.   |
+| `--gridla-handle-cursor`        | the `*-resize` cursor  | Cursor of every edge (an edge property wins over this one).    |
+
+<StylingDemos only="handles" />
+
+### Size and hit areas
+
+```css
+/* Thicker handles everywhere. */
+[data-gridla-canvas] {
+  --gridla-handle-size: 14px;
+}
+
+/* Bigger targets on touch screens; 44px is the usual minimum. */
+@media (pointer: coarse) {
+  [data-gridla-canvas] {
+    --gridla-handle-size: 24px;
+  }
+}
+
+/* Corner-only feel: edges keep clear of big corner grips. */
+[data-gridla-item] {
+  --gridla-handle-inset: 20px;
+}
+```
+
+The properties inherit, so a value on the canvas applies to every item. Setting `--gridla-handle-size` on a single item (inline or via a class) changes that item only.
+
+### Visible grips
+
+Handles are invisible until you paint them. A pseudo-element keeps the hit area at full size while the visible grip stays small; show it on hover, on selection, or on keyboard focus of the canvas.
+
+```css
+[data-gridla-resize-handle] {
+  z-index: 1; /* above the item's content */
+}
+
+[data-gridla-resize-handle]::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: #3b82f6;
+  opacity: 0;
+  transition: opacity 120ms ease-out;
+}
+
+[data-gridla-item]:hover [data-gridla-resize-handle]::after,
+[data-gridla-item][data-gridla-selected] [data-gridla-resize-handle]::after,
+[data-gridla-canvas]:focus-visible
+  [data-gridla-item][data-gridla-selected]
+  [data-gridla-resize-handle]::after {
+  opacity: 1;
+}
+
+/* Corner grips as small circles, edge grips as thin bars. */
+[data-gridla-edge='ne']::after,
+[data-gridla-edge='nw']::after,
+[data-gridla-edge='se']::after,
+[data-gridla-edge='sw']::after {
+  border-radius: 50%;
+}
+
+[data-gridla-edge='n']::after,
+[data-gridla-edge='s']::after {
+  inset: 3px 30%;
+}
+
+[data-gridla-edge='e']::after,
+[data-gridla-edge='w']::after {
+  inset: 30% 3px;
+}
+```
+
+The demo above uses these rules. Hover a card or click it to select it and the grips appear; the hit areas stay 10px (or whatever you set) regardless of how small the grip is drawn.
+
+### Cursors
+
+The inline cursor reads `--gridla-handle-cursor-<edge>` first, then `--gridla-handle-cursor`, then the matching resize cursor, so a plain declaration overrides it:
+
+```css
+/* One custom cursor for every edge. */
+[data-gridla-canvas] {
+  --gridla-handle-cursor: crosshair;
+}
+
+/* Or per edge. */
+[data-gridla-canvas] {
+  --gridla-handle-cursor-se: url('grab-corner.svg') 8 8, nwse-resize;
+  --gridla-handle-cursor-nw: url('grab-corner.svg') 8 8, nwse-resize;
+}
+```
+
+### Which edges
+
+Render only the edges you want. Corner-only handles are a common choice for card layouts; a single south-east handle is enough for many dashboards.
+
+```tsx
+import { GridItem } from 'gridla/react'
+
+export function Corners({ id }: { id: string }) {
+  return <GridItem id={id} resizeEdges={['ne', 'nw', 'se', 'sw']} />
+}
+
+export function OneCorner({ id }: { id: string }) {
+  return <GridItem id={id} resizeEdges={['se']} />
+}
+```
+
+`resizeEdges` is per item, so a fixed-size item simply passes none. To hide an edge visually while keeping the others, target it by attribute:
+
+```css
+[data-gridla-item].fixed-height [data-gridla-edge='n'],
+[data-gridla-item].fixed-height [data-gridla-edge='s'] {
+  display: none;
+}
+```
+
+### Class hooks
+
+Every adapter accepts a class for the built-in handles. The prop name follows the framework's convention:
+
+| Adapter        | Handle class                                | Edges                              | Item class                         |
+| -------------- | ------------------------------------------- | ---------------------------------- | ---------------------------------- |
+| React          | `resizeHandleClassName`                     | `resizeEdges={['e', 's', 'se']}`   | `className`                        |
+| Vue            | `resize-handle-class` / `resizeHandleClass` | `:resize-edges="['e', 's', 'se']"` | `class` (falls through)            |
+| Svelte         | `resizeHandleClass`                         | `resizeEdges={['e', 's', 'se']}`   | `class`                            |
+| Solid          | `resizeHandleClass`                         | `resizeEdges={['e', 's', 'se']}`   | `class`                            |
+| Angular        | `resizeHandleClass`                         | `[resizeEdges]="['e', 's', 'se']"` | `class` on the `[gridlaItem]` host |
+| Qwik           | `resizeHandleClass`                         | `resizeEdges={['e', 's', 'se']}`   | `class`                            |
+| DOM            | `resizeHandleClassName` (mount option)      | `resizeEdges` (mount option)       | `createItemElement` / `renderItem` |
+| Web Components | `resize-handle-class` on `<gridla-canvas>`  | `resize-edges="e s se"`            | your markup inside `<gridla-item>` |
+
+A class is convenient when you scope styles with CSS Modules or a utility framework; the data attributes work without one.
+
+### Your own handles
+
+When you render handles yourself (`getResizeHandleProps(edge)` in React, Vue, Svelte, Solid, and Qwik; `gridlaResizeHandle="se"` in Angular; the attributes by hand in the DOM), position and style them however you like: outside the item, as a floating knob, as an SVG. [`resizeHandleStyle(edge)`](../api/interaction/style) from `gridla/interaction` gives you the built-in geometry (with the same custom properties) if you want to start from it:
+
+```tsx
+import { resizeHandleStyle } from 'gridla/interaction'
+import { GridItem } from 'gridla/react'
+
+export function Card({ id }: { id: string }) {
+  return (
+    <GridItem id={id}>
+      {({ isSelected, getResizeHandleProps }) =>
+        isSelected ? (
+          <span className="knob" {...getResizeHandleProps('se')} style={resizeHandleStyle('se')} />
+        ) : null
+      }
+    </GridItem>
+  )
+}
+```
+
+Custom handles must keep `touch-action: none` (the helper sets it) or the browser will scroll instead of resizing on touch screens.
+
+## Drag handles
+
+By default the whole item is a drag surface: the item element carries `data-gridla-drag-handle`. Pass `draggable={false}` and spread `dragHandleProps` (Angular: `gridlaDragHandle`) on the element that should start a move, typically a header, and controls inside the item keep working.
+
+```css
+/* Whole-item drag. */
+[data-gridla-item][data-gridla-drag-handle] {
+  cursor: grab;
+}
+
+/* Explicit handle inside an item. */
+[data-gridla-item] [data-gridla-drag-handle] {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+[data-gridla-item][data-gridla-active] [data-gridla-drag-handle],
+[data-gridla-item][data-gridla-active][data-gridla-drag-handle] {
+  cursor: grabbing;
+}
+```
+
+The canvas already has `touch-action: none`, which is what lets a touch start a drag instead of a scroll. If you build a custom canvas element, keep it. Text selection during a gesture is suppressed twice: the canvas sets `user-select: none` while dragging, and `html[data-gridla-dragging]` lets you extend that to the whole page:
+
+```css
+html[data-gridla-dragging] {
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grabbing;
+}
+```
+
+## Preview outline
+
+`GridPreviewOutline` (and `preview: true` in the DOM adapter, `<gridla-preview>` in Web Components) renders a box where the active item will land when released. It has geometry and `pointer-events: none` and nothing else.
+
+```css
+[data-gridla-preview] {
+  border: 2px dashed #e0562f;
+  border-radius: 6px;
+  background: rgb(224 86 47 / 0.12);
+  transition: transform 120ms ease-out;
+}
+```
+
+A short `transform` transition makes the outline glide between candidate slots instead of jumping. Keep it faster than your item transition so it never lags behind the pointer.
+
+### By strategy, accepted or rejected
+
+The built-in outline only renders accepted previews. To color the outline by what the solver did, or to show a rejected drop, read the preview yourself and render your own element. `useGridPreview()` (React, Vue, Solid), `controller.preview()` (Angular), `gridStore((state) => state.preview)` (Svelte), or `useGridState().value.preview` (Qwik) gives you a `GridPreview`: the `item` rect, the `strategy` name, `shiftedSiblings`, and `accepted`.
+
+```tsx
+import { rectStyle } from 'gridla/interaction'
+import { useGridPreview } from 'gridla/react'
+
+export function StrategyPreview() {
+  const preview = useGridPreview()
+  if (!preview) return null
+  const { x, y, w, h } = preview.item
+  return (
+    <div
+      data-gridla-preview=""
+      data-strategy={preview.strategy}
+      data-rejected={preview.accepted ? undefined : ''}
+      style={{
+        pointerEvents: 'none',
+        boxSizing: 'border-box',
+        ...rectStyle({ x, y, w, h }, 'transform'),
+      }}
+    />
+  )
+}
+```
+
+```css
+[data-gridla-preview] {
+  border: 2px dashed #e0562f;
+}
+
+[data-gridla-preview][data-strategy^='push'] {
+  border-color: #e0562f;
+}
+
+[data-gridla-preview][data-strategy='swap'],
+[data-gridla-preview][data-strategy='group-swap'] {
+  border-color: #3b82f6;
+}
+
+[data-gridla-preview][data-strategy^='reorder'],
+[data-gridla-preview][data-strategy^='insert'] {
+  border-color: #2f9e6b;
+}
+
+[data-gridla-preview][data-strategy*='shrink'],
+[data-gridla-preview][data-strategy*='trim'] {
+  border-color: #d19a1a;
+}
+
+[data-gridla-preview][data-rejected] {
+  border-color: #c0392b;
+  background: rgb(192 57 43 / 0.12);
+}
+
+/* Print the strategy name in the corner. */
+[data-gridla-preview]::after {
+  content: attr(data-strategy);
+  position: absolute;
+  top: 4px;
+  left: 6px;
+  font:
+    500 11px/1 ui-monospace,
+    monospace;
+}
+```
+
+The strategy names are the `SolveStrategy` union: `push-x`, `push-y`, `push-down`, `push-shrink-x`, `push-shrink-y`, `swap`, `group-swap`, `reorder-row`, `reorder-column`, `insert-row`, `insert-column`, `shrink-neighbor`, `resize`, `resize-shrink-neighbors`, `snap`, `free`, and a few more listed in the [instrumentation API](../api/core/instrumentation).
+
+<StylingDemos only="preview" />
+
+## Motion
+
+Items are positioned with a `transform` that changes when the solver moves them, so a CSS transition on `transform` animates every sibling the solver pushes, swaps, or reorders. The active item must not animate: it follows the pointer and any transition would make it lag.
+
+```css
+[data-gridla-item] {
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+[data-gridla-item][data-gridla-active] {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-gridla-item] {
+    transition: none;
+  }
+}
+```
+
+Two variations are common:
+
+- **Animate the release only.** Keep siblings snapping instantly while the pointer is down, then let everything settle when the gesture ends: `html[data-gridla-dragging] [data-gridla-item] { transition: none; }`. Note that this also removes the settle animation of the released item; use `html[data-gridla-dragging] [data-gridla-item]:not([data-gridla-active])` if you only want the siblings to snap.
+- **Animate size too.** `width` and `height` change when the solver shrinks a neighbor or when you resize; transitioning them looks smooth on small canvases but costs layout on every frame. Prefer it only for a handful of items.
+
+The active item already gets `z-index: 2` inline; if you raise other items above 2 (a sticky header, a hovered card), raise the active item further with `[data-gridla-item][data-gridla-active] { z-index: 10; }`. `will-change: transform` on every item is rarely worth it: it forces a compositor layer per item and costs memory on large canvases. Reserve it for the active item, or skip it.
+
+<StylingDemos only="motion" />
+
+## States
+
+```css
+/* Selection: an outline that works in both themes and does not rely on color alone. */
+[data-gridla-item][data-gridla-selected] {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* Siblings that moved to make room. */
+[data-gridla-item][data-gridla-shifted] {
+  border-style: dashed;
+}
+
+/* The source of a cross-canvas transfer; the adapter already fades it to 0.4. */
+[data-gridla-item][data-gridla-transferring] {
+  border-style: dotted;
+  filter: grayscale(1);
+}
+
+/* Keyboard users: the canvas is focusable and arrow keys move the selection. */
+[data-gridla-canvas] {
+  outline: none;
+}
+
+[data-gridla-canvas]:focus-visible {
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 4px #3b82f6;
+}
+```
+
+Every state attribute is boolean and set on the item itself, so `[data-gridla-item][data-gridla-selected]` and `[data-gridla-selected]` select the same element; the longer form keeps specificity predictable next to your own item class.
+
+## Nested groups
+
+A group is an item that hosts a canvas of its own. Give it a head strip that carries `dragHandleProps` and a body that fills the rest; the inner canvas measures the body and inner gestures stay inside it (`onPointerDown={stop}`, see [nesting](../concepts/nesting)).
+
+```css
+.group {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 1px dashed #3b82f6;
+}
+
+.group-head {
+  cursor: grab;
+  padding: 6px 10px;
+  border-bottom: 1px dashed #3b82f6;
+}
+
+.group-body {
+  flex: 1;
+  min-height: 0;
+  padding: 6px;
+}
+
+.group-body [data-gridla-canvas] {
+  height: 100%;
+}
+
+/* A locked group (policy.movement === 'locked'): no grab cursor, striped ground. */
+.group[data-locked] {
+  cursor: default;
+  background: repeating-linear-gradient(135deg, transparent 0 6px, #8882 6px 7px);
+}
+
+.group[data-locked] .group-head {
+  cursor: default;
+}
+```
+
+`data-locked` is not a Gridla attribute: set it from the item's `policy` in your render function, the same way you would any other application state.
+
+## Dark mode and tokens
+
+Keep colors in custom properties on the canvas so a theme switch is one rule:
+
+```css
+[data-gridla-canvas] {
+  --grid-line: #8884;
+  --grid-surface: #fff;
+  --grid-accent: #e0562f;
+  --grid-select: #3b82f6;
+}
+
+@media (prefers-color-scheme: dark) {
+  [data-gridla-canvas] {
+    --grid-line: #fff3;
+    --grid-surface: #1d2033;
+  }
+}
+
+[data-gridla-item] {
+  background: var(--grid-surface);
+  border: 1px solid var(--grid-line);
+}
+
+[data-gridla-item][data-gridla-selected] {
+  outline: 2px solid var(--grid-select);
+}
+
+[data-gridla-preview] {
+  border: 2px dashed var(--grid-accent);
+}
+
+[data-gridla-resize-handle]::after {
+  background: var(--grid-select);
+}
+```
+
+Class-based themes work the same: `.dark [data-gridla-canvas] { ... }`.
+
+## Starter stylesheet
+
+The package ships an optional starter stylesheet with the rules from this page: item box, states, selection ring, focus ring, preview outline, hover-revealed grips, larger touch targets, and reduced-motion handling. Import it and override its tokens, or copy it into your project and edit.
+
+```ts
+import 'gridla/base.css'
+```
+
+```css
+/* Override the tokens on the canvas or on :root. */
+[data-gridla-canvas] {
+  --gridla-accent: #6d28d9;
+  --gridla-select: #0ea5e9;
+  --gridla-radius: 10px;
+  --gridla-handle-size: 12px;
+}
+```
+
+The full file, for reference:
+
+```css
+/*
+ * gridla/base.css — an optional starter stylesheet for the headless adapters.
+ * Everything hangs off the data attributes every adapter emits.
+ */
+
+[data-gridla-canvas] {
+  --gridla-line: #8884;
+  --gridla-surface: Canvas;
+  --gridla-accent: #e0562f;
+  --gridla-select: #3b82f6;
+  --gridla-radius: 6px;
+  --gridla-duration: 180ms;
+  --gridla-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Built-in resize handles read these; unset means 10px. */
+  --gridla-handle-size: 10px;
+  --gridla-handle-inset: 10px;
+
+  position: relative;
+  outline: none;
+}
+
+/* Keyboard users need to see which canvas has focus. */
+[data-gridla-canvas]:focus-visible {
+  box-shadow: 0 0 0 2px var(--gridla-select);
+}
+
+/* Items: a box the content can fill. Geometry (size, transform) is inline. */
+[data-gridla-item] {
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--gridla-line);
+  border-radius: var(--gridla-radius);
+  background: var(--gridla-surface);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform var(--gridla-duration) var(--gridla-ease),
+    width var(--gridla-duration) var(--gridla-ease),
+    height var(--gridla-duration) var(--gridla-ease);
+}
+
+/* The active item follows the pointer; never animate it. */
+[data-gridla-item][data-gridla-active] {
+  cursor: grabbing;
+  transition: none;
+  border-color: var(--gridla-accent);
+  box-shadow: 0 4px 16px #0003;
+}
+
+[data-gridla-item][data-gridla-selected] {
+  border-color: var(--gridla-select);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gridla-select) 30%, transparent);
+}
+
+/* Siblings the solver moved out of the way during a gesture. */
+[data-gridla-item][data-gridla-shifted] {
+  border-style: dashed;
+}
+
+/* The source of a cross-canvas transfer (the adapter also fades it). */
+[data-gridla-item][data-gridla-transferring] {
+  border-style: dotted;
+}
+
+/* Explicit drag handles inside an item (`draggable={false}` on the item). */
+[data-gridla-item] [data-gridla-drag-handle] {
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Where the active item will land. */
+[data-gridla-preview] {
+  border: 2px dashed var(--gridla-accent);
+  border-radius: var(--gridla-radius);
+  background: color-mix(in srgb, var(--gridla-accent) 12%, transparent);
+}
+
+/* Resize handles: invisible hit areas; show a grip when the item is selected
+ * or hovered. */
+[data-gridla-resize-handle] {
+  z-index: 1;
+}
+
+[data-gridla-resize-handle]::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: var(--gridla-select);
+  opacity: 0;
+  transition: opacity 120ms var(--gridla-ease);
+}
+
+[data-gridla-item]:hover [data-gridla-resize-handle]::after,
+[data-gridla-item][data-gridla-selected] [data-gridla-resize-handle]::after {
+  opacity: 0.85;
+}
+
+/* Bigger targets on touch screens. */
+@media (pointer: coarse) {
+  [data-gridla-canvas] {
+    --gridla-handle-size: 18px;
+    --gridla-handle-inset: 18px;
+  }
+}
+
+/* No text selection anywhere while a gesture runs. */
+html[data-gridla-dragging] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-gridla-item],
+  [data-gridla-resize-handle]::after {
+    transition: none;
+  }
+}
+```
+
+## Per-adapter cheat sheet
+
+| Adapter        | Item class            | Handle class            | Edges           | Positioning               | Preview                                     |
+| -------------- | --------------------- | ----------------------- | --------------- | ------------------------- | ------------------------------------------- |
+| React          | `className`           | `resizeHandleClassName` | `resizeEdges`   | `positioning="absolute"`  | `<GridPreviewOutline className="…" />`      |
+| Vue            | `class`               | `resize-handle-class`   | `:resize-edges` | `positioning="absolute"`  | `<GridPreviewOutline class="…" />`          |
+| Svelte         | `class`               | `resizeHandleClass`     | `resizeEdges`   | `positioning="absolute"`  | `<GridPreviewOutline class="…" />`          |
+| Solid          | `class`               | `resizeHandleClass`     | `resizeEdges`   | `positioning="absolute"`  | `<GridPreviewOutline class="…" />`          |
+| Angular        | `class` on the host   | `resizeHandleClass`     | `[resizeEdges]` | `positioning="absolute"`  | `<gridla-preview-outline class="…" />`      |
+| Qwik           | `class`               | `resizeHandleClass`     | `resizeEdges`   | `positioning="absolute"`  | `<GridPreviewOutline class="…" />`          |
+| DOM            | `createItemElement`   | `resizeHandleClassName` | `resizeEdges`   | `positioning: 'absolute'` | `preview: true` or `preview: element`       |
+| Web Components | markup in the element | `resize-handle-class`   | `resize-edges`  | `positioning="absolute"`  | `<gridla-preview>` inside `<gridla-canvas>` |
+
+Every adapter emits the same attributes, so the stylesheet is the one part of a Gridla integration you never rewrite when switching frameworks.

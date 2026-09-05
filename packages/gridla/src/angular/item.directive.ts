@@ -11,43 +11,9 @@ import {
 } from '@angular/core'
 
 import type { GridRect, GridResizeEdge } from 'gridla'
-import { GRID_DATA } from 'gridla/interaction'
+import { GRID_DATA, resizeHandleStyle } from 'gridla/interaction'
 import { GridController } from './controller'
 import type { GridItemView } from './view'
-
-const EDGE_CURSORS: Record<GridResizeEdge, string> = {
-  n: 'ns-resize',
-  s: 'ns-resize',
-  e: 'ew-resize',
-  w: 'ew-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
-}
-
-/** Inline styles for a built-in resize handle on `edge`, fully inside the item. */
-function resizeHandleStyle(edge: GridResizeEdge, size = 10): Record<string, string> {
-  const base: Record<string, string> = {
-    position: 'absolute',
-    cursor: EDGE_CURSORS[edge],
-    'touch-action': 'none',
-  }
-  const px = `${size}px`
-  if (edge === 'n' || edge === 's') {
-    return { ...base, left: px, right: px, height: px, [edge === 'n' ? 'top' : 'bottom']: '0' }
-  }
-  if (edge === 'e' || edge === 'w') {
-    return { ...base, top: px, bottom: px, width: px, [edge === 'w' ? 'left' : 'right']: '0' }
-  }
-  return {
-    ...base,
-    width: px,
-    height: px,
-    [edge.includes('n') ? 'top' : 'bottom']: '0',
-    [edge.includes('w') ? 'left' : 'right']: '0',
-  }
-}
 
 /**
  * Positions one item inside `<gridla-canvas>`. Headless: it sets geometry

@@ -47,7 +47,7 @@ export function createElement(tag: string, props: ElementProps, children?: unkno
 
 ### GridCanvas
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L56">solid/components.ts:56</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L57">solid/components.ts:57</a></span>
 
 The element items are positioned in. Measures itself on mount, feeds the
 size to the provider, and binds pointer and keyboard handling. Renders a
@@ -61,7 +61,7 @@ export function GridCanvas(props: GridCanvasProps): JSX.Element
 
 ### GridItem
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L264">solid/components.ts:264</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L203">solid/components.ts:203</a></span>
 
 Positions one item inside [`GridCanvas`](/api/qwik/components#gridcanvas). Headless: it renders a `div` with
 geometry styles and data attributes and leaves appearance to you. Pass a
@@ -73,7 +73,7 @@ export function GridItem(props: GridItemProps): JSX.Element
 
 ### GridPreviewOutline
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L352">solid/components.ts:352</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L291">solid/components.ts:291</a></span>
 
 Renders a box where the active item will land when released. Renders
 nothing when no gesture is in progress.
@@ -111,7 +111,7 @@ export type ElementProps = Record<string, unknown>
 
 ### GridCanvasProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L41">solid/components.ts:41</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L42">solid/components.ts:42</a></span>
 
 Props for [`GridCanvas`](/api/qwik/components#gridcanvas): `div` attributes (except `onKeyDown`, which the canvas
 owns) plus the pointer gesture options `onItemClick`, `onDeleteKey`, `enabled`.
@@ -134,7 +134,7 @@ export type GridCanvasProps = Omit<DivAttributes, 'onKeyDown'> &
 
 ### GridItemProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L165">solid/components.ts:165</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L166">solid/components.ts:166</a></span>
 
 Props for [`GridItem`](/api/qwik/components#griditem). `id` selects the item; the rest control drag surfaces,
 built-in resize handles, and how the element is positioned.
@@ -181,7 +181,7 @@ export type GridItemProps = Omit<DivAttributes, 'id'> & {
 
 ### GridItemRenderProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L149">solid/components.ts:149</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L150">solid/components.ts:150</a></span>
 
 Passed to a [`GridItem`](/api/qwik/components#griditem) render function: the item's [`GridItemView`](/api/qwik/hooks#griditemview) accessor
 plus props for drag and resize handles.
@@ -208,7 +208,7 @@ export type GridItemRenderProps = {
 
 ### GridPositioning
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L21">solid/components.ts:21</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L22">solid/components.ts:22</a></span>
 
 Element positioning mode: `transform` (default) or absolute `left`/`top`.
 
@@ -218,7 +218,7 @@ export type GridPositioning = 'transform' | 'absolute'
 
 ### GridPreviewOutlineProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L342">solid/components.ts:342</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/solid/components.ts#L281">solid/components.ts:281</a></span>
 
 Props for [`GridPreviewOutline`](/api/qwik/components#gridpreviewoutline): `div` attributes plus the positioning mode
 (`transform` by default).

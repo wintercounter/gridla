@@ -7,6 +7,8 @@ description: Mount a draggable, resizable canvas on any element with mountGrid f
 
 `gridla/dom` is the vanilla adapter. `mountGrid(element, options)` turns an element into a canvas: it creates and positions one element per item, wires pointer and keyboard input, measures the element with `ResizeObserver`, and reports every committed layout. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters.
 
+Appearance is yours: see the [styling guide](../guides/styling) for every `data-gridla-*` attribute, resize handle sizing, the preview outline, and a starter stylesheet.
+
 ## Install
 
 ```bash

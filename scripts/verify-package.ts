@@ -229,6 +229,9 @@ await check('attw', () => {
     PKG_REL,
     '--profile',
     'esm-only',
+    // `gridla/base.css` is a stylesheet export; attw only understands JS entry points.
+    '--exclude-entrypoints',
+    'base.css',
     '--format',
     'ascii',
   ])

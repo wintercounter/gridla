@@ -1,4 +1,5 @@
 import type { GridRect, GridResizeEdge } from '../core'
+import { resizeHandleStyle } from '../interaction/style'
 import type { GridInteraction, GridState } from '../interaction/types'
 
 /**
@@ -94,48 +95,13 @@ export function applyRect(element: HTMLElement, rect: GridRect, positioning: Gri
   }
 }
 
-const EDGE_CURSORS: Record<GridResizeEdge, string> = {
-  n: 'ns-resize',
-  s: 'ns-resize',
-  e: 'ew-resize',
-  w: 'ew-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
-}
-
 /**
  * Style a built-in resize handle for `edge`. Handles sit fully inside the item
  * so they stay hit-testable when the item clips its overflow.
  */
-export function styleResizeHandle(element: HTMLElement, edge: GridResizeEdge, size = 10) {
-  const style = element.style
-  style.position = 'absolute'
-  style.cursor = EDGE_CURSORS[edge]
-  style.touchAction = 'none'
-  style.zIndex = '1'
-  const px = `${size}px`
-  const vertical = edge === 'n' || edge === 's'
-  const horizontal = edge === 'e' || edge === 'w'
-  if (vertical) {
-    style.left = px
-    style.right = px
-    style.height = px
-    style[edge === 'n' ? 'top' : 'bottom'] = '0px'
-    return
-  }
-  if (horizontal) {
-    style.top = px
-    style.bottom = px
-    style.width = px
-    style[edge === 'w' ? 'left' : 'right'] = '0px'
-    return
-  }
-  style.width = px
-  style.height = px
-  style[edge.includes('n') ? 'top' : 'bottom'] = '0px'
-  style[edge.includes('w') ? 'left' : 'right'] = '0px'
+export function styleResizeHandle(element: HTMLElement, edge: GridResizeEdge, size?: number) {
+  Object.assign(element.style, resizeHandleStyle(edge, { size }))
+  element.style.zIndex = '1'
 }
 
 /** Set a boolean data attribute: present (empty) when `on`, absent otherwise. */

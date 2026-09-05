@@ -42,7 +42,7 @@ export const GRID_DATA: { readonly item: "data-gridla-item"; readonly dragHandle
 
 ### GridCanvas
 
-<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L54">vue/components.ts:54</a></span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L55">vue/components.ts:55</a></span>
 
 The element items are positioned in. Measures itself, feeds the size to the
 provider, and wires pointer and keyboard handling through
@@ -55,7 +55,7 @@ export const GridCanvas: DefineComponent<ExtractPropTypes<{ enabled: { type: Boo
 
 ### GridItem
 
-<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L247">vue/components.ts:247</a></span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L191">vue/components.ts:191</a></span>
 
 Positions one item inside [`GridCanvas`](/api/qwik/components#gridcanvas). Headless: it renders a `div` with
 geometry styles and data attributes and leaves appearance to you. The
@@ -67,7 +67,7 @@ export const GridItem: DefineComponent<ExtractPropTypes<{ id: { type: StringCons
 
 ### GridPreviewOutline
 
-<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L332">vue/components.ts:332</a></span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L276">vue/components.ts:276</a></span>
 
 Renders a box where the active item will land when released. Renders
 nothing when no gesture is in progress.
@@ -80,7 +80,7 @@ export const GridPreviewOutline: DefineComponent<ExtractPropTypes<{ positioning:
 
 ### GridCanvasEmits
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L43">vue/components.ts:43</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L44">vue/components.ts:44</a></span>
 
 Events emitted by [`GridCanvas`](/api/qwik/components#gridcanvas): `itemClick` for a press that did not turn
 into a drag, `deleteKey` when Delete or Backspace is pressed with an item
@@ -100,7 +100,7 @@ export type GridCanvasEmits = {
 
 ### GridCanvasProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L33">vue/components.ts:33</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L34">vue/components.ts:34</a></span>
 
 Props of [`GridCanvas`](/api/qwik/components#gridcanvas). Any other attribute (`class`, `style`, `tabindex`,
 listeners) falls through to the rendered `div`.
@@ -118,7 +118,7 @@ export type GridCanvasProps = {
 
 ### GridItemProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L164">vue/components.ts:164</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L165">vue/components.ts:165</a></span>
 
 Props of [`GridItem`](/api/qwik/components#griditem). `id` selects the item; the rest control drag surfaces,
 built-in resize handles, and how the element is positioned. Other
@@ -158,7 +158,7 @@ export type GridItemProps = {
 
 ### GridItemSlotProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L149">vue/components.ts:149</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L150">vue/components.ts:150</a></span>
 
 Passed to the [`GridItem`](/api/qwik/components#griditem) default slot: the item's [`GridItemView`](/api/qwik/hooks#griditemview) plus
 attribute objects for drag and resize handles (spread them with `v-bind`).
@@ -182,7 +182,7 @@ export type GridItemSlotProps = GridItemView & {
 
 ### GridPreviewOutlineProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L324">vue/components.ts:324</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/vue/components.ts#L268">vue/components.ts:268</a></span>
 
 Props of [`GridPreviewOutline`](/api/qwik/components#gridpreviewoutline): the positioning mode (`transform` by
 default). Other attributes fall through to the rendered `div`.

@@ -166,7 +166,7 @@ describe('gridla/solid', () => {
       b
         .querySelector('[data-gridla-resize-handle="b"][data-gridla-edge="se"]')!
         .getAttribute('style'),
-    ).toContain('cursor: nwse-resize')
+    ).toContain('nwse-resize')
     expect(host.querySelector('[data-gridla-preview]')).toBeNull()
   })
 

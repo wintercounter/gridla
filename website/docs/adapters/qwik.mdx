@@ -7,6 +7,8 @@ description: Resumable grid components for Qwik from gridla/qwik. The server ren
 
 `gridla/qwik` binds the layout engine to Qwik components: `GridProvider`, `GridCanvas`, `GridItem`, `GridPreviewOutline`, and `GridTransferScope`, with the same props and the same `data-gridla-*` attributes as the other adapters. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on.
 
+Appearance is yours: see the [styling guide](../guides/styling) for every `data-gridla-*` attribute, resize handle sizing, the preview outline, and a starter stylesheet.
+
 Qwik's constraints shape the adapter in three visible ways:
 
 - **Callbacks carry the `$` suffix** (`onLayoutChange$`, `onCommit$`, `onItemClick$`): Qwik serializes function props as QRLs, and the suffix is what its optimizer looks for.

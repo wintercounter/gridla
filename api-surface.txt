@@ -184,8 +184,11 @@ gridla/interaction function createPointerGesture
 gridla/interaction function createTransferScope
 gridla/interaction function measurePreviewShift
 gridla/interaction function observeSize
+gridla/interaction function rectStyle
 gridla/interaction function renderLayout
+gridla/interaction function resizeHandleStyle
 gridla/interaction function resolveControllerConfig
+gridla/interaction function styleToText
 gridla/interaction type GridActions
 gridla/interaction type GridChangeDetail
 gridla/interaction type GridChangeReason
@@ -201,6 +204,9 @@ gridla/interaction type GridPointerGesture
 gridla/interaction type GridPointerGestureDeps
 gridla/interaction type GridPointerGestureOptions
 gridla/interaction type GridPreview
+gridla/interaction type GridRectStyle
+gridla/interaction type GridResizeHandleStyle
+gridla/interaction type GridResizeHandleStyleOptions
 gridla/interaction type GridState
 gridla/interaction type GridStore
 gridla/interaction type GridStoreListener

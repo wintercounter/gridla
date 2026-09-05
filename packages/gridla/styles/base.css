@@ -1,0 +1,122 @@
+/*
+ * gridla/base.css — an optional starter stylesheet for the headless adapters.
+ *
+ * Everything hangs off the data attributes every adapter emits; nothing here
+ * is required. Override the tokens on the canvas (or `:root`) to fit your
+ * design, or copy the rules you want and drop the import.
+ */
+
+[data-gridla-canvas] {
+  --gridla-line: #8884;
+  --gridla-surface: Canvas;
+  --gridla-accent: #e0562f;
+  --gridla-select: #3b82f6;
+  --gridla-radius: 6px;
+  --gridla-duration: 180ms;
+  --gridla-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Built-in resize handles read these; unset means 10px. */
+  --gridla-handle-size: 10px;
+  --gridla-handle-inset: 10px;
+
+  position: relative;
+  outline: none;
+}
+
+/* Keyboard users need to see which canvas has focus. */
+[data-gridla-canvas]:focus-visible {
+  box-shadow: 0 0 0 2px var(--gridla-select);
+}
+
+/* Items: a box the content can fill. Geometry (size, transform) is inline. */
+[data-gridla-item] {
+  box-sizing: border-box;
+  overflow: hidden;
+  border: 1px solid var(--gridla-line);
+  border-radius: var(--gridla-radius);
+  background: var(--gridla-surface);
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  transition:
+    transform var(--gridla-duration) var(--gridla-ease),
+    width var(--gridla-duration) var(--gridla-ease),
+    height var(--gridla-duration) var(--gridla-ease);
+}
+
+/* The active item follows the pointer; never animate it. */
+[data-gridla-item][data-gridla-active] {
+  cursor: grabbing;
+  transition: none;
+  border-color: var(--gridla-accent);
+  box-shadow: 0 4px 16px #0003;
+}
+
+[data-gridla-item][data-gridla-selected] {
+  border-color: var(--gridla-select);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--gridla-select) 30%, transparent);
+}
+
+/* Siblings the solver moved out of the way during a gesture. */
+[data-gridla-item][data-gridla-shifted] {
+  border-style: dashed;
+}
+
+/* The source of a cross-canvas transfer (the adapter also fades it). */
+[data-gridla-item][data-gridla-transferring] {
+  border-style: dotted;
+}
+
+/* Explicit drag handles inside an item (`draggable={false}` on the item). */
+[data-gridla-item] [data-gridla-drag-handle] {
+  cursor: grab;
+  touch-action: none;
+}
+
+/* Where the active item will land. */
+[data-gridla-preview] {
+  border: 2px dashed var(--gridla-accent);
+  border-radius: var(--gridla-radius);
+  background: color-mix(in srgb, var(--gridla-accent) 12%, transparent);
+}
+
+/* Resize handles: invisible hit areas; show a grip when the item is selected
+ * or hovered. Corners get a filled square, edges a short bar. */
+[data-gridla-resize-handle] {
+  z-index: 1;
+}
+
+[data-gridla-resize-handle]::after {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border-radius: 2px;
+  background: var(--gridla-select);
+  opacity: 0;
+  transition: opacity 120ms var(--gridla-ease);
+}
+
+[data-gridla-item]:hover [data-gridla-resize-handle]::after,
+[data-gridla-item][data-gridla-selected] [data-gridla-resize-handle]::after {
+  opacity: 0.85;
+}
+
+/* Bigger targets on touch screens. */
+@media (pointer: coarse) {
+  [data-gridla-canvas] {
+    --gridla-handle-size: 18px;
+    --gridla-handle-inset: 18px;
+  }
+}
+
+/* No text selection anywhere while a gesture runs. */
+html[data-gridla-dragging] {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-gridla-item],
+  [data-gridla-resize-handle]::after {
+    transition: none;
+  }
+}

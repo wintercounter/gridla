@@ -10,9 +10,10 @@ import {
   type ReactNode,
 } from 'react'
 
-import type { GridRect, GridResizeEdge } from '../core'
+import type { GridResizeEdge } from '../core'
 import { useGridContext } from './context'
 import { useGridItemView, useGridStore, type GridItemView } from './hooks'
+import { rectStyle, resizeHandleStyle } from '../interaction/style'
 import { GRID_DATA, useGridInteraction, type UseGridInteractionOptions } from './interaction'
 import { useElementSize } from './measure'
 
@@ -124,56 +125,6 @@ export type GridItemProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'i
   /** Render the cursor-tracked rect while dragging instead of the solved preview. Default `true`. */
   followPointer?: boolean
   children?: ReactNode | ((view: GridItemRenderProps) => ReactNode)
-}
-
-const EDGE_CURSORS: Record<GridResizeEdge, string> = {
-  n: 'ns-resize',
-  s: 'ns-resize',
-  e: 'ew-resize',
-  w: 'ew-resize',
-  ne: 'nesw-resize',
-  sw: 'nesw-resize',
-  nw: 'nwse-resize',
-  se: 'nwse-resize',
-}
-
-function resizeHandleStyle(edge: GridResizeEdge, size = 10): CSSProperties {
-  // Handles sit fully inside the item so they stay hit-testable when the
-  // item clips its overflow.
-  const base: CSSProperties = {
-    position: 'absolute',
-    cursor: EDGE_CURSORS[edge],
-    touchAction: 'none',
-  }
-  const vertical = edge === 'n' || edge === 's'
-  const horizontal = edge === 'e' || edge === 'w'
-  if (vertical) {
-    return { ...base, left: size, right: size, height: size, [edge === 'n' ? 'top' : 'bottom']: 0 }
-  }
-  if (horizontal) {
-    return { ...base, top: size, bottom: size, width: size, [edge === 'w' ? 'left' : 'right']: 0 }
-  }
-  return {
-    ...base,
-    width: size,
-    height: size,
-    [edge.includes('n') ? 'top' : 'bottom']: 0,
-    [edge.includes('w') ? 'left' : 'right']: 0,
-  }
-}
-
-function rectStyle(rect: GridRect, positioning: 'transform' | 'absolute'): CSSProperties {
-  if (positioning === 'absolute') {
-    return { position: 'absolute', left: rect.x, top: rect.y, width: rect.w, height: rect.h }
-  }
-  return {
-    position: 'absolute',
-    left: 0,
-    top: 0,
-    width: rect.w,
-    height: rect.h,
-    transform: `translate(${rect.x}px, ${rect.y}px)`,
-  }
 }
 
 /**

@@ -49,7 +49,7 @@ export class GridCanvasComponent // selector: gridla-canvas
 
 ### GridDragHandleDirective
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L151">angular/item.directive.ts:151</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L117">angular/item.directive.ts:117</a></span>
 
 Marks an element inside a `[gridlaItem]` as the surface that starts a move.
 Pair it with `draggable="false"` on the item so the rest of the item is
@@ -65,7 +65,7 @@ export class GridDragHandleDirective // selector: [gridlaDragHandle]
 
 ### GridItemDirective
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L59">angular/item.directive.ts:59</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L25">angular/item.directive.ts:25</a></span>
 
 Positions one item inside `\<gridla-canvas\>`. Headless: it sets geometry
 styles and data attributes on its host and leaves appearance to you.
@@ -83,7 +83,7 @@ export class GridItemDirective // selector: [gridlaItem]
 | `draggable` | `InputSignalWithTransform\<boolean, unknown\>` | `true` (default): the whole element is a drag surface. `false`: only elements marked with `gridlaDragHandle` start a move. |
 | `resizeEdges` | `InputSignal\<ReadonlyArray\<GridResizeEdge\>\>` | Edges to render built-in resize handles for. Default: none. |
 | `resizeHandleClass` | `InputSignal\<string \\| undefined\>` | Class for built-in resize handles. |
-| `positioning` | `InputSignal\<"transform" \\| "absolute"\>` | Position the element with `transform` (default) or with `left`/`top`. Transform keeps layout work off the main thread during gestures. |
+| `positioning` | `InputSignal\<"absolute" \\| "transform"\>` | Position the element with `transform` (default) or with `left`/`top`. Transform keeps layout work off the main thread during gestures. |
 | `followPointer` | `InputSignalWithTransform\<boolean, unknown\>` | Render the cursor-tracked rect while dragging instead of the solved preview. Default `true`. |
 | `controller` | `GridController\<any\>` | The controller of the enclosing provider. |
 | `view` | `Signal\<GridItemView\>` | Everything needed to paint this item. |
@@ -103,12 +103,12 @@ export class GridPreviewOutlineComponent // selector: gridla-preview-outline
 
 | Member | Type | Description |
 | --- | --- | --- |
-| `positioning` | `InputSignal\<"transform" \\| "absolute"\>` | Position with `transform` (default) or with `left`/`top`. |
+| `positioning` | `InputSignal\<"absolute" \\| "transform"\>` | Position with `transform` (default) or with `left`/`top`. |
 | `rect` | `Signal\<GridRect \\| null\>` | The preview rectangle, or `null` when there is nothing to show. |
 
 ### GridResizeHandleDirective
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L164">angular/item.directive.ts:164</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/angular/item.directive.ts#L130">angular/item.directive.ts:130</a></span>
 
 Marks an element inside a `[gridlaItem]` as a resize handle for one edge:
 `\<div gridlaResizeHandle="se"\>\</div\>`. Position and style it yourself.
