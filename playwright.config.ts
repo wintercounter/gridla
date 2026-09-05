@@ -13,7 +13,13 @@ import { defineConfig, devices } from '@playwright/test'
  */
 const siteDir = process.env.GRIDLA_SITE_DIR ?? 'site-dist'
 const port = Number(process.env.GRIDLA_SITE_PORT ?? 4173)
-const baseURL = `http://127.0.0.1:${port}/gridla/`
+// GRIDLA_BASE_URL points the suite at an already running server (for example
+// a dev server) instead of the built artifact.
+const externalBase = process.env.GRIDLA_BASE_URL
+const baseURL = externalBase ?? `http://127.0.0.1:${port}/gridla/`
+// Playwright's bundled browsers are glibc builds; on musl hosts point
+// GRIDLA_CHROMIUM at a system Chromium.
+const chromiumPath = process.env.GRIDLA_CHROMIUM
 
 export default defineConfig({
   testDir: 'tests/e2e/specs',
@@ -31,14 +37,23 @@ export default defineConfig({
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
   },
-  webServer: {
-    command: `bun run scripts/serve-site.ts --dir ${siteDir} --port ${port} --base /gridla/`,
-    url: `${baseURL}revision.txt`,
-    reuseExistingServer: !process.env.CI,
-    timeout: 30_000,
-  },
+  webServer: externalBase
+    ? undefined
+    : {
+        command: `bun run scripts/serve-site.ts --dir ${siteDir} --port ${port} --base /gridla/`,
+        url: `${baseURL}revision.txt`,
+        reuseExistingServer: !process.env.CI,
+        timeout: 30_000,
+      },
   projects: [
-    { name: 'chromium', testIgnore: /obscura/, use: { ...devices['Desktop Chrome'] } },
+    {
+      name: 'chromium',
+      testIgnore: /obscura/,
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: chromiumPath ? { executablePath: chromiumPath } : undefined,
+      },
+    },
     { name: 'firefox', testIgnore: /obscura/, use: { ...devices['Desktop Firefox'] } },
     { name: 'webkit', testIgnore: /obscura/, use: { ...devices['Desktop Safari'] } },
     {

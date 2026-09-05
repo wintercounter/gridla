@@ -3,8 +3,12 @@
   "compilerOptions": {
     "noEmit": true,
     "paths": {
-      "gridla": ["./packages/gridla/src/index.ts"],
-      "gridla/react": ["./packages/gridla/src/react.ts"]
+      "gridla": [
+        "./packages/gridla/src/index.ts"
+      ],
+      "gridla/react": [
+        "./packages/gridla/src/react.ts"
+      ]
     }
   },
   "include": [
@@ -13,5 +17,10 @@
     "benchmarks",
     "scripts"
   ],
-  "exclude": ["node_modules", "**/dist", "tests/package/consumers"]
+  "exclude": [
+    "node_modules",
+    "**/dist",
+    "tests/package/consumers",
+    "tests/e2e/obscura/spike.ts"
+  ]
 }
