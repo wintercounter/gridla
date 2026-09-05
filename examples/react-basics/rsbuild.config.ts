@@ -5,7 +5,7 @@ import { pluginReact } from '@rsbuild/plugin-react'
 
 export default defineConfig({
   plugins: [pluginReact()],
-  html: { template: './index.html' },
+  html: { template: './index.html', favicon: '../../assets/favicon.svg' },
   source: {
     entry: { index: './src/main.tsx' },
     include: [resolve(import.meta.dirname, '../shared')],
