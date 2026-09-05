@@ -1,5 +1,6 @@
 import { useEffect, type ReactNode } from 'react'
 
+import { ADAPTER_ICONS, type CodeTabKind } from './CodeTabs'
 import { SiteFooter } from './Footer'
 import { InstallCommand } from './InstallCommand'
 import { Mark } from './Mark'
@@ -64,7 +65,8 @@ export function Hero() {
         <p className="g-hero-lede" data-reveal="" style={{ ['--i' as string]: 2 }}>
           A framework-neutral engine that moves, resizes, places, and transfers items in pixel
           coordinates, projects a layout onto any canvas size, and flattens trees of nested layouts.
-          Zero runtime dependencies; React adapter included.
+          Zero runtime dependencies; adapters for React, Vue, Svelte, Solid, Angular, Qwik, and Web
+          Components included.
         </p>
         <div data-reveal="" style={{ ['--i' as string]: 3 }}>
           <InstallCommand />
@@ -122,11 +124,11 @@ export function CodeSection({ children }: { children: ReactNode }) {
   return (
     <section className="g-home-code">
       <SectionHead
-        kicker="Two entry points"
-        title="The core is a set of pure functions. React is optional."
+        kicker="One core, one adapter per framework"
+        title="The core is a set of pure functions. Adapters are optional."
       >
-        Solve in the core with plain objects, or let the adapter own measurement, gestures, and
-        previews while you own the state.
+        Solve in the core with plain objects, or let an adapter own measurement, gestures, and
+        previews while you own the state. Same names, same data attributes, in every framework.
       </SectionHead>
       <div data-reveal="">{children}</div>
     </section>
@@ -209,12 +211,12 @@ const FEATURES: { title: string; body: ReactNode; extra?: ReactNode }[] = [
     ),
   },
   {
-    title: 'Headless React adapter',
+    title: 'Headless adapters',
     body: (
       <>
         <code>GridProvider</code>, <code>GridCanvas</code>, and <code>GridItem</code> handle
-        measurement, pointer and keyboard gestures, previews, and cross-canvas transfer. Appearance
-        stays yours.
+        measurement, pointer and keyboard gestures, previews, and cross-canvas transfer, in React,
+        Vue, Svelte, Solid, Angular, Qwik, Web Components, or plain DOM. Appearance stays yours.
       </>
     ),
   },
@@ -255,7 +257,7 @@ const LINKS: { title: string; body: string; href: string; external?: boolean }[]
   },
   {
     title: 'API reference',
-    body: 'Every core and React export, generated from the source declarations.',
+    body: 'Every core, interaction, and adapter export, generated from the source declarations.',
     href: href('api/index.html'),
   },
   {
@@ -271,10 +273,51 @@ const LINKS: { title: string; body: string; href: string; external?: boolean }[]
   },
 ]
 
+const ADAPTERS: { kind: CodeTabKind; label: string; href: string }[] = [
+  { kind: 'react', label: 'React', href: href('getting-started/react.html') },
+  { kind: 'vue', label: 'Vue', href: href('adapters/vue.html') },
+  { kind: 'svelte', label: 'Svelte', href: href('adapters/svelte.html') },
+  { kind: 'solid', label: 'Solid', href: href('adapters/solid.html') },
+  { kind: 'angular', label: 'Angular', href: href('adapters/angular.html') },
+  { kind: 'elements', label: 'Web Components', href: href('adapters/web-components.html') },
+  { kind: 'dom', label: 'DOM', href: href('adapters/dom.html') },
+  { kind: 'qwik', label: 'Qwik', href: href('adapters/qwik.html') },
+  { kind: 'preact', label: 'Preact', href: href('adapters/preact.html') },
+]
+
+/** One row of framework icons with labels, each linking to its guide. */
+export function AdapterStrip() {
+  return (
+    <nav className="g-adapters" aria-label="Adapters" data-reveal="">
+      <a className="g-adapters-head" href={href('adapters/index.html')}>
+        <b>
+          Adapters
+          <ArrowRightIcon />
+        </b>
+        <span>One contract, one subpath export per framework.</span>
+      </a>
+      <ul>
+        {ADAPTERS.map((adapter) => {
+          const Icon = ADAPTER_ICONS[adapter.kind]
+          return (
+            <li key={adapter.kind}>
+              <a href={adapter.href}>
+                <Icon />
+                <span>{adapter.label}</span>
+              </a>
+            </li>
+          )
+        })}
+      </ul>
+    </nav>
+  )
+}
+
 export function HomeLinks() {
   return (
     <section className="g-home-links">
       <SectionHead kicker="Go deeper" title="Try it, read it, measure it." />
+      <AdapterStrip />
       <ul>
         {LINKS.map((link, index) => (
           <li key={link.title} data-reveal="" style={{ ['--i' as string]: index % 3 }}>

@@ -6,7 +6,7 @@ import { expect, test } from '../fixtures'
  * `data-gridla-*` attributes, and boots without console errors. Add a name
  * here when its demo app lands; the site build mounts it automatically.
  */
-const ADAPTERS = ['vanilla-dom']
+const ADAPTERS = ['vanilla-dom', 'preact', 'elements', 'solid', 'vue', 'qwik', 'angular', 'svelte']
 
 for (const name of ADAPTERS) {
   test.describe(`adapter ${name} @smoke`, () => {

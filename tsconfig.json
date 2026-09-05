@@ -5,7 +5,28 @@
     "paths": {
       "gridla": ["./packages/gridla/src/index.ts"],
       "gridla/react": ["./packages/gridla/src/react.ts"],
-      "gridla/interaction": ["./packages/gridla/src/interaction.ts"]
+      "gridla/interaction": ["./packages/gridla/src/interaction.ts"],
+      "gridla/svelte": ["./packages/gridla/src/svelte/index.ts"],
+      "gridla/dom": ["./packages/gridla/src/dom.ts"],
+      "gridla/elements": ["./packages/gridla/src/elements.ts"],
+      "gridla/vue": ["./packages/gridla/src/vue.ts"],
+      "gridla/qwik": ["./packages/gridla/src/qwik.ts"],
+      "gridla/solid": ["./packages/gridla/src/solid.ts"],
+      "gridla/angular": ["./packages/gridla/src/angular/index.ts"],
+      "@angular/*": ["./packages/gridla/node_modules/@angular/*"],
+      "solid-js": ["./packages/gridla/node_modules/solid-js"],
+      "solid-js/*": ["./packages/gridla/node_modules/solid-js/*"],
+      "svelte": ["./packages/gridla/node_modules/svelte"],
+      "svelte/elements": ["./packages/gridla/node_modules/svelte/elements.d.ts"],
+      "vue": ["./packages/gridla/node_modules/vue"],
+      "vue/server-renderer": ["./packages/gridla/node_modules/vue/server-renderer"],
+      "@builder.io/qwik": ["./packages/gridla/node_modules/@builder.io/qwik/dist/core"],
+      "@builder.io/qwik/jsx-runtime": ["./packages/gridla/node_modules/@builder.io/qwik/dist/core"],
+      "@builder.io/qwik/jsx-dev-runtime": [
+        "./packages/gridla/node_modules/@builder.io/qwik/dist/core"
+      ],
+      "@builder.io/qwik/server": ["./packages/gridla/node_modules/@builder.io/qwik/dist/server"],
+      "@qwik-client-manifest": ["./tests/adapters/qwik-client-manifest.ts"]
     }
   },
   "include": ["packages/gridla/src", "tests", "benchmarks", "scripts"],

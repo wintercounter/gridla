@@ -2,64 +2,104 @@ import '@gridla/demo-kit/tokens.css'
 import '@gridla/demo-kit/demo.css'
 import './style.css'
 
-import { projectLayout, type GridItem, type GridLayout } from 'gridla'
-import { dashboardLayout, formatRect } from '@gridla/demo-kit'
+import { createItem, type GridItem, type GridLayout } from 'gridla'
+import {
+  createTransferScope,
+  mountGrid,
+  type GridChangeDetail,
+  type GridHandle,
+  type GridItemView,
+} from 'gridla/dom'
+import { canvas, dashboardLayout, formatRect } from '@gridla/demo-kit'
 
-// Scaffold for the DOM adapter demo. It renders a static layout with the core
-// package only; once `gridla/dom` lands this file switches to `mountGrid` and
-// the hand-written renderer below goes away. The data attributes match the
-// shared adapter contract (see docs/private/adapters-brief.md) so the
-// adapters e2e suite can already run against this app.
+// Demo app for `gridla/dom`: a dashboard with draggable, resizable items, a
+// nested group (a second `mountGrid` inside an item) that shares a transfer
+// scope with the outer canvas, a drop preview, and a status line showing the
+// accepted change. The adapters e2e suite runs against this page.
 
-const canvas = document.getElementById('canvas') as HTMLElement
-const note = document.getElementById('note') as HTMLElement
+type Data = { label: string }
 
-const source: GridLayout<{ label: string }> = dashboardLayout()
+const stage = document.getElementById('canvas') as HTMLElement
+const status = document.getElementById('status') as HTMLElement
+const scope = createTransferScope()
 
-function measure() {
-  const rect = canvas.getBoundingClientRect()
-  return { w: Math.round(rect.width), h: Math.round(rect.height) }
+/** The dashboard fixture with its footer row turned into a nested group. */
+function outerLayout(): GridLayout<Data> {
+  const base = dashboardLayout()
+  return {
+    // Scrollable: drops and pushes may grow the canvas downward.
+    canvas: { ...base.canvas, heightMode: 'scrollable' },
+    items: base.items.map((item) =>
+      item.id === 'table' ? { ...item, id: 'group', minH: 140, data: { label: 'Group' } } : item,
+    ),
+  }
 }
 
-function elementFor(item: GridItem): HTMLElement {
-  let element = canvas.querySelector<HTMLElement>(`[data-gridla-item="${CSS.escape(item.id)}"]`)
-  if (!element) {
-    element = document.createElement('div')
-    element.className = 'gd-item'
-    element.setAttribute('data-gridla-item', item.id)
-    element.innerHTML =
-      '<div class="gd-item-head"><span></span><span class="gd-item-coords"></span></div><div class="gd-item-body">static · projected to the stage</div>'
-    canvas.append(element)
+function groupLayout(): GridLayout<Data> {
+  return {
+    canvas: canvas(936, 160, 8),
+    items: [
+      createItem('note', { w: 450, h: 144, minW: 80, minH: 48 }, 8, 8, { label: 'Note' }),
+      createItem('todo', { w: 458, h: 144, minW: 80, minH: 48 }, 470, 8, { label: 'To-do' }),
+    ],
   }
+}
+
+function report(detail: GridChangeDetail) {
+  status.textContent = `${detail.reason} · ${detail.strategy ?? 'none'} · ${detail.itemId ?? ''}`
+}
+
+let group: GridHandle<Data> | null = null
+
+function renderItem(item: GridItem<Data>, element: HTMLElement, view: GridItemView) {
+  if (!element.firstElementChild) {
+    element.className = 'gd-item'
+    element.innerHTML =
+      '<div class="gd-item-head"><span></span><span class="gd-item-coords"></span></div><div class="gd-item-body"></div>'
+  }
+  const head = element.querySelector('.gd-item-head span')
+  if (head) head.textContent = item.data?.label ?? item.id
+  const coords = element.querySelector('.gd-item-coords')
+  if (coords) coords.textContent = formatRect(view.rect)
+  const body = element.querySelector<HTMLElement>('.gd-item-body')
+  if (!body) return
+  if (item.id !== 'group') {
+    if (!body.textContent) body.textContent = 'drag · resize · arrow keys'
+    return
+  }
+  if (group) return
+  body.classList.add('nested-stage')
+  group = mountGrid<Data>(body, {
+    id: 'group',
+    defaultLayout: groupLayout(),
+    scope,
+    gap: 12,
+    snapDistance: 24,
+    resizeEdges: ['e', 's', 'se'],
+    resizeHandleClassName: 'gd-handle',
+    preview: previewElement(),
+    // The group must not be dropped into itself.
+    acceptTransfers: (entry) => entry.id !== 'group',
+    renderItem,
+    onLayoutChange: (_layout, detail) => report(detail),
+  })
+}
+
+function previewElement() {
+  const element = document.createElement('div')
+  element.className = 'gd-preview'
   return element
 }
 
-function paint(layout: GridLayout<{ label: string }>) {
-  const seen = new Set<string>()
-  for (const item of layout.items) {
-    seen.add(item.id)
-    const element = elementFor(item)
-    const head = element.querySelector('.gd-item-head span')
-    if (head) head.textContent = item.data?.label ?? item.id
-    const coords = element.querySelector('.gd-item-coords')
-    if (coords) coords.textContent = formatRect(item)
-    element.style.position = 'absolute'
-    element.style.left = '0'
-    element.style.top = '0'
-    element.style.width = `${item.w}px`
-    element.style.height = `${item.h}px`
-    element.style.transform = `translate(${item.x}px, ${item.y}px)`
-  }
-  for (const element of Array.from(canvas.querySelectorAll<HTMLElement>('[data-gridla-item]'))) {
-    if (!seen.has(element.getAttribute('data-gridla-item') ?? '')) element.remove()
-  }
-  note.textContent = `${layout.items.length} items · canvas ${layout.canvas.width}x${layout.canvas.height}`
-}
-
-function project() {
-  const size = measure()
-  paint(projectLayout(source, { ...source.canvas, width: size.w, height: size.h }))
-}
-
-project()
-new ResizeObserver(project).observe(canvas)
+mountGrid<Data>(stage, {
+  id: 'dashboard',
+  defaultLayout: outerLayout(),
+  scope,
+  gap: 12,
+  snapDistance: 24,
+  resizeEdges: ['e', 's', 'se'],
+  resizeHandleClassName: 'gd-handle',
+  preview: previewElement(),
+  renderItem,
+  onLayoutChange: (_layout, detail) => report(detail),
+})

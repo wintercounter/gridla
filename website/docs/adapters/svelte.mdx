@@ -1,0 +1,240 @@
+---
+title: Svelte
+description: gridla/svelte binds the layout engine to Svelte 5 runes. GridProvider, GridCanvas, GridItem, GridPreviewOutline, and GridTransferScope, with bind:layout and rune-style readers.
+---
+
+# Svelte
+
+`gridla/svelte` is the Svelte 5 adapter: the same headless components as `gridla/react`, written with runes. `GridProvider` owns layout and gesture state, `GridCanvas` measures itself and wires pointer and keyboard input, `GridItem` positions one item, and `GridPreviewOutline` shows where the active item will land. Appearance is yours. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters.
+
+## Install
+
+```bash
+bun add gridla svelte
+```
+
+`svelte` (5 or later) is an optional peer dependency. The adapter ships as Svelte source (`.svelte` components and `.svelte.ts` modules under `dist/svelte/`) with a `svelte` export condition, so Vite, SvelteKit, and Rsbuild compile it with the rest of your app.
+
+## Minimal example
+
+```svelte
+<script lang="ts">
+  import type { GridLayout } from 'gridla'
+  import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/svelte'
+
+  const initial: GridLayout<{ label: string }> = {
+    canvas: {
+      width: 960,
+      height: 600,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      heightMode: 'bounded',
+    },
+    items: [
+      { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+      { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+      { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+    ],
+  }
+</script>
+
+<GridProvider defaultLayout={initial} gap={12} snapDistance={24}>
+  <GridCanvas style="height: 480px">
+    {#each initial.items as item (item.id)}
+      <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>
+        {item.data?.label}
+      </GridItem>
+    {/each}
+    <GridPreviewOutline />
+  </GridCanvas>
+</GridProvider>
+```
+
+What each piece does:
+
+- `GridProvider` holds the source layout, projects it onto the measured canvas size (`responsive` is `true` by default), and runs the solvers during gestures. `gap`, `snapDistance`, `snap`, and `onTrace` are the same `SolveOptions` the core takes.
+- `GridCanvas` renders a `div` with `position: relative`, measures itself with `ResizeObserver`, and attaches the pointer and keyboard listeners. Give it a height.
+- `GridItem` renders a `div` positioned with `transform` and sets `data-gridla-active`, `data-gridla-selected`, and `data-gridla-shifted` for styling. `resizeEdges` adds built-in resize handles. Its children snippet receives the item view, so content can react to `isSelected`, `rect`, and the rest.
+- `GridPreviewOutline` renders a box where the active item will land when released, and nothing when there is no gesture.
+
+Render the items from a stable list of ids (here the initial layout): each `GridItem` follows its own geometry through a rune, so the list itself does not update during a drag.
+
+## Controlled and uncontrolled
+
+`layout` is bindable. Bind it to keep the state yourself: every accepted change lands in your variable, and assigning a new layout to it re-renders the canvas.
+
+```svelte
+<script lang="ts">
+  import type { GridLayout } from 'gridla'
+  import type { GridChangeDetail } from 'gridla/interaction'
+  import { GridCanvas, GridItem, GridProvider } from 'gridla/svelte'
+
+  let { initial }: { initial: GridLayout<{ label: string }> } = $props()
+  let layout = $state(initial)
+
+  function persist(next: GridLayout<{ label: string }>, detail: GridChangeDetail) {
+    console.log(detail.reason, detail.itemId, detail.strategy)
+    localStorage.setItem('dashboard', JSON.stringify(next))
+  }
+</script>
+
+<GridProvider bind:layout onLayoutChange={persist} gap={12}>
+  <GridCanvas style="height: 480px">
+    {#each layout.items as item (item.id)}
+      <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>
+        {item.data?.label}
+      </GridItem>
+    {/each}
+  </GridCanvas>
+</GridProvider>
+
+<button type="button" onclick={() => (layout = initial)}>Reset</button>
+```
+
+`onLayoutChange` fires with the next layout and a `GridChangeDetail` (`reason`, `itemId`, `strategy`) after every accepted change, bound or not. Passing `layout` without `bind:` works too: the provider updates the layout it renders and reports the change, and the next value you pass wins. Use `defaultLayout` when you only need the initial state. See [controlled state](../recipes/controlled-state) and [persistence](../recipes/persistence).
+
+## Nested layouts and transfers
+
+A nested canvas is a `GridProvider` inside a `GridItem`. Wrap the providers in one `GridTransferScope` and items move between them: the pointer decides the target, the target previews the drop, and releasing commits it. `onTransferOut` fires on the source, `onTransferIn` on the target, and both bound layouts follow.
+
+```svelte
+<script lang="ts">
+  import type { GridLayout } from 'gridla'
+  import { GridCanvas, GridItem, GridProvider, GridTransferScope } from 'gridla/svelte'
+
+  let { outer, inner }: { outer: GridLayout; inner: GridLayout } = $props()
+  let outerLayout = $state(outer)
+  let innerLayout = $state(inner)
+</script>
+
+<GridTransferScope>
+  <GridProvider bind:layout={outerLayout} gap={12}>
+    <GridCanvas style="height: 600px">
+      {#each outerLayout.items as item (item.id)}
+        {#if item.id === 'group'}
+          <GridItem id="group" draggable={false}>
+            {#snippet children(view)}
+              <header {...view.dragHandleProps}>Group</header>
+              <GridProvider bind:layout={innerLayout} gap={8} acceptTransfers={(item) => item.w < 400}>
+                <GridCanvas style="position: absolute; inset: 40px 0 0 0">
+                  {#each innerLayout.items as child (child.id)}
+                    <GridItem id={child.id}>{child.id}</GridItem>
+                  {/each}
+                </GridCanvas>
+              </GridProvider>
+            {/snippet}
+          </GridItem>
+        {:else}
+          <GridItem id={item.id}>{item.id}</GridItem>
+        {/if}
+      {/each}
+    </GridCanvas>
+  </GridProvider>
+</GridTransferScope>
+```
+
+`draggable={false}` turns off the whole-item drag surface so the nested canvas can receive pointer input; `view.dragHandleProps` marks the header as the group's handle. `acceptTransfers` takes a boolean or a predicate. See the [transfer recipe](../recipes/transfer) for the rules the scope applies.
+
+## Runes
+
+The module exports rune-style readers. Call them during component initialization (they read the provider from context) and read `.current` wherever you need the value; it tracks like any rune.
+
+```ts
+import {
+  createGridRunes,
+  gridActions,
+  gridItemView,
+  gridLayout,
+  gridSelection,
+  gridStore,
+} from 'gridla/svelte'
+
+// Inside a component rendered under <GridProvider>:
+const actions = gridActions<{ label: string }>()
+const layout = gridLayout()
+const selection = gridSelection()
+const chart = gridItemView('chart')
+const dragging = gridStore((state) => state.interaction !== null)
+
+export function addNote() {
+  actions.place(
+    { id: `note-${Date.now()}`, w: 220, h: 140, minW: 80, minH: 60, data: { label: 'Note' } },
+    { pointer: { x: 480, y: 300 } },
+  )
+}
+
+export function describe() {
+  return `${layout.current.items.length} items, selected ${selection.current ?? 'none'}, chart at ${chart.current.rect.x},${chart.current.rect.y}, ${dragging.current ? 'dragging' : 'idle'}`
+}
+
+// For a custom provider: a controller whose state is a $state.raw snapshot.
+export const runes = createGridRunes({
+  defaultLayout: {
+    canvas: {
+      width: 800,
+      height: 600,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      heightMode: 'bounded',
+    },
+    items: [],
+  },
+})
+```
+
+`gridActions()` returns the same imperative API as the other adapters (`move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, `cancel`, and the incoming-preview trio); `place`, `move`, and `resize` return `false` when the solver rejected the request.
+
+## Server rendering and SvelteKit
+
+The adapter touches `window` and `document` only inside effects, so it renders on the server. The server output is the authored layout: items sit where the layout puts them, in the layout's own pixels, and the canvas takes the layout size when `responsive` is off. On the client, `GridCanvas` measures itself in an effect before the first paint completes and the provider projects the layout onto the measured size, so hydration does not flash an unprojected layout for longer than a frame. Nothing else is needed for SvelteKit; keep `ssr` on and render the components as usual.
+
+## Styling
+
+Items and the preview are unstyled `div`s. A minimal stylesheet:
+
+```css
+[data-gridla-item] {
+  border: 1px solid #8884;
+  border-radius: 6px;
+  background: white;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-gridla-item][data-gridla-active] {
+  transition: none;
+  z-index: 2;
+}
+[data-gridla-item][data-gridla-selected] {
+  outline: 2px solid #3b82f6;
+}
+[data-gridla-preview] {
+  border: 2px dashed #e0562f;
+  border-radius: 6px;
+}
+```
+
+## API
+
+| Export                                                                                           | Kind      | What it does                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GridProvider`                                                                                   | component | Owns layout and gesture state. Props: `layout` (bindable), `defaultLayout`, `onLayoutChange`, `onCommit`, `onTransferIn`, `onTransferOut`, `acceptTransfers`, `responsive`, `dragThreshold`, `keyboardStep`, `selectedId`, `onSelectedIdChange`, `id`, and every `SolveOptions` field. |
+| `GridCanvas`                                                                                     | component | The measured, input-wired element items live in. Props: `div` attributes plus `onItemClick`, `onDeleteKey`, `enabled`.                                                                                                                                                                 |
+| `GridItem`                                                                                       | component | Positions one item. Props: `id`, `draggable`, `resizeEdges`, `resizeHandleClass`, `positioning`, `followPointer`, `div` attributes; children snippet receives `GridItemRenderProps`.                                                                                                   |
+| `GridPreviewOutline`                                                                             | component | The drop preview box. Props: `positioning`, `div` attributes.                                                                                                                                                                                                                          |
+| `GridTransferScope`                                                                              | component | Lets items move between the providers inside it.                                                                                                                                                                                                                                       |
+| `gridStore(selector, isEqual?)`                                                                  | rune      | A slice of provider state as `{ current }`.                                                                                                                                                                                                                                            |
+| `gridItemView(id)`                                                                               | rune      | One item's `GridItemView` as `{ current }`; accepts a getter for a reactive id.                                                                                                                                                                                                        |
+| `gridLayout()`, `gridSelection()`                                                                | rune      | The rendered layout and the selected id as `{ current }`.                                                                                                                                                                                                                              |
+| `gridActions()`                                                                                  | function  | The provider's imperative `GridActions`.                                                                                                                                                                                                                                               |
+| `createGridRunes(options)`                                                                       | function  | A `GridController` whose state is a `$state.raw` snapshot, for custom providers.                                                                                                                                                                                                       |
+| `getGridContext()`, `setGridContext()`, `getTransferScopeContext()`, `setTransferScopeContext()` | function  | Context access for custom components.                                                                                                                                                                                                                                                  |
+| `selectItemView`, `itemViewsEqual`, `rectStyle`, `resizeHandleStyle`, `rectsEqual`               | function  | The helpers the components are built from, for custom rendering.                                                                                                                                                                                                                       |
+| `GRID_DATA`                                                                                      | const     | The data attribute names the pointer gesture looks for.                                                                                                                                                                                                                                |
+
+The full reference, generated from the source declarations, is under [API › Svelte](../api/svelte/components).
+
+## Next
+
+- [Custom rendering](../recipes/custom-rendering): drag handles and your own resize chrome; the render-prop patterns map onto the children snippet.
+- [Keyboard controls](../recipes/keyboard): what the built-in handlers do and how to extend them.
+- [Multiple canvases](../recipes/multiple-canvases): transfer scopes in depth.

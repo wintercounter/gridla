@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gridla · Web Components adapter</title>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-head">
+        <div>
+          <h1>Gridla with Web Components</h1>
+          <p>
+            The same dashboard as the DOM demo, declared in HTML with
+            <code>&lt;gridla-canvas&gt;</code> and <code>&lt;gridla-item&gt;</code> from
+            <code>gridla/elements</code>. The group is a nested canvas inside an item, and the
+            <code>&lt;gridla-transfer-scope&gt;</code> around both lets items move between them.
+          </p>
+        </div>
+      </header>
+      <section class="gd-stage" id="stage">
+        <gridla-transfer-scope>
+          <gridla-canvas
+            id="canvas"
+            gap="12"
+            snap-distance="24"
+            resize-edges="e s se"
+            resize-handle-class="gd-handle"
+          >
+            <gridla-item item-id="header" class="gd-item">
+              <div class="gd-item-head">
+                <span>Header</span><span class="gd-item-coords"></span>
+              </div>
+              <div class="gd-item-body">drag · resize · arrow keys</div>
+            </gridla-item>
+            <gridla-item item-id="chart" class="gd-item">
+              <div class="gd-item-head"><span>Chart</span><span class="gd-item-coords"></span></div>
+              <div class="gd-item-body">drag · resize · arrow keys</div>
+            </gridla-item>
+            <gridla-item item-id="sidebar" class="gd-item">
+              <div class="gd-item-head">
+                <span>Sidebar</span><span class="gd-item-coords"></span>
+              </div>
+              <div class="gd-item-body">drag · resize · arrow keys</div>
+            </gridla-item>
+            <gridla-item item-id="group" class="gd-item">
+              <div class="gd-item-head"><span>Group</span><span class="gd-item-coords"></span></div>
+              <gridla-canvas
+                id="group-canvas"
+                class="gd-item-body nested-stage"
+                gap="12"
+                snap-distance="24"
+                resize-edges="e s se"
+                resize-handle-class="gd-handle"
+              >
+                <gridla-item item-id="note" class="gd-item">
+                  <div class="gd-item-head">
+                    <span>Note</span><span class="gd-item-coords"></span>
+                  </div>
+                  <div class="gd-item-body">drag me onto the dashboard</div>
+                </gridla-item>
+                <gridla-item item-id="todo" class="gd-item">
+                  <div class="gd-item-head">
+                    <span>To-do</span><span class="gd-item-coords"></span>
+                  </div>
+                  <div class="gd-item-body">drag me onto the dashboard</div>
+                </gridla-item>
+                <gridla-preview class="gd-preview"></gridla-preview>
+              </gridla-canvas>
+            </gridla-item>
+            <gridla-preview class="gd-preview"></gridla-preview>
+          </gridla-canvas>
+        </gridla-transfer-scope>
+      </section>
+      <p class="page-note">Last change: <span id="status" data-status>none yet</span></p>
+    </main>
+  </body>
+</html>

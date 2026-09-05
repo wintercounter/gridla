@@ -1,0 +1,63 @@
+.page {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: var(--g-space-6) var(--g-space-4) var(--g-space-8);
+}
+
+.page-head {
+  max-width: 44rem;
+  margin-bottom: var(--g-space-6);
+}
+
+.page-head h1 {
+  font: 600 var(--g-text-xl) / var(--g-leading-tight) var(--g-font-display);
+  letter-spacing: var(--g-tracking-display);
+  margin: 0 0 var(--g-space-3);
+}
+
+.page-head p {
+  margin: 0;
+  color: var(--g-fg-muted);
+}
+
+code {
+  font-family: var(--g-font-mono);
+  font-size: 0.92em;
+  color: var(--g-fg);
+}
+
+.stage {
+  height: 480px;
+}
+
+.stage-inner,
+.stage-canvas {
+  height: 100%;
+}
+
+/* The group item hosts a nested canvas below its header. */
+.group {
+  grid-template-rows: auto 1fr;
+}
+
+.group > [gridlaProvider] {
+  min-height: 0;
+}
+
+.group-canvas {
+  height: 100%;
+  min-height: 0;
+  background-color: var(--g-bg-sunken);
+  overflow: hidden;
+}
+
+.readout {
+  margin-top: var(--g-space-4);
+  display: grid;
+  gap: var(--g-space-3);
+}
+
+.readout pre {
+  margin: 0;
+  max-height: 14rem;
+}

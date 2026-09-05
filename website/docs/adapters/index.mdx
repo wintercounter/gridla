@@ -1,41 +1,53 @@
 ---
 title: Adapters
-description: One layout engine, one adapter contract, a subpath export per framework. React ships today; DOM, Web Components, Vue, Svelte, Solid, Angular, Preact, and Qwik are coming in 0.2.
+description: One layout engine, one adapter contract, a subpath export per framework. React, DOM, Web Components, Vue, Svelte, Solid, Angular, Qwik, and Preact through the React adapter.
 ---
 
 # Adapters
 
 The core of Gridla is a set of pure functions over plain objects. An adapter binds that core to a rendering model: it measures the canvas, positions items, turns pointer and keyboard input into solver calls, and hands the committed layout back to your state. Every adapter ships from the same `gridla` package as its own subpath export, with the framework as an optional peer dependency and nothing else.
 
-## Status
+## Overview
 
-| Framework      | Subpath           | Status        |
-| -------------- | ----------------- | ------------- |
-| React          | `gridla/react`    | Available     |
-| DOM (vanilla)  | `gridla/dom`      | Coming in 0.2 |
-| Web Components | `gridla/elements` | Coming in 0.2 |
-| Vue            | `gridla/vue`      | Coming in 0.2 |
-| Svelte         | `gridla/svelte`   | Coming in 0.2 |
-| Solid          | `gridla/solid`    | Coming in 0.2 |
-| Angular        | `gridla/angular`  | Coming in 0.2 |
-| Preact         | `gridla/react`    | Coming in 0.2 |
-| Qwik           | `gridla/qwik`     | Coming in 0.2 |
+| Framework      | Entry             | Status    | Guide                                        |
+| -------------- | ----------------- | --------- | -------------------------------------------- |
+| React          | `gridla/react`    | Available | [React quickstart](../getting-started/react) |
+| DOM (vanilla)  | `gridla/dom`      | Available | [DOM](./dom)                                 |
+| Web Components | `gridla/elements` | Available | [Web Components](./web-components)           |
+| Vue            | `gridla/vue`      | Available | [Vue](./vue)                                 |
+| Svelte         | `gridla/svelte`   | Available | [Svelte](./svelte)                           |
+| Solid          | `gridla/solid`    | Available | [Solid](./solid)                             |
+| Angular        | `gridla/angular`  | Available | [Angular](./angular)                         |
+| Qwik           | `gridla/qwik`     | Available | [Qwik](./qwik)                               |
+| Preact         | `gridla/react`    | Available | [Preact](./preact)                           |
 
-React is documented under [Getting started](../getting-started/react) and the [API reference](../api/react/provider). Preact will reuse the React adapter through `preact/compat`; the 0.2 page documents the alias setup and the verification that runs against it in the package contract suite.
+Preact reuses the React adapter through `preact/compat`; the [Preact page](./preact) documents the alias setup and the verification that runs against it in the package contract suite.
 
-## One contract
+## Which one?
 
-Adapters share a contract so that switching frameworks, or mixing them on one page, changes nothing about how a layout behaves:
+Pick the entry for the framework that renders your page; the layout behaves the same in every one of them, and the [core](../getting-started/vanilla) stays available for solving outside a component tree. Without a framework, use `gridla/dom` when you mount from code (one function, one element) and `gridla/elements` when you declare the canvas in HTML or from a template engine. Mixing adapters on one page is fine; they share no global state.
 
-- **Same names and props.** `GridProvider` (or the framework's idiom for it), `GridCanvas`, `GridItem`, `GridPreviewOutline`, and `GridTransferScope`, with controlled (`layout` plus `onLayoutChange`) and uncontrolled (`defaultLayout`) modes, `responsive`, `config`, `selectedId`, transfer callbacks, `onCommit`, and `onItemClick`.
-- **Same data attributes.** Every adapter marks the canvas with `data-gridla-canvas`, each item with `data-gridla-item`, and the active, selected, shifted, transferring, preview, drag-handle, and resize-handle elements with the matching `data-gridla-*` attribute. Styles, tests, and tooling written against one adapter work against all of them.
-- **Headless.** Adapters position items and nothing more. No stylesheet ships; theming is yours.
-- **Server safe.** No `window` or `document` access at import time. Where the framework allows a pre-paint measurement, the first paint already uses the measured size.
-- **Nested layouts and transfers.** Nested canvases are nested providers, and items move between canvases through a transfer scope, exactly as in the [React transfer recipe](../recipes/transfer).
+## Shared contract
 
-## Under the hood
+Adapters share a contract so that switching frameworks, or mixing them on one page, changes nothing about how a layout behaves. The React adapter defines the reference behavior; every guide above has the same sections (install, minimal example, controlled and uncontrolled, nested layouts and transfers, server rendering, API) so the differences are easy to find.
 
-All adapters are thin. The interaction layer that the React adapter is built on (the store, the controller that turns gestures into solver calls, pointer and keyboard handling, transfer scopes, and size observation) is framework neutral and is exported for adapter authors, so a community adapter for a framework not listed here is a small package rather than a reimplementation.
+- **Same names.** `GridProvider` (or the framework's idiom for it: `mountGrid` in the DOM, `<gridla-canvas>` as a custom element, `[gridlaProvider]` in Angular), `GridCanvas`, `GridItem`, `GridPreviewOutline`, and `GridTransferScope`.
+- **Same props.** Controlled (`layout` plus `onLayoutChange`) and uncontrolled (`defaultLayout`) modes, `responsive`, `config` or the individual `SolveOptions` fields (`gap`, `snapDistance`, `snap`, `onTrace`), `selectedId`, `acceptTransfers`, `onTransferIn`, `onTransferOut`, `onCommit`, and `onItemClick`. Change callbacks receive the next layout and a `GridChangeDetail` (`reason`, `itemId`, solver `strategy`). Frameworks spell the binding their own way (`v-model:layout`, `bind:layout`, `[(layout)]`, `onLayoutChange$`), but the semantics do not change.
+- **Same data attributes.** Every adapter marks the canvas with `data-gridla-canvas`, each item with `data-gridla-item="<id>"`, the active, selected, shifted, and transferring items with `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring`, the landing box with `data-gridla-preview`, and handles with `data-gridla-drag-handle` and `data-gridla-resize-handle="<edge>"`. The root carries `data-gridla-dragging` while a gesture runs. Styles, tests, and tooling written against one adapter work against all of them.
+- **Headless.** Adapters position items (`transform` by default, or `left`/`top` with `positioning: 'absolute'`) and nothing more. No stylesheet ships; theming is yours.
+- **Server rendering.** No `window` or `document` access at import time. The server output is the authored layout; on the client the canvas measures itself before the first paint where the framework allows it, so the projected layout is what the user sees first.
+- **Nested layouts and transfer scope.** Nested canvases are nested providers, and items move between canvases through a transfer scope: the pointer decides the target, the target previews the drop, and releasing commits it, exactly as in the [transfer recipe](../recipes/transfer).
+
+### Write your own adapter
+
+All adapters are thin bindings over [`gridla/interaction`](../api/interaction/controller), the framework-neutral layer the React adapter is built on. It is a public entry, so an adapter for a framework not listed here is a small module rather than a reimplementation. The four functions to know:
+
+- [`createGridController`](../api/interaction/controller#creategridcontroller) owns the store, the projection onto the measured size, the gesture API, the controlled and uncontrolled sync, and the `onLayoutChange` reasons. Your adapter renders `store` snapshots and forwards prop changes with `setLayout`, `setSize`, and `setConfig`.
+- [`createPointerGesture`](../api/interaction/gesture#createpointergesture) turns pointer and keyboard input into controller calls. It takes a minimal event shape, so it works with synthetic events too; `bindPointer(element)` attaches native listeners and returns an unsubscribe.
+- [`createTransferScope`](../api/interaction/transfer#createtransferscope) registers controllers and hit-tests their canvases during a drag, so several providers (from any adapter) can exchange items.
+- [`observeSize`](../api/interaction/controller#observesize) measures an element synchronously and then through `ResizeObserver`, which is how every adapter feeds `setSize`.
+
+Emit the data attributes above from [`GRID_DATA`](../api/interaction/gesture#grid_data), keep your module free of `window` and `document` at import time, and the shared browser contract suite can run against your demo app unchanged.
 
 ## Verification
 

@@ -32,7 +32,7 @@ import type { GridController, GridControllerOptions, GridStore, GridStoreListene
 
 <span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L192">interaction/controller.ts:192</a></span>
 
-Create a [`GridController`](#gridcontroller). Give it a `layout` (controlled: every accepted
+Create a [`GridController`](/api/angular/provider#gridcontroller). Give it a `layout` (controlled: every accepted
 change is reported through `onLayoutChange` and the store follows the next
 `setOptions(\{ layout \})`) or a `defaultLayout` (uncontrolled: the controller
 owns the layout and still reports changes). Call `setSize` with the measured
@@ -90,7 +90,7 @@ export function renderLayout<TData>(
 
 <span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L149">interaction/controller.ts:149</a></span>
 
-Resolve [`GridControllerConfig`](/api/interaction/types#gridcontrollerconfig) from controller options by applying the
+Resolve [`GridControllerConfig`](/api/svelte/types#gridcontrollerconfig) from controller options by applying the
 defaults (`responsive: true`, `dragThreshold: 4`, `keyboardStep: 8`, `gap: 0`).
 
 ```ts
@@ -159,7 +159,7 @@ export type GridController<TData = unknown> = {
 
 Options for [`createGridController`](#creategridcontroller): every [`SolveOptions`](/api/core/solvers#solveoptions) field, a controlled
 or uncontrolled layout, change and transfer callbacks, and the settings that
-make up [`GridControllerConfig`](/api/interaction/types#gridcontrollerconfig). Framework adapters map their props onto this
+make up [`GridControllerConfig`](/api/svelte/types#gridcontrollerconfig). Framework adapters map their props onto this
 shape and forward later changes with `setOptions`.
 
 ```ts

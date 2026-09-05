@@ -1,25 +1,32 @@
 ---
 title: Install
-description: Add Gridla to a project. One package, two entry points, zero runtime dependencies.
+description: Add Gridla to a project. One package, a framework-neutral core, and one adapter entry per framework, with zero runtime dependencies.
 ---
 
 # Install
 
-Gridla is one npm package with two entry points: `gridla` is the framework-neutral core and `gridla/react` is the React adapter. Both are ESM only and ship TypeScript declarations.
+Gridla is one npm package. `gridla` is the framework-neutral core; every adapter is a subpath of the same package with its framework as an optional peer dependency. All entries are ESM only and ship TypeScript declarations.
 
 import { PackageManagerTabs } from '@rspress/core/theme'
 
 <PackageManagerTabs command="install gridla" />
 
-React is an optional peer dependency (`>=18`, `useSyncExternalStore` is required). Install it only if you use `gridla/react`.
-
-## Requirements
-
-- Node 20.19 or newer for tooling; the library itself has no Node-specific code.
-- A bundler or runtime that resolves the `exports` field. The core has no side effects and tree-shakes.
-- Browsers: the last two versions of evergreen browsers. Syntax targets ES2022. See [browser support](../guides/browser-support).
-
 ## Entry points
+
+| Entry                | What it is                                                       | Peer dependency (optional) | Guide                                                              |
+| -------------------- | ---------------------------------------------------------------- | -------------------------- | ------------------------------------------------------------------ |
+| `gridla`             | Core: pure functions over plain objects. Safe on the server.     | none                       | [Vanilla quickstart](./vanilla)                                    |
+| `gridla/interaction` | Framework-neutral controller, gestures, transfer scope, sizing.  | none                       | [Write your own adapter](../adapters/index#write-your-own-adapter) |
+| `gridla/react`       | React adapter: provider, components, hooks. Also runs on Preact. | `react >=18`               | [React quickstart](./react)                                        |
+| `gridla/dom`         | Vanilla adapter: `mountGrid(element, options)`.                  | none                       | [DOM](../adapters/dom)                                             |
+| `gridla/elements`    | Web Components over the DOM adapter.                             | none                       | [Web Components](../adapters/web-components)                       |
+| `gridla/vue`         | Vue 3 components and composables.                                | `vue >=3.5`                | [Vue](../adapters/vue)                                             |
+| `gridla/svelte`      | Svelte 5 components and runes.                                   | `svelte >=5`               | [Svelte](../adapters/svelte)                                       |
+| `gridla/solid`       | Solid components and primitives.                                 | `solid-js >=1.8`           | [Solid](../adapters/solid)                                         |
+| `gridla/angular`     | Angular standalone components and directives with signals.       | `@angular/core >=20`       | [Angular](../adapters/angular)                                     |
+| `gridla/qwik`        | Qwik components (resumable, client-side controller).             | `@builder.io/qwik >=1.14`  | [Qwik](../adapters/qwik)                                           |
+
+Install only the peer for the entry you import; nothing else is pulled in. Preact uses `gridla/react` with `react` aliased to `preact/compat`, see the [Preact guide](../adapters/preact).
 
 ```ts
 // Core: pure functions over plain objects. Safe on the server.
@@ -29,9 +36,16 @@ import { moveItem, projectLayout, flattenLayout } from 'gridla'
 import { GridProvider, GridCanvas, GridItem } from 'gridla/react'
 ```
 
-Everything in `gridla` takes plain objects and returns new plain objects. Nothing touches the DOM or global state, so the core runs in Node, workers, and server renderers unchanged.
+Everything in `gridla` takes plain objects and returns new plain objects. Nothing touches the DOM or global state, so the core runs in Node, workers, and server renderers unchanged. The adapters touch no `window` or `document` at import time either.
+
+## Requirements
+
+- Node 20.19 or newer for tooling; the library itself has no Node-specific code.
+- A bundler or runtime that resolves the `exports` field. The core has no side effects and tree-shakes.
+- Browsers: the last two versions of evergreen browsers. Syntax targets ES2022. Adapters need Pointer Events and `ResizeObserver`. See [browser support](../guides/browser-support).
 
 ## Next
 
 - [Vanilla quickstart](./vanilla): a canvas you can drag on, in fifty lines and no framework.
 - [React quickstart](./react): the same with `GridProvider`.
+- [Adapters](../adapters/index): the other frameworks, and the contract they all follow.

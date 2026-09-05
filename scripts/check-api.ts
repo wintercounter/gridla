@@ -28,15 +28,18 @@ function surfaceOf(file: string, entry: string): string[] {
   for (const [pattern, kind] of patterns) {
     for (const match of text.matchAll(pattern)) lines.push(`${entry} ${kind} ${match[1]}`)
   }
-  // Re-exported names: `export { a, b as c, type D }`
-  for (const match of text.matchAll(/^export \{([^}]+)\}/gm)) {
-    for (const part of match[1].split(',')) {
+  // Re-exported names: `export { a, b as c, type D }`. Bundled declarations
+  // (ng-packagr) also list their own declarations this way, and their types
+  // in a separate `export type { ... }` list.
+  for (const match of text.matchAll(/^export (type )?\{([^}]+)\}/gm)) {
+    const kind = match[1] ? 'type' : 'export'
+    for (const part of match[2].split(',')) {
       const name = part
         .trim()
         .replace(/^type /, '')
         .split(/\s+as\s+/)
         .pop()
-      if (name) lines.push(`${entry} export ${name}`)
+      if (name) lines.push(`${entry} ${kind} ${name}`)
     }
   }
   return lines
@@ -51,6 +54,13 @@ const surface = [
   ...surfaceOf('index.d.ts', 'gridla'),
   ...surfaceOf('react.d.ts', 'gridla/react'),
   ...surfaceOf('interaction.d.ts', 'gridla/interaction'),
+  ...surfaceOf('dom.d.ts', 'gridla/dom'),
+  ...surfaceOf('elements.d.ts', 'gridla/elements'),
+  ...surfaceOf('vue.d.ts', 'gridla/vue'),
+  ...surfaceOf('qwik.qwik.d.ts', 'gridla/qwik'),
+  ...surfaceOf('svelte/index.d.ts', 'gridla/svelte'),
+  ...surfaceOf('solid.d.ts', 'gridla/solid'),
+  ...surfaceOf('angular/index.d.ts', 'gridla/angular'),
 ]
   .filter((line, index, all) => all.indexOf(line) === index)
   .sort()

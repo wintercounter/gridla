@@ -1,0 +1,253 @@
+---
+title: Solid
+description: A draggable, resizable canvas with GridProvider, GridCanvas, and GridItem from gridla/solid. Fine-grained primitives over the controller store, no compiler required.
+---
+
+# Solid
+
+`gridla/solid` is the Solid adapter. It is written with `solid-js/h` hyperscript, so it ships as plain JavaScript with no JSX transform of its own; your app can use JSX, hyperscript, or `solid-js/html`. The components own layout and gesture state, measure the canvas, bind pointer and keyboard input, and position items. Appearance is yours. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters.
+
+## Install
+
+```bash
+bun add gridla solid-js
+```
+
+The adapter ships inside the `gridla` package as the `gridla/solid` subpath. `solid-js` (1.8 or later) is an optional peer dependency.
+
+## Minimal example
+
+Give `GridProvider` a `defaultLayout` and it keeps the state for you. `GridCanvas` renders a `div` with `position: relative`; give it a height. `GridItem` positions one item with a `transform` and sets the `data-gridla-*` attributes for styling; `resizeEdges` adds built-in resize handles. `GridPreviewOutline` renders a box where the active item will land.
+
+```tsx
+/** @jsxImportSource solid-js */
+import { For } from 'solid-js'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/solid'
+
+const initial: GridLayout<{ label: string }> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+export function Dashboard() {
+  return (
+    <GridProvider defaultLayout={initial} gap={12} snapDistance={24}>
+      <GridCanvas style={{ height: '480px' }}>
+        <For each={initial.items}>
+          {(item) => (
+            <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>
+              {item.data?.label}
+            </GridItem>
+          )}
+        </For>
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+The same tree with hyperscript, for apps that skip the compiler:
+
+```ts
+import h from 'solid-js/h'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/solid'
+
+export function Dashboard(initial: GridLayout<{ label: string }>) {
+  return h(
+    GridProvider,
+    { defaultLayout: initial, gap: 12, snapDistance: 24 },
+    h(GridCanvas, { style: { height: '480px' } }, [
+      ...initial.items.map((item) =>
+        h(GridItem, { id: item.id, resizeEdges: ['e', 's', 'se'] }, item.data?.label),
+      ),
+      h(GridPreviewOutline, {}),
+    ]),
+  )
+}
+```
+
+Two hyperscript rules to keep in mind: `solid-js/h` treats a function prop with **zero parameters** as an accessor and calls it, so pass reactive values as `() => value()` and declare callbacks with their parameters (`onCommit: (detail) => ...`); and `solid-js/h` is a client runtime, so server rendering goes through `createComponent` (which compiled JSX emits for you; see [Server rendering](#server-rendering-and-solidstart)).
+
+Styles use Solid's conventions: `style` takes an object with hyphenated property names and string values (`{ height: '480px' }`), and classes go through `class`.
+
+## Controlled and uncontrolled
+
+Pass `layout` and `onLayoutChange` to keep the state yourself. The provider reads its props reactively: every accepted change is reported through the callback, and the next value of `layout` flows back into the controller without a remount.
+
+```tsx
+/** @jsxImportSource solid-js */
+import { For, createSignal } from 'solid-js'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider } from 'gridla/solid'
+
+type Data = { label: string }
+
+export function Dashboard(props: { initial: GridLayout<Data> }) {
+  const [layout, setLayout] = createSignal(props.initial)
+  return (
+    <GridProvider<Data> layout={layout()} onLayoutChange={setLayout} gap={12}>
+      <GridCanvas style={{ height: '480px' }}>
+        <For each={layout().items}>
+          {(item) => (
+            <GridItem id={item.id} resizeEdges={['e', 's', 'se']}>
+              {item.data?.label}
+            </GridItem>
+          )}
+        </For>
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+The second callback argument is a `GridChangeDetail` with the `reason` (`move`, `resize`, `place`, `remove`, `update`, `transfer`, `set`), the `itemId`, and the solver `strategy`. `onCommit` fires with the same detail after every interactive commit. Uncontrolled providers (`defaultLayout`) still report every change, so persistence works the same way in both modes. See [controlled state](../recipes/controlled-state) and [persistence](../recipes/persistence).
+
+## Nested layouts and transfers
+
+A nested layout is a `GridProvider` rendered inside a `GridItem`. Wrap the providers in a `GridTransferScope` and items move between them: the pointer decides the target, the deepest canvas under it previews the drop, and releasing there commits it. `onTransferOut` fires on the source and `onTransferIn` on the target.
+
+```tsx
+/** @jsxImportSource solid-js */
+import { For, createSignal } from 'solid-js'
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, GridTransferScope } from 'gridla/solid'
+
+type Data = { label: string; kind?: 'group' }
+
+function Group(props: { id: string; initial: GridLayout<Data> }) {
+  const [layout, setLayout] = createSignal(props.initial)
+  return (
+    <GridItem id={props.id} draggable={false}>
+      {({ dragHandleProps }) => (
+        <>
+          <header {...dragHandleProps}>Group</header>
+          <GridProvider<Data> layout={layout()} onLayoutChange={setLayout} gap={8}>
+            <GridCanvas style={{ height: 'calc(100% - 2rem)' }}>
+              <For each={layout().items}>
+                {(item) => <GridItem id={item.id}>{item.data?.label}</GridItem>}
+              </For>
+            </GridCanvas>
+          </GridProvider>
+        </>
+      )}
+    </GridItem>
+  )
+}
+
+export function Page(props: { outer: GridLayout<Data>; inner: GridLayout<Data> }) {
+  const [layout, setLayout] = createSignal(props.outer)
+  return (
+    <GridTransferScope>
+      <GridProvider<Data>
+        layout={layout()}
+        onLayoutChange={setLayout}
+        onTransferIn={(item, from) => console.log(`${item.id} arrived from ${from}`)}
+      >
+        <GridCanvas style={{ height: '600px' }}>
+          <For each={layout().items}>
+            {(item) =>
+              item.data?.kind === 'group' ? (
+                <Group id={item.id} initial={props.inner} />
+              ) : (
+                <GridItem id={item.id}>{item.data?.label}</GridItem>
+              )
+            }
+          </For>
+        </GridCanvas>
+      </GridProvider>
+    </GridTransferScope>
+  )
+}
+```
+
+The render-function form of `children` receives the item's `view` accessor plus `dragHandleProps` and `getResizeHandleProps(edge)`, for your own drag surface and resize chrome. With `draggable={false}` only elements carrying `dragHandleProps` start a move, which keeps presses inside the nested canvas from dragging the group. Set `acceptTransfers` to `false`, or to a predicate, on any provider that should not take drops.
+
+## Primitives
+
+Every primitive returns an accessor that notifies only when its slice changes, built with `from()` over the controller store. Call them inside a provider.
+
+```tsx
+/** @jsxImportSource solid-js */
+import { useGridActions, useGridItemView, useGridLayout, useGridSelection } from 'gridla/solid'
+
+export function Toolbar() {
+  const actions = useGridActions<{ label: string }>()
+  const layout = useGridLayout()
+  const selected = useGridSelection()
+  return (
+    <div>
+      <span>{layout().items.length} items</span>
+      <button
+        type="button"
+        onClick={() =>
+          actions.place(
+            {
+              id: `note-${Date.now()}`,
+              w: 220,
+              h: 140,
+              minW: 80,
+              minH: 60,
+              data: { label: 'Note' },
+            },
+            { pointer: { x: 480, y: 300 } },
+          )
+        }
+      >
+        Add note
+      </button>
+      <button type="button" disabled={!selected()} onClick={() => actions.remove(selected()!)}>
+        Remove selected
+      </button>
+    </div>
+  )
+}
+
+export function Coordinates(props: { id: string }) {
+  const view = useGridItemView(() => props.id)
+  return (
+    <span>
+      {view().rect.x},{view().rect.y}
+    </span>
+  )
+}
+```
+
+`useGridStore(selector, isEqual?)` is the general form; `useGridLayout`, `useGridVisibleLayout`, `useGridSourceLayout`, `useGridItem`, `useGridItemView`, `useGridInteractionState`, `useGridPreview`, and `useGridSelection` are selectors over it. `useGridActions` returns the imperative actions (`move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, `cancel`), which return `false` when the solver rejected the request.
+
+## Server rendering and SolidStart
+
+The adapter touches no `window` or `document` at import time. On the server, `GridCanvas` and `GridItem` render through `ssrElement` and emit the authored layout: every item at its authored position and size, with the same data attributes as on the client. Measurement, projection, and input start in `onMount`, so the first client paint after hydration already uses the measured size. Nothing else is required in SolidStart; import from `gridla/solid` in a route component as you would any other component.
+
+Hyperscript (`solid-js/h`) is a client runtime and cannot render on the server. Compiled JSX calls `createComponent`, which the adapter supports in both environments; if you compose the tree by hand for a server render, use `createComponent` from `solid-js/web` instead of `h`.
+
+## API
+
+| Export                                                                        | Kind      | Purpose                                                                                                                                                                                                                                                                                                         |
+| ----------------------------------------------------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GridProvider`                                                                | component | Owns layout and gesture state; props `layout`, `defaultLayout`, `onLayoutChange`, `onCommit`, `responsive`, `selectedId`, `onSelectedIdChange`, `acceptTransfers`, `onTransferIn`, `onTransferOut`, `dragThreshold`, `keyboardStep`, and every `SolveOptions` field (`gap`, `snapDistance`, `snap`, `onTrace`). |
+| `GridCanvas`                                                                  | component | The positioned container; measures itself, binds pointer and keyboard handling; props `onItemClick`, `onDeleteKey`, `enabled`, plus `div` attributes.                                                                                                                                                           |
+| `GridItem`                                                                    | component | Positions one item; props `id`, `draggable`, `resizeEdges`, `resizeHandleClass`, `positioning`, `followPointer`, and `children` as content or a render function.                                                                                                                                                |
+| `GridPreviewOutline`                                                          | component | The drop preview box; renders nothing when idle.                                                                                                                                                                                                                                                                |
+| `GridTransferScope`                                                           | component | Lets items move between the providers inside it.                                                                                                                                                                                                                                                                |
+| `useGridStore`                                                                | primitive | Accessor over a selected slice of provider state with custom equality.                                                                                                                                                                                                                                          |
+| `useGridItemView`                                                             | primitive | Accessor over one item's rect, base rect, active rect, and flags.                                                                                                                                                                                                                                               |
+| `useGridActions`                                                              | primitive | The imperative actions.                                                                                                                                                                                                                                                                                         |
+| `useGridLayout`, `useGridVisibleLayout`, `useGridSourceLayout`, `useGridItem` | primitive | Layout accessors.                                                                                                                                                                                                                                                                                               |
+| `useGridSelection`, `useGridInteractionState`, `useGridPreview`               | primitive | Selection, gesture, and preview accessors.                                                                                                                                                                                                                                                                      |
+| `useGridContext`, `useTransferScope`                                          | primitive | The raw context values, for custom canvases.                                                                                                                                                                                                                                                                    |
+| `createElement`                                                               | function  | The hyperscript-or-`ssrElement` helper the components are built with.                                                                                                                                                                                                                                           |
+| `GRID_DATA`                                                                   | constant  | The data attribute names the pointer gesture reads.                                                                                                                                                                                                                                                             |
+
+The full reference is generated from the source: [Provider](../api/solid/provider), [Components](../api/solid/components), [Primitives](../api/solid/primitives), [Transfer scope](../api/solid/transfer), and [Types](../api/solid/types). The demo app that drives the adapter's browser tests is published with this site under `/adapters/solid/`.

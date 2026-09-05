@@ -1,0 +1,20 @@
+{
+  "name": "gridla-adapter-solid",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rsbuild dev",
+    "build": "rsbuild build",
+    "preview": "rsbuild preview"
+  },
+  "dependencies": {
+    "@gridla/demo-kit": "workspace:*",
+    "gridla": "workspace:*",
+    "solid-js": "^1.9"
+  },
+  "devDependencies": {
+    "@rsbuild/plugin-babel": "^2.1.0",
+    "@rsbuild/plugin-solid": "^1.2.2"
+  }
+}

@@ -1,0 +1,322 @@
+---
+title: Angular
+description: Standalone components and directives with signals for Angular 20, from gridla/angular, compiled with ng-packagr.
+---
+
+# Angular
+
+`gridla/angular` is a headless adapter for Angular 20 and later: standalone components and directives that own layout and gesture state, measure the canvas, wire pointer and keyboard input, and position items. State is exposed as signals; appearance is yours. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on, so behavior is identical across adapters. It is compiled with ng-packagr (partial Ivy) and ships as a FESM bundle with `@angular/core` as an optional peer dependency.
+
+## Install
+
+```bash
+bun add gridla @angular/core
+```
+
+The adapter imports nothing else: no `@angular/common`, no `rxjs` beyond what `@angular/core` already needs, and no zone.js. It works with zoneless change detection.
+
+## Bootstrap
+
+`provideGridla` registers application-wide defaults (every `SolveOptions` field plus `responsive`, `dragThreshold`, and `keyboardStep`). It is optional; a provider's own inputs always take precedence.
+
+```ts title="main.ts"
+import { provideZonelessChangeDetection } from '@angular/core'
+import { bootstrapApplication } from '@angular/platform-browser'
+import { provideGridla } from 'gridla/angular'
+
+import { AppComponent } from './app.component'
+
+bootstrapApplication(AppComponent, {
+  providers: [provideZonelessChangeDetection(), provideGridla({ gap: 12, snapDistance: 24 })],
+})
+```
+
+## Minimal example
+
+`GridProviderComponent` matches `<gridla-provider>` or the `gridlaProvider` attribute on any element. `<gridla-canvas>` is the positioned box; give it a height. `[gridlaItem]` positions one item by id, and `<gridla-preview-outline>` shows where the active item will land.
+
+```ts title="app.component.ts"
+import { Component, signal } from '@angular/core'
+import type { GridLayout } from 'gridla'
+import {
+  GridCanvasComponent,
+  GridItemDirective,
+  GridPreviewOutlineComponent,
+  GridProviderComponent,
+} from 'gridla/angular'
+
+type Data = { label: string }
+
+const initial: GridLayout<Data> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+@Component({
+  selector: 'app-dashboard',
+  imports: [
+    GridProviderComponent,
+    GridCanvasComponent,
+    GridItemDirective,
+    GridPreviewOutlineComponent,
+  ],
+  template: `
+    <gridla-provider [(layout)]="layout" [gap]="12" [snapDistance]="24">
+      <gridla-canvas style="height: 480px">
+        @for (item of layout().items; track item.id) {
+          <div class="tile" [gridlaItem]="item.id" [resizeEdges]="['e', 's', 'se']">
+            {{ item.data?.label }}
+          </div>
+        }
+        <gridla-preview-outline class="outline" />
+      </gridla-canvas>
+    </gridla-provider>
+  `,
+})
+export class AppComponent {
+  readonly layout = signal(initial)
+}
+```
+
+What each piece does:
+
+- `gridlaProvider` holds the source layout, projects it onto the measured canvas size (`responsive` is `true` by default), and runs the solvers during gestures. `gap`, `snapDistance`, `snap`, and `onTrace` are the same `SolveOptions` the core takes, available as inputs or together as `[config]`.
+- `<gridla-canvas>` renders with `position: relative`, measures itself with `ResizeObserver` after the first render, and listens for pointer and keyboard events on its host.
+- `[gridlaItem]` positions its host with `transform` and sets `data-gridla-item`, `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring` for styling. `resizeEdges` appends built-in resize handles; `gridlaDragHandle` and `gridlaResizeHandle` mark your own elements instead.
+- `<gridla-preview-outline>` is a box where the active item will land when released, hidden when there is no gesture.
+
+Iterate over a stable list of ids (here the bound layout with `track item.id`); each `[gridlaItem]` subscribes to its own geometry through a signal, so the list itself does not rerender during a drag.
+
+## Controlled and uncontrolled
+
+`layout` is an input and `layoutChange` emits the next layout after every accepted change, so `[(layout)]` works with a `WritableSignal` or a plain property. `layoutChangeDetail` emits the same layout together with the `GridChangeDetail` (`reason`, `itemId`, solver `strategy`), and `commit` fires for interactive commits only. Pass `[defaultLayout]` instead of `[layout]` for uncontrolled use.
+
+```ts
+import { Component, signal } from '@angular/core'
+import type { GridLayout } from 'gridla'
+import {
+  GridCanvasComponent,
+  GridItemDirective,
+  GridProviderComponent,
+  type GridLayoutChangeEvent,
+} from 'gridla/angular'
+
+@Component({
+  selector: 'app-controlled',
+  imports: [GridProviderComponent, GridCanvasComponent, GridItemDirective],
+  template: `
+    <div gridlaProvider [(layout)]="layout" (layoutChangeDetail)="onChange($event)">
+      <gridla-canvas style="height: 480px">
+        @for (item of layout().items; track item.id) {
+          <div [gridlaItem]="item.id">{{ item.id }}</div>
+        }
+      </gridla-canvas>
+    </div>
+    <p>{{ status() }}</p>
+  `,
+})
+export class ControlledComponent {
+  readonly layout = signal<GridLayout>({
+    canvas: {
+      width: 960,
+      height: 600,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      heightMode: 'bounded',
+    },
+    items: [{ id: 'a', x: 0, y: 0, w: 320, h: 240 }],
+  })
+  readonly status = signal('idle')
+
+  onChange({ change }: GridLayoutChangeEvent) {
+    this.status.set(`${change.reason} ${change.itemId ?? ''} ${change.strategy ?? ''}`)
+  }
+}
+```
+
+A new layout object assigned to the signal flows back into the canvas; the provider compares references and only re-projects when the input changed.
+
+## Signals and actions
+
+Inside any component or directive rendered within a provider, inject the controller or use the helpers. All of them must be called in an injection context (a constructor or field initializer).
+
+```ts
+import { Component, inject } from '@angular/core'
+import {
+  GridController,
+  injectGridActions,
+  injectGridItemView,
+  injectGridStore,
+} from 'gridla/angular'
+
+@Component({
+  selector: 'app-toolbar',
+  template: `
+    <button type="button" (click)="add()">Add note</button>
+    <span>{{ count() }} items, selected: {{ selected() }}</span>
+  `,
+})
+export class ToolbarComponent {
+  readonly controller = inject(GridController)
+  readonly actions = injectGridActions<{ label: string }>()
+  readonly count = injectGridStore((state) => state.layout.items.length)
+  readonly selected = this.controller.selectedId
+  readonly firstView = injectGridItemView('note')
+
+  add() {
+    this.actions.place(
+      { id: `note-${Date.now()}`, w: 220, h: 140, minW: 80, minH: 60, data: { label: 'Note' } },
+      { pointer: { x: 480, y: 300 } },
+    )
+  }
+}
+```
+
+`GridController` exposes `state`, `layout`, `visibleLayout`, `interaction`, `preview`, `selectedId`, and `dragging` as signals, `select(selector, equal?)` for custom slices, `itemView(id)` for everything a rendered item needs, plus the imperative `actions` (`move`, `resize`, `place`, `remove`, `update`, `select`, `setLayout`, `cancel`) and the low-level `gesture` API from `gridla/interaction`.
+
+## Nested layouts and transfers
+
+A nested layout is a nested provider: put a `gridlaProvider` inside a `[gridlaItem]`. Wrap several providers in `<gridla-transfer-scope>` (or the `gridlaTransferScope` attribute, or `provideGridTransferScope()` in a component's `providers`) and items can be dragged between them. The pointer decides the target; `transferOut` fires on the source and `transferIn` on the target.
+
+```ts
+import { Component, signal } from '@angular/core'
+import type { GridLayout } from 'gridla'
+import {
+  GridCanvasComponent,
+  GridDragHandleDirective,
+  GridItemDirective,
+  GridProviderComponent,
+  GridTransferScopeComponent,
+  type GridTransferInEvent,
+} from 'gridla/angular'
+
+@Component({
+  selector: 'app-nested',
+  imports: [
+    GridProviderComponent,
+    GridCanvasComponent,
+    GridItemDirective,
+    GridDragHandleDirective,
+    GridTransferScopeComponent,
+  ],
+  template: `
+    <gridla-transfer-scope>
+      <div gridlaProvider [(layout)]="outer">
+        <gridla-canvas style="height: 480px">
+          @for (item of outer().items; track item.id) {
+            @if (item.id === 'group') {
+              <div [gridlaItem]="item.id" draggable="false">
+                <header gridlaDragHandle>Group</header>
+                <div gridlaProvider [(layout)]="inner" (transferIn)="arrived($event)">
+                  <gridla-canvas style="height: 200px" (pointerdown)="$event.stopPropagation()">
+                    @for (child of inner().items; track child.id) {
+                      <div [gridlaItem]="child.id">{{ child.id }}</div>
+                    }
+                  </gridla-canvas>
+                </div>
+              </div>
+            } @else {
+              <div [gridlaItem]="item.id">{{ item.id }}</div>
+            }
+          }
+        </gridla-canvas>
+      </div>
+    </gridla-transfer-scope>
+  `,
+})
+export class NestedComponent {
+  readonly outer = signal<GridLayout>({
+    canvas: {
+      width: 960,
+      height: 600,
+      padding: { top: 0, right: 0, bottom: 0, left: 0 },
+      heightMode: 'bounded',
+    },
+    items: [
+      { id: 'chart', x: 0, y: 0, w: 460, h: 300 },
+      { id: 'group', x: 480, y: 0, w: 480, h: 300, minW: 200, minH: 160 },
+    ],
+  })
+  readonly inner = signal<GridLayout>({
+    canvas: {
+      width: 480,
+      height: 240,
+      padding: { top: 8, right: 8, bottom: 8, left: 8 },
+      heightMode: 'bounded',
+    },
+    items: [{ id: 'note', x: 8, y: 8, w: 200, h: 100 }],
+  })
+
+  arrived(event: GridTransferInEvent) {
+    console.warn(`${event.item.id} arrived from ${event.sourceId}`)
+  }
+}
+```
+
+Two details matter: the group item is `draggable="false"` with an explicit `gridlaDragHandle`, so presses inside the nested canvas do not start a move of the group; and the nested canvas stops `pointerdown` from bubbling, so the outer canvas does not select the nested item. `acceptTransfers` (a boolean or a predicate) controls what a provider accepts.
+
+## Styling
+
+Items are unstyled elements. A minimal stylesheet:
+
+```css
+[data-gridla-item] {
+  border: 1px solid #8884;
+  border-radius: 6px;
+  background: white;
+  transition:
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    width 180ms cubic-bezier(0.22, 1, 0.36, 1),
+    height 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+[data-gridla-item][data-gridla-active] {
+  transition: none;
+}
+[data-gridla-item][data-gridla-selected] {
+  outline: 2px solid #3b82f6;
+}
+[data-gridla-preview] {
+  border: 2px dashed #e0562f;
+  border-radius: 6px;
+}
+```
+
+## Server rendering
+
+The adapter touches no `window` or `document` at import time or during construction, so it renders with Angular SSR. On the server the canvas renders its items at the source layout's own size; measuring (`ResizeObserver`) and pointer capture start in `afterNextRender`, which runs only in the browser. The first client render measures the canvas before the browser paints, so there is no visible re-layout after hydration.
+
+## Packaging
+
+The entry is compiled by ng-packagr in partial compilation mode. The Angular linker in your build (Angular CLI, or any esbuild, Vite, or Rspack setup with the Angular plugin) turns it into a full Ivy definition; the JIT compiler can also link it at runtime, which is how the demo app is built without the Angular CLI. The bundle imports `gridla/interaction` from the same package, so the core and the interaction layer are never duplicated when you also use `gridla` directly.
+
+## API
+
+| Export                        | Kind       | Purpose                                                                                                                                                                           |
+| ----------------------------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GridProviderComponent`       | component  | `<gridla-provider>` / `[gridlaProvider]`. Inputs mirror the React props; outputs `layoutChange`, `layoutChangeDetail`, `commit`, `selectedIdChange`, `transferIn`, `transferOut`. |
+| `GridCanvasComponent`         | component  | `<gridla-canvas>`. Inputs `enabled`, `tabindex`; outputs `itemClick`, `deleteKey`.                                                                                                |
+| `GridItemDirective`           | directive  | `[gridlaItem]="id"`. Inputs `draggable`, `resizeEdges`, `resizeHandleClass`, `positioning`, `followPointer`.                                                                      |
+| `GridDragHandleDirective`     | directive  | `gridlaDragHandle`: marks the surface that starts a move.                                                                                                                         |
+| `GridResizeHandleDirective`   | directive  | `gridlaResizeHandle="se"`: marks a custom resize handle.                                                                                                                          |
+| `GridPreviewOutlineComponent` | component  | `<gridla-preview-outline>`. Input `positioning`.                                                                                                                                  |
+| `GridTransferScopeComponent`  | component  | `<gridla-transfer-scope>` / `[gridlaTransferScope]`.                                                                                                                              |
+| `GridController`              | injectable | Signals over the controller state plus `actions` and `gesture`.                                                                                                                   |
+| `injectGridController`        | function   | The nearest `GridController`.                                                                                                                                                     |
+| `injectGridStore`             | function   | A signal over a slice of the state.                                                                                                                                               |
+| `injectGridItemView`          | function   | A signal with everything needed to paint one item.                                                                                                                                |
+| `injectGridActions`           | function   | The imperative actions.                                                                                                                                                           |
+| `provideGridla`               | function   | Application-wide defaults.                                                                                                                                                        |
+| `provideGridTransferScope`    | function   | A transfer scope as component providers.                                                                                                                                          |
+| `GRIDLA_OPTIONS`              | token      | The defaults registered by `provideGridla`.                                                                                                                                       |
+| `GRID_TRANSFER_SCOPE`         | token      | The enclosing `TransferScope`.                                                                                                                                                    |
+| `GRID_DATA`                   | const      | The data attribute names.                                                                                                                                                         |
+
+The full reference is generated from the source: [Provider](../api/angular/provider), [Components](../api/angular/components), [Signals](../api/angular/signals), and [Types](../api/angular/types).

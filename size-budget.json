@@ -1,11 +1,32 @@
 {
   "gridla": {
-    "gzip": 25500
+    "gzip": 25600
   },
   "gridla/react": {
-    "gzip": 26600
+    "gzip": 27400
   },
   "gridla/interaction": {
     "gzip": 24800
+  },
+  "gridla/dom": {
+    "gzip": 27200
+  },
+  "gridla/elements": {
+    "gzip": 28400
+  },
+  "gridla/vue": {
+    "gzip": 27700
+  },
+  "gridla/qwik": {
+    "gzip": 27100
+  },
+  "gridla/svelte": {
+    "gzip": 3500
+  },
+  "gridla/solid": {
+    "gzip": 27500
+  },
+  "gridla/angular": {
+    "gzip": 5700
   }
 }

@@ -1,0 +1,195 @@
+---
+title: Qwik
+description: Resumable grid components for Qwik from gridla/qwik. The server renders the layout from props; the client creates the controller when the canvas becomes visible.
+---
+
+# Qwik
+
+`gridla/qwik` binds the layout engine to Qwik components: `GridProvider`, `GridCanvas`, `GridItem`, `GridPreviewOutline`, and `GridTransferScope`, with the same props and the same `data-gridla-*` attributes as the other adapters. It is a thin binding over [`gridla/interaction`](../api/interaction/controller), the same layer the React adapter is built on.
+
+Qwik's constraints shape the adapter in three visible ways:
+
+- **Callbacks carry the `$` suffix** (`onLayoutChange$`, `onCommit$`, `onItemClick$`): Qwik serializes function props as QRLs, and the suffix is what its optimizer looks for.
+- **The controller is client only.** The server renders the layout at its authored size from props alone; once the provider is visible in the browser, a `GridController` is created in a visible task and mirrored into a signal. Nothing that cannot be serialized crosses the server/client boundary.
+- **Children are projected**, not rendered through a function. `GridItem` renders a `Slot`; read `useGridItemView(id)` for the item's geometry and flags.
+
+## Install
+
+```bash
+bun add gridla @builder.io/qwik
+```
+
+The adapter ships inside the `gridla` package as the `gridla/qwik` subpath, with `@builder.io/qwik` (1.14 or newer) as an optional peer dependency. Its build keeps the `$` boundaries intact and is published as `qwik.qwik.js`, the file shape the Qwik optimizer transforms inside your application build, exactly like any other Qwik library. No configuration is needed in a Qwik City project.
+
+## Minimal example
+
+```tsx
+/** @jsxImportSource @builder.io/qwik */
+import { component$, useSignal } from '@builder.io/qwik'
+
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridPreviewOutline, GridProvider } from 'gridla/qwik'
+
+type Data = { label: string }
+
+const initial: GridLayout<Data> = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360, minW: 240, minH: 160, data: { label: 'Chart' } },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160, minH: 120, data: { label: 'Note' } },
+    { id: 'feed', x: 0, y: 372, w: 960, h: 228, minH: 120, data: { label: 'Feed' } },
+  ],
+}
+
+export const Dashboard = component$(() => {
+  const layout = useSignal<GridLayout<Data>>(initial)
+  return (
+    <GridProvider
+      layout={layout.value}
+      gap={12}
+      onLayoutChange$={(next) => {
+        layout.value = next as GridLayout<Data>
+      }}
+    >
+      <GridCanvas style={{ height: '480px' }}>
+        {layout.value.items.map((item) => (
+          <GridItem key={item.id} id={item.id} resizeEdges={['e', 's', 'se']}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+})
+```
+
+What happens:
+
+- On the server, `GridProvider` computes the rendered layout from `layout` (or `defaultLayout`) and every `GridItem` is positioned at its authored geometry, so the HTML already contains the grid.
+- In the browser, the provider's visible task (strategy `document-ready`) creates the controller. `GridCanvas` then measures itself with `ResizeObserver`, feeds the size to the controller, and binds pointer and keyboard handling with native listeners. Because the layout is `responsive` by default, items are re-projected to the measured width on the first frame after resume.
+- Every store change is written into one signal, and each component reads the slice it needs from that signal during render. Item geometry is set as inline styles (`transform` by default, or `left`/`top` with `positioning="absolute"`).
+
+## Controlled and uncontrolled
+
+Pass `layout` and `onLayoutChange$` to own the state (the example above keeps it in a signal), or `defaultLayout` to let the controller own it and still be notified. Because `layout` is read from a signal, Qwik hands it to the provider as a derived prop; the provider tracks it and forwards each change to the controller.
+
+`selectedId` and `onSelectedIdChange$` work the same way for the selection. `acceptTransfers` is a boolean only: the controller needs a synchronous answer and a QRL resolves asynchronously.
+
+## Imperative actions
+
+The controller lives in a client-only store. Capture that store in an event handler and use the controller when it exists:
+
+```tsx
+/** @jsxImportSource @builder.io/qwik */
+import { component$ } from '@builder.io/qwik'
+
+import { useGridRuntime } from 'gridla/qwik'
+
+export const AddButton = component$(() => {
+  const runtime = useGridRuntime()
+  return (
+    <button
+      type="button"
+      onClick$={() => {
+        runtime.controller?.actions.place(
+          { id: `item-${Date.now()}`, w: 220, h: 140, minW: 80, minH: 60 },
+          { pointer: { x: 480, y: 300 } },
+        )
+      }}
+    >
+      Add item
+    </button>
+  )
+})
+```
+
+`runtime.controller` is `undefined` on the server and until the provider has mounted; it is a `noSerialize` value, so read it inside the handler rather than capturing it.
+
+## Reading state
+
+- `useGridState()` returns the provider's `GridState` as a read-only signal.
+- `useGridVisibleLayout()` returns the layout to paint right now: the solver's preview during a gesture, otherwise the rendered layout.
+- `useGridItemView(id)` returns a computed signal with one item's rect, its pre-gesture rect, and its `isActive`, `isSelected`, `isShifted`, and `isTransferring` flags.
+
+```tsx
+/** @jsxImportSource @builder.io/qwik */
+import { component$ } from '@builder.io/qwik'
+
+import { GridItem, useGridItemView } from 'gridla/qwik'
+
+export const Card = component$<{ id: string; label: string }>(({ id, label }) => {
+  const view = useGridItemView(id)
+  return (
+    <GridItem id={id} class="card" resizeEdges={['se']} resizeHandleClass="card-handle">
+      <strong>{label}</strong>
+      <span>
+        {view.value.rect.w}×{view.value.rect.h}
+      </span>
+    </GridItem>
+  )
+})
+```
+
+## Nested layouts and transfers
+
+A nested layout is a `GridProvider` rendered inside a `GridItem`, as in the other adapters. Wrap several providers in `GridTransferScope` and items move between them. The scope object itself is created on the client by the first provider that mounts, so nested layouts and transfers work without any serialization concerns:
+
+```tsx
+/** @jsxImportSource @builder.io/qwik */
+import { component$ } from '@builder.io/qwik'
+
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, GridTransferScope } from 'gridla/qwik'
+
+export const TwoCanvases = component$<{ left: GridLayout; right: GridLayout }>(
+  ({ left, right }) => (
+    <GridTransferScope>
+      <GridProvider
+        defaultLayout={left}
+        onTransferOut$={(itemId, targetId) => console.log(itemId, targetId)}
+      >
+        <GridCanvas style={{ height: '320px' }}>
+          {left.items.map((item) => (
+            <GridItem key={item.id} id={item.id} />
+          ))}
+        </GridCanvas>
+      </GridProvider>
+      <GridProvider
+        defaultLayout={right}
+        onTransferIn$={(item, sourceId) => console.log(item.id, sourceId)}
+      >
+        <GridCanvas style={{ height: '320px' }}>
+          {right.items.map((item) => (
+            <GridItem key={item.id} id={item.id} />
+          ))}
+        </GridCanvas>
+      </GridProvider>
+    </GridTransferScope>
+  ),
+)
+```
+
+## Server rendering
+
+`renderToString` from `@builder.io/qwik/server` renders the components without a DOM; the unit suite (`tests/adapters/qwik.test.ts`) does exactly that and checks the emitted attributes. Nothing in `gridla/qwik` touches `window` or `document` at import time. When the page resumes, the visible task creates the controller from the props that are current at that moment, so a layout that changed between render and resume is picked up.
+
+## Building without Qwik City
+
+The Qwik optimizer normally runs inside Vite through `@builder.io/qwik/optimizer`. It is a plain API, so any bundler can call it per module. The demo app for this adapter (`examples/adapters/qwik`) is built with Rsbuild and a small loader that runs `transformModules` with the `inline` entry strategy over the app's `.tsx` files and over `gridla`'s `qwik.qwik.js`; the qwikloader script is inlined into the page. That app drives the shared browser contract suite for this adapter.
+
+## Differences from the React adapter
+
+| React                                  | Qwik                                              |
+| -------------------------------------- | ------------------------------------------------- |
+| `onLayoutChange`, `onCommit`, ...      | `onLayoutChange$`, `onCommit$`, ... (QRLs)        |
+| `acceptTransfers` boolean or predicate | `acceptTransfers` boolean                         |
+| `GridItem` children as a function      | `Slot` plus `useGridItemView(id)`                 |
+| `className`, `resizeHandleClassName`   | `class`, `resizeHandleClass`                      |
+| `useGridActions()`                     | `useGridRuntime().controller?.actions` (client)   |
+| `style` object or string               | `style` object only (merged with geometry styles) |

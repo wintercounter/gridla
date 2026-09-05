@@ -1,0 +1,10 @@
+{
+  "name": "gridla-angular",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Build manifest for the gridla/angular entry. ng-packagr reads it to name the FESM bundle; the published package.json is the one in packages/gridla.",
+  "sideEffects": false,
+  "peerDependencies": {
+    "@angular/core": ">=20.0.0"
+  }
+}

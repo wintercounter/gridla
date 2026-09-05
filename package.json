@@ -16,6 +16,8 @@
     "dev:gallery": "bun run --filter gridla-gallery dev",
     "dev:studio": "bun run --filter gridla-studio dev",
     "dev:adapters:vanilla-dom": "bun run --filter gridla-adapter-vanilla-dom dev",
+    "dev:adapters:elements": "bun run --filter gridla-adapter-elements dev",
+    "dev:adapters:solid": "bun run --filter gridla-adapter-solid dev",
     "dev:website": "bun run --filter gridla-website dev",
     "test": "bun test packages tests/compatibility tests/invariants",
     "test:watch": "bun test --watch packages tests/compatibility tests/invariants",

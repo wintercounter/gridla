@@ -11,17 +11,18 @@
         <div>
           <h1>Gridla with the DOM</h1>
           <p>
-            A framework-free canvas. The layout is projected onto the measured stage with
-            <code>projectLayout</code> and every item is positioned with a transform. This app
-            drives the shared adapter contract tests; it emits the same
-            <code>data-gridla-*</code> attributes every adapter does.
+            A framework-free canvas mounted with <code>mountGrid</code> from
+            <code>gridla/dom</code>. Drag items, resize them from the east, south, and corner
+            handles, nudge the selection with the arrow keys, and drag the note or the to-do out of
+            the group onto the dashboard. The group is a second <code>mountGrid</code> inside an
+            item; both canvases share one transfer scope.
           </p>
         </div>
       </header>
       <section class="gd-stage" id="stage">
-        <div id="canvas" data-gridla-canvas></div>
+        <div id="canvas"></div>
       </section>
-      <p class="page-note" id="note"></p>
+      <p class="page-note">Last change: <span id="status" data-status>none yet</span></p>
     </main>
   </body>
 </html>

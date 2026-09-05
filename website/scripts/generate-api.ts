@@ -19,7 +19,7 @@ const REPO_DIR = path.resolve(WEBSITE_DIR, '..')
 const SRC_DIR = path.join(REPO_DIR, 'packages/gridla/src')
 const OUT_DIR = path.join(WEBSITE_DIR, 'docs/api')
 
-type Kind = 'function' | 'component' | 'hook' | 'type' | 'const'
+type Kind = 'function' | 'component' | 'hook' | 'type' | 'const' | 'class'
 
 type Entry = {
   name: string
@@ -139,6 +139,36 @@ const GROUPS: Group[] = [
     files: ['interaction/types.ts'],
   },
   {
+    id: 'dom/mount',
+    title: 'Mount',
+    entry: 'dom',
+    intro:
+      '`mountGrid` turns an element into a canvas: it creates and positions one element per item, wires pointer and keyboard input, measures the canvas, and reports committed layouts through a `GridHandle`.',
+    files: ['dom/mount.ts', 'dom/view.ts', 'interaction/attributes.ts', 'interaction/transfer.ts'],
+  },
+  {
+    id: 'dom/types',
+    title: 'Types',
+    entry: 'dom',
+    intro: 'State and change types re-exported from the interaction layer for DOM consumers.',
+    files: ['interaction/types.ts'],
+  },
+  {
+    id: 'elements/elements',
+    title: 'Elements',
+    entry: 'elements',
+    intro:
+      'Custom elements over `gridla/dom`: `<gridla-canvas>`, `<gridla-item>`, `<gridla-preview>`, and `<gridla-transfer-scope>`, registered with `defineGridlaElements`. No shadow DOM; your styles apply.',
+    files: ['elements/elements.ts', 'interaction/transfer.ts'],
+  },
+  {
+    id: 'elements/types',
+    title: 'Types',
+    entry: 'elements',
+    intro: 'Change types re-exported from the interaction layer for custom element consumers.',
+    files: ['interaction/types.ts'],
+  },
+  {
     id: 'react/provider',
     title: 'Provider',
     entry: 'react',
@@ -185,6 +215,191 @@ const GROUPS: Group[] = [
     intro: 'State, action, and event types shared by the provider, hooks, and components.',
     files: ['react/types.ts', 'interaction/types.ts'],
   },
+  {
+    id: 'solid/provider',
+    title: 'Provider',
+    entry: 'solid',
+    intro:
+      '`GridProvider` owns layout and gesture state for one canvas. It accepts every `SolveOptions` field as a prop, works controlled or uncontrolled, reads its props reactively, and exposes the controller through context.',
+    files: ['solid/provider.ts', 'solid/context.ts'],
+  },
+  {
+    id: 'solid/components',
+    title: 'Components',
+    entry: 'solid',
+    intro:
+      'Headless building blocks written without a compiler. `GridCanvas` measures itself on mount and binds input; `GridItem` positions one item and exposes drag and resize handles; `GridPreviewOutline` shows where the active item will land; `createElement` is the hyperscript-or-SSR helper they are built with.',
+    files: ['solid/components.ts', 'solid/element.ts', 'interaction/attributes.ts'],
+  },
+  {
+    id: 'solid/primitives',
+    title: 'Primitives',
+    entry: 'solid',
+    intro:
+      'Accessors over slices of provider state built with `from()` over the controller store, plus the imperative actions. Each accessor notifies only when its slice changes.',
+    files: ['solid/hooks.ts'],
+  },
+  {
+    id: 'solid/transfer',
+    title: 'Transfer scope',
+    entry: 'solid',
+    intro:
+      'Move items between providers. Wrap several `GridProvider`s in a `GridTransferScope`; the pointer decides the target and the provider callbacks report the transfer.',
+    files: ['solid/transfer.ts'],
+  },
+  {
+    id: 'solid/types',
+    title: 'Types',
+    entry: 'solid',
+    intro: 'State, action, and event types shared by the provider, primitives, and components.',
+    files: ['interaction/types.ts'],
+  },
+  {
+    id: 'angular/provider',
+    title: 'Provider',
+    entry: 'angular',
+    intro:
+      '`GridProviderComponent` (`<gridla-provider>` or `[gridlaProvider]`) owns layout and gesture state for one canvas and provides an injectable `GridController` to its content. `provideGridla` registers application-wide defaults.',
+    files: ['angular/provider.component.ts', 'angular/controller.ts', 'angular/provide.ts'],
+  },
+  {
+    id: 'angular/components',
+    title: 'Components',
+    entry: 'angular',
+    intro:
+      'Headless building blocks. `<gridla-canvas>` measures itself and wires input; `[gridlaItem]` positions one item and renders built-in resize handles; `<gridla-preview-outline>` shows where the active item will land; `<gridla-transfer-scope>` lets items move between providers.',
+    files: [
+      'angular/canvas.component.ts',
+      'angular/item.directive.ts',
+      'angular/preview-outline.component.ts',
+      'angular/transfer-scope.component.ts',
+      'interaction/attributes.ts',
+    ],
+  },
+  {
+    id: 'angular/signals',
+    title: 'Signals',
+    entry: 'angular',
+    intro:
+      'Read provider state as signals from any injection context: a slice of the state, one item as it should be painted, or the imperative actions.',
+    files: ['angular/inject.ts', 'angular/view.ts'],
+  },
+  {
+    id: 'angular/types',
+    title: 'Types',
+    entry: 'angular',
+    intro:
+      'Output payloads, application options, and the state, action, and change types shared with the other adapters.',
+    files: ['angular/types.ts', 'interaction/types.ts'],
+  },
+  {
+    id: 'svelte/components',
+    title: 'Components',
+    entry: 'svelte',
+    intro:
+      'Svelte 5 components over the interaction layer. `GridProvider` owns layout and gesture state for one canvas (`bind:layout` or `defaultLayout`); `GridCanvas` measures itself and wires input; `GridItem` positions one item and passes its view to the children snippet; `GridPreviewOutline` shows where the active item will land; `GridTransferScope` lets items move between providers.',
+    files: [
+      'svelte/GridProvider.svelte',
+      'svelte/GridCanvas.svelte',
+      'svelte/GridItem.svelte',
+      'svelte/GridPreviewOutline.svelte',
+      'svelte/GridTransferScope.svelte',
+    ],
+  },
+  {
+    id: 'svelte/runes',
+    title: 'Runes',
+    entry: 'svelte',
+    intro:
+      'Rune-style readers over the nearest provider, called during component initialization: `gridStore` selects a slice of state, `gridItemView` follows one item, `gridLayout` and `gridSelection` read the rendered layout and the selection, and `gridActions` reaches the imperative API. `createGridRunes` wraps a controller store in `$state.raw` for custom providers.',
+    files: ['svelte/context.svelte.ts', 'svelte/view.ts'],
+  },
+  {
+    id: 'svelte/types',
+    title: 'Types',
+    entry: 'svelte',
+    intro:
+      'Component props, the item view passed to snippets, and the state, action, and change types shared with the other adapters.',
+    files: ['svelte/types.ts', 'interaction/types.ts', 'interaction/attributes.ts'],
+  },
+  {
+    id: 'vue/provider',
+    title: 'Provider',
+    entry: 'vue',
+    intro:
+      '`GridProvider` owns layout and gesture state for one canvas. It takes every `SolveOptions` field as a prop, works controlled (`v-model:layout`) or uncontrolled (`default-layout`), and provides the store, actions, and controller to its descendants.',
+    files: ['vue/provider.ts', 'vue/context.ts'],
+  },
+  {
+    id: 'vue/components',
+    title: 'Components',
+    entry: 'vue',
+    intro:
+      'Headless building blocks. `GridCanvas` measures itself and wires input; `GridItem` positions one item and exposes drag and resize handle attributes through its default slot; `GridPreviewOutline` shows where the active item will land.',
+    files: ['vue/components.ts', 'interaction/attributes.ts'],
+  },
+  {
+    id: 'vue/composables',
+    title: 'Composables',
+    entry: 'vue',
+    intro:
+      'Subscribe to slices of provider state as shallow refs, read the rendered or visible layout, and reach the imperative actions.',
+    files: ['vue/composables.ts'],
+  },
+  {
+    id: 'vue/transfer',
+    title: 'Transfer scope',
+    entry: 'vue',
+    intro:
+      'Move items between providers. Wrap several `GridProvider`s in a `GridTransferScope`; the pointer decides the target and the provider events report the transfer.',
+    files: ['vue/transfer.ts'],
+  },
+  {
+    id: 'vue/types',
+    title: 'Types',
+    entry: 'vue',
+    intro: 'State, action, and event types shared by the provider, composables, and components.',
+    files: ['vue/types.ts', 'interaction/types.ts'],
+  },
+  {
+    id: 'qwik/provider',
+    title: 'Provider',
+    entry: 'qwik',
+    intro:
+      '`GridProvider` owns layout and gesture state for one canvas. The server renders the layout from props; on the client a controller is created in a visible task and mirrored into a signal. Callbacks carry the Qwik `$` suffix.',
+    files: ['qwik/provider.tsx', 'qwik/context.ts'],
+  },
+  {
+    id: 'qwik/components',
+    title: 'Components',
+    entry: 'qwik',
+    intro:
+      'Headless building blocks. `GridCanvas` measures itself and binds input with native listeners; `GridItem` positions one item and projects its children through a `Slot`; `GridPreviewOutline` shows where the active item will land.',
+    files: ['qwik/components.tsx', 'interaction/attributes.ts'],
+  },
+  {
+    id: 'qwik/hooks',
+    title: 'Hooks',
+    entry: 'qwik',
+    intro:
+      "Read provider state as signals, derive one item's view, and reach the client-only runtime that holds the controller.",
+    files: ['qwik/hooks.ts', 'qwik/view.ts'],
+  },
+  {
+    id: 'qwik/transfer',
+    title: 'Transfer scope',
+    entry: 'qwik',
+    intro:
+      'Move items between providers. Wrap several `GridProvider`s in a `GridTransferScope`; the pointer decides the target and the provider callbacks report the transfer.',
+    files: ['qwik/transfer.tsx'],
+  },
+  {
+    id: 'qwik/types',
+    title: 'Types',
+    entry: 'qwik',
+    intro: 'State and change types re-exported from the interaction layer for Qwik consumers.',
+    files: ['interaction/types.ts'],
+  },
 ]
 
 // ---------------------------------------------------------------------------
@@ -194,17 +409,49 @@ const GROUPS: Group[] = [
 const entryFiles = {
   core: path.join(SRC_DIR, 'core/index.ts'),
   interaction: path.join(SRC_DIR, 'interaction/index.ts'),
+  dom: path.join(SRC_DIR, 'dom/index.ts'),
+  elements: path.join(SRC_DIR, 'elements/index.ts'),
   react: path.join(SRC_DIR, 'react/index.ts'),
+  vue: path.join(SRC_DIR, 'vue/index.ts'),
+  solid: path.join(SRC_DIR, 'solid/index.ts'),
+  angular: path.join(SRC_DIR, 'angular/index.ts'),
+  qwik: path.join(SRC_DIR, 'qwik/index.ts'),
+  // `.svelte` components have no TypeScript source to read; the entry is the
+  // declaration output of `scripts/build-svelte.ts` (run `bun run build` first).
+  svelte: path.join(REPO_DIR, 'packages/gridla/dist/svelte/index.d.ts'),
 }
 type EntryName = keyof typeof entryFiles
-const ENTRY_ORDER: EntryName[] = ['core', 'interaction', 'react']
+const ENTRY_ORDER: EntryName[] = [
+  'core',
+  'interaction',
+  'react',
+  'dom',
+  'elements',
+  'vue',
+  'solid',
+  'angular',
+  'svelte',
+  'qwik',
+]
 const IMPORT_PATH: Record<EntryName, string> = {
   core: 'gridla',
   interaction: 'gridla/interaction',
+  dom: 'gridla/dom',
+  elements: 'gridla/elements',
   react: 'gridla/react',
+  vue: 'gridla/vue',
+  solid: 'gridla/solid',
+  angular: 'gridla/angular',
+  svelte: 'gridla/svelte',
+  qwik: 'gridla/qwik',
 }
 
 const program = ts.createProgram(Object.values(entryFiles), {
+  // The Angular entry imports the package's own entry points by name.
+  paths: {
+    gridla: [path.join(SRC_DIR, 'index.ts')],
+    'gridla/interaction': [path.join(SRC_DIR, 'interaction.ts')],
+  },
   target: ts.ScriptTarget.ES2022,
   module: ts.ModuleKind.ESNext,
   moduleResolution: ts.ModuleResolutionKind.Bundler,
@@ -232,10 +479,22 @@ function firstSentence(text: string): string {
 }
 
 function relativeSourceFile(node: ts.Node): string {
-  return path.relative(SRC_DIR, node.getSourceFile().fileName).replace(/\\/g, '/')
+  const relative = path.relative(SRC_DIR, node.getSourceFile().fileName).replace(/\\/g, '/')
+  // Declarations read from `dist/svelte/` map back to their sources.
+  const built = /^\.\.\/dist\/(svelte\/.+)\.d\.ts$/.exec(relative)
+  if (!built) return relative
+  // `X.svelte.d.ts` is emitted for both `X.svelte` and a `X.svelte.ts` rune module.
+  return fs.existsSync(path.join(SRC_DIR, `${built[1]}.ts`)) ? `${built[1]}.ts` : built[1]
 }
 
+/** Whether a declaration was read from built output rather than a source file. */
+function isBuilt(node: ts.Node): boolean {
+  return node.getSourceFile().fileName.includes('/dist/')
+}
+
+/** Source line of a declaration, or `0` for built output (no matching source line). */
 function lineOf(node: ts.Node): number {
+  if (isBuilt(node)) return 0
   return node.getSourceFile().getLineAndCharacterOfPosition(node.getStart()).line + 1
 }
 
@@ -274,14 +533,47 @@ function componentSignature(decl: ts.Declaration, name: string): string {
 
 function isReactComponent(name: string, decl: ts.Declaration): boolean {
   if (!/^[A-Z]/.test(name)) return false
-  if (ts.isFunctionDeclaration(decl)) return relativeSourceFile(decl).startsWith('react/')
+  if (relativeSourceFile(decl).endsWith('.svelte')) return true
+  if (ts.isFunctionDeclaration(decl)) return /^(react|solid)\//.test(relativeSourceFile(decl))
   if (ts.isVariableDeclaration(decl) && decl.initializer) {
     return decl.initializer.getText().startsWith('forwardRef')
   }
   return false
 }
 
+/** `export class Name<T> implements X` plus its decorator's selector, without the body. */
+function classSignature(decl: ts.ClassDeclaration): string {
+  const source = decl.getSourceFile()
+  const text = source.text.slice(decl.getStart(source), decl.members.pos)
+  const header = (/(?:export\s+)?(?:abstract\s+)?class\b[\s\S]*$/.exec(text)?.[0] ?? text)
+    .replace(/\s*\{\s*$/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  const selector = /selector:\s*'([^']+)'/.exec(text)?.[1]
+  return selector ? `${header} // selector: ${selector}` : header
+}
+
+function classMembers(decl: ts.ClassDeclaration): Member[] {
+  const members: Member[] = []
+  for (const member of decl.members) {
+    if (!ts.isPropertyDeclaration(member) && !ts.isMethodDeclaration(member)) continue
+    if (!member.name || !ts.isIdentifier(member.name)) continue
+    const modifiers = ts.getCombinedModifierFlags(member)
+    if (modifiers & (ts.ModifierFlags.Private | ts.ModifierFlags.Protected)) continue
+    const symbol = checker.getSymbolAtLocation(member.name)
+    if (!symbol) continue
+    const type = checker.typeToString(
+      checker.getTypeOfSymbolAtLocation(symbol, member),
+      member,
+      FORMAT,
+    )
+    members.push({ name: member.name.text, type, doc: docOf(symbol), optional: false })
+  }
+  return members
+}
+
 function membersOf(decl: ts.Declaration): Member[] {
+  if (ts.isClassDeclaration(decl)) return classMembers(decl)
   if (!ts.isTypeAliasDeclaration(decl) && !ts.isInterfaceDeclaration(decl)) return []
   const type = checker.getTypeAtLocation(decl)
   if (type.isUnion() && type.types.every((member) => member.isStringLiteral())) return []
@@ -336,6 +628,11 @@ function collect(entry: EntryName): Entry[] {
       const type = checker.getTypeOfSymbolAtLocation(symbol, decl)
       kind = type.getCallSignatures().length > 0 ? 'function' : 'const'
       signature = signatureText(decl)
+    } else if (ts.isClassDeclaration(decl)) {
+      // Angular components and directives are classes; the members table
+      // lists their public API (inputs, outputs, signals, methods).
+      kind = /(Component|Directive)$/.test(name) ? 'component' : 'class'
+      signature = classSignature(decl)
     } else {
       kind = 'const'
       signature = signatureText(decl)
@@ -359,10 +656,11 @@ function collect(entry: EntryName): Entry[] {
 // MDX
 // ---------------------------------------------------------------------------
 
-const KIND_ORDER: Kind[] = ['function', 'component', 'hook', 'const', 'type']
+const KIND_ORDER: Kind[] = ['function', 'component', 'class', 'hook', 'const', 'type']
 const KIND_LABEL: Record<Kind, string> = {
   function: 'Functions',
   component: 'Components',
+  class: 'Classes',
   hook: 'Hooks',
   const: 'Constants',
   type: 'Types',
@@ -400,7 +698,7 @@ function renderEntry(entry: Entry, index: Map<string, string>, group: Group): st
   lines.push(`### ${entry.name}`)
   lines.push('')
   lines.push(
-    `<span className="g-api-meta">${entry.kind} · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/${entry.file}#L${entry.line}">${entry.file}:${entry.line}</a></span>`,
+    `<span className="g-api-meta">${entry.kind} · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/${entry.file}${entry.line > 0 ? `#L${entry.line}` : ''}">${entry.file}${entry.line > 0 ? `:${entry.line}` : ''}</a></span>`,
   )
   lines.push('')
   if (entry.doc) {
@@ -518,7 +816,14 @@ function renderIndex(groups: { group: Group; entries: Entry[] }[]): string {
 const all = {
   core: collect('core'),
   interaction: collect('interaction'),
+  dom: collect('dom'),
+  elements: collect('elements'),
   react: collect('react'),
+  vue: collect('vue'),
+  solid: collect('solid'),
+  angular: collect('angular'),
+  svelte: collect('svelte'),
+  qwik: collect('qwik'),
 }
 const index = new Map<string, string>()
 const assigned = new Set<string>()

@@ -49,6 +49,35 @@
       "types": "./dist/interaction.d.ts",
       "default": "./dist/interaction.js"
     },
+    "./angular": {
+      "types": "./dist/angular/index.d.ts",
+      "default": "./dist/angular/fesm2022/gridla-angular.mjs"
+    },
+    "./dom": {
+      "types": "./dist/dom.d.ts",
+      "default": "./dist/dom.js"
+    },
+    "./elements": {
+      "types": "./dist/elements.d.ts",
+      "default": "./dist/elements.js"
+    },
+    "./vue": {
+      "types": "./dist/vue.d.ts",
+      "default": "./dist/vue.js"
+    },
+    "./qwik": {
+      "types": "./dist/qwik.qwik.d.ts",
+      "default": "./dist/qwik.qwik.js"
+    },
+    "./solid": {
+      "types": "./dist/solid.d.ts",
+      "default": "./dist/solid.js"
+    },
+    "./svelte": {
+      "types": "./dist/svelte/index.d.ts",
+      "svelte": "./dist/svelte/index.js",
+      "default": "./dist/svelte/index.js"
+    },
     "./package.json": "./package.json"
   },
   "publishConfig": {
@@ -56,7 +85,9 @@
     "provenance": true
   },
   "scripts": {
-    "build": "rslib build",
+    "build": "rslib build && bun run build:svelte && bun run build:angular",
+    "build:angular": "node scripts/build-angular.mjs",
+    "build:svelte": "bun run ../../scripts/build-svelte.ts",
     "dev": "rslib build --watch",
     "test": "bun test src"
   },
@@ -86,17 +117,35 @@
     "solid-js": "^1.9",
     "svelte": "^5",
     "svelte-check": "^4.7.6",
+    "typescript": "5.9.3",
     "vue": "^3.5"
   },
   "peerDependencies": {
-    "react": ">=18.0.0"
+    "@angular/core": ">=20.0.0",
+    "@builder.io/qwik": ">=1.14.0",
+    "react": ">=18.0.0",
+    "svelte": ">=5.0.0",
+    "vue": ">=3.5.0"
   },
   "peerDependenciesMeta": {
+    "@angular/core": {
+      "optional": true
+    },
+    "@builder.io/qwik": {
+      "optional": true
+    },
     "react": {
+      "optional": true
+    },
+    "svelte": {
+      "optional": true
+    },
+    "vue": {
       "optional": true
     }
   },
   "engines": {
     "node": ">=20.19"
-  }
+  },
+  "qwik": "./dist/qwik.qwik.js"
 }
