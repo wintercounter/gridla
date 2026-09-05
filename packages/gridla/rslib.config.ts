@@ -1,0 +1,32 @@
+import { defineConfig } from '@rslib/core'
+
+export default defineConfig({
+  source: {
+    entry: {
+      index: './src/index.ts',
+      react: './src/react.ts',
+    },
+    tsconfigPath: './tsconfig.build.json',
+  },
+  lib: [
+    {
+      format: 'esm',
+      syntax: 'es2022',
+      bundle: true,
+      dts: {
+        bundle: false,
+      },
+      output: {
+        distPath: {
+          root: './dist',
+        },
+        sourceMap: true,
+        minify: false,
+      },
+    },
+  ],
+  output: {
+    target: 'web',
+    externals: ['react', 'react/jsx-runtime', 'react-dom'],
+  },
+})

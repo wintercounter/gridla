@@ -1,0 +1,77 @@
+{
+  "name": "gridla",
+  "version": "0.1.0",
+  "description": "Pixel-based grid and nested-layout engine with move, resize, place, and transfer solving. Framework-neutral core with an optional React adapter.",
+  "license": "MIT",
+  "author": "Viktor Vincze <wintercounter@gmail.com>",
+  "homepage": "https://wintercounter.github.io/gridla/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wintercounter/gridla.git",
+    "directory": "packages/gridla"
+  },
+  "bugs": {
+    "url": "https://github.com/wintercounter/gridla/issues"
+  },
+  "keywords": [
+    "grid",
+    "layout",
+    "drag",
+    "resize",
+    "dashboard",
+    "page-builder",
+    "nested-layout",
+    "responsive",
+    "react",
+    "typescript"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./react": {
+      "types": "./dist/react.d.ts",
+      "default": "./dist/react.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "types": "./dist/index.d.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "build": "rslib build",
+    "dev": "rslib build --watch",
+    "test": "bun test src"
+  },
+  "peerDependencies": {
+    "react": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@rslib/core": "0.23.2",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -1,0 +1,17 @@
+docs/
+node_modules/
+dist/
+doc_build/
+.rspress/
+.rsbuild/
+coverage/
+test-results/
+playwright-report/
+blob-report/
+*.tgz
+.DS_Store
+*.log
+.env
+.env.*
+!.env.example
+tests/package/consumers/*/node_modules

@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "gridla": ["./packages/gridla/src/index.ts"],
+      "gridla/react": ["./packages/gridla/src/react.ts"]
+    }
+  },
+  "include": [
+    "packages/gridla/src",
+    "tests",
+    "benchmarks",
+    "scripts"
+  ],
+  "exclude": ["node_modules", "**/dist", "tests/package/consumers"]
+}
