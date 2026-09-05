@@ -1,11 +1,7 @@
 import { computed, defineComponent, h, ref, type VNode } from 'vue'
 
-import {
-  createItem,
-  type GridChangeDetail,
-  type GridItem as GridItemModel,
-  type GridLayout,
-} from 'gridla'
+import { createItem, type GridItem as GridItemModel, type GridLayout } from 'gridla'
+import type { GridChangeDetail } from 'gridla/interaction'
 import {
   GridCanvas,
   GridItem,

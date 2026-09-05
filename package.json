@@ -29,7 +29,7 @@
     "lint:fix": "oxlint --type-aware --fix",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p examples/tsconfig.json",
     "check": "bun run format:check && bun run lint && bun run typecheck && bun run test && bun run build && bun run check:size && bun run check:api",
     "changeset": "changeset",
     "version": "changeset version",
