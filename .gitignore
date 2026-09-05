@@ -15,3 +15,4 @@ blob-report/
 .env.*
 !.env.example
 tests/package/consumers/*/node_modules
+.tools/

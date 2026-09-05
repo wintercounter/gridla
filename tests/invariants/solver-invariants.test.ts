@@ -46,7 +46,9 @@ import {
  *   (b) no two solid items overlap (locked-vs-locked pairs excepted)
  *   (c) item ids are conserved (place adds one, remove removes one)
  *   (d) w/h >= 1 and authored minimums hold unless the canvas is smaller
- *   (e) fixed-size axes keep their pixel size
+ *   (e) fixed-size axes of bystanders keep their pixel size (own test:
+ *       `sizeMode` is documented for projection, and the active item may be
+ *       scaled to fit, so only side effects on other items are checked)
  *   (f) locked items that were not the active target keep their rect
  *   (g) inputs are not mutated
  *   (h) the same request on the same input yields the same output
@@ -150,11 +152,19 @@ function assertSizes(before: GridLayout, after: GridLayout, activeId: string): v
 
     const prior = previous.get(item.id)
     if (!prior) continue
-    // (e) fixed axes keep their pixel size
-    if (isFixedWidth(prior)) expect(item.w).toBe(prior.w)
-    if (isFixedHeight(prior)) expect(item.h).toBe(prior.h)
     // (f) locked bystanders never move or resize
     if (isLocked(prior) && item.id !== activeId) expect(rectOf(item)).toEqual(rectOf(prior))
+  }
+}
+
+/** (e) a solver side effect never changes a bystander's fixed axis. */
+function assertFixedAxesKept(before: GridLayout, after: GridLayout, activeId: string): void {
+  const previous = new Map(before.items.map((item) => [item.id, item]))
+  for (const item of after.items) {
+    const prior = previous.get(item.id)
+    if (!prior || item.id === activeId) continue
+    if (isFixedWidth(prior)) expect(item.w).toBe(prior.w)
+    if (isFixedHeight(prior)) expect(item.h).toBe(prior.h)
   }
 }
 
@@ -175,7 +185,14 @@ function assertAccepted(before: GridLayout, applied: Applied): void {
  * determinism, rejection semantics, and (when accepted) the layout invariants.
  * Returns the layout to continue from.
  */
-function step(layout: GridLayout, op: Op, index: number, gap: Gap, snap: boolean): GridLayout {
+function step(
+  layout: GridLayout,
+  op: Op,
+  index: number,
+  gap: Gap,
+  snap: boolean,
+  checkFixedAxes = false,
+): GridLayout {
   const frozen = deepFreeze(structuredClone(layout))
   const before = snapshot(frozen)
   const options: SolveOptions = { gap, snap }
@@ -211,6 +228,7 @@ function step(layout: GridLayout, op: Op, index: number, gap: Gap, snap: boolean
   expect(result.layout.canvas).toEqual(frozen.canvas)
 
   assertAccepted(frozen, first)
+  if (checkFixedAxes) assertFixedAxesKept(frozen, result.layout, first.activeId)
   return result.layout
 }
 
@@ -263,5 +281,101 @@ describe('solver invariants', () => {
       }),
       { numRuns: 200 },
     )
+  })
+
+  it('(e) solver side effects keep fixed-size axes of bystanders', () => {
+    fc.assert(
+      fc.property(
+        gappedLayoutArb,
+        fc.oneof(moveOpArb, resizeOpArb, placeOpArb),
+        snapArb,
+        ({ gap, layout }, op, snap) => {
+          step(layout, op, 0, gap, snap, true)
+        },
+      ),
+      { numRuns: 500 },
+    )
+  })
+})
+
+const canvas200: GridLayout['canvas'] = {
+  width: 200,
+  height: 200,
+  padding: { top: 0, right: 0, bottom: 0, left: 0 },
+  heightMode: 'bounded',
+}
+
+/**
+ * Minimized counterexamples found by the properties above. Each pins one
+ * engine behaviour that violates an invariant so the failure is reproducible
+ * without a fast-check seed.
+ */
+describe('solver invariants: minimized counterexamples', () => {
+  it('placeItem by pointer does not accept a drop that overlaps a sibling', () => {
+    // A single item fills the canvas; there is no room for the new one.
+    // Observed: strategy `pointer-overlap`, accepted: true, and the placed
+    // item overlaps the existing one.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [{ id: 'chart', x: 0, y: 0, w: 200, h: 200, minW: 20, minH: 20 }],
+    }
+    const result = placeItem({
+      layout,
+      item: { id: 'note', w: 40, h: 40, minW: 20, minH: 20 },
+      pointer: { x: 0, y: 0 },
+      options: { gap: 6, snap: false },
+    })
+    if (result.accepted) {
+      expect(findLayoutViolations(result.layout)).toEqual([])
+    } else {
+      expect(result.layout.items).toEqual(layout.items)
+    }
+  })
+
+  it('moveItem does not shrink a fixed-width bystander to make room', () => {
+    // Two full-height columns; the right one is dragged 2px to the left.
+    // Observed: strategy `push-shrink-x` narrows the fixed-w column 100 → 98.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'sidebar', x: 0, y: 0, w: 100, h: 200, minW: 20, minH: 20, sizeMode: 'fixed-w' },
+        { id: 'feed-a', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
+      ],
+    }
+    const result = moveItem({
+      layout,
+      itemId: 'feed-a',
+      position: { x: 2, y: 0 },
+      options: { gap: 0, snap: false },
+    })
+    if (result.accepted) {
+      expect(result.layout.items.find((item) => item.id === 'sidebar')!.w).toBe(100)
+    }
+  })
+
+  it('placeItem does not trim a fixed-size bystander to make room', () => {
+    // Dropping a 40×40 item on the seam between two columns.
+    // Observed: strategy `trim-neighbor` narrows the fixed column 100 → 72.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'feed-a', x: 0, y: 0, w: 88, h: 200, minW: 20, minH: 20 },
+        { id: 'sidebar', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20, sizeMode: 'fixed' },
+      ],
+    }
+    const result = placeItem({
+      layout,
+      item: { id: 'note', w: 40, h: 40, minW: 20, minH: 20 },
+      position: { x: 74, y: 0 },
+      options: { gap: 0, snap: false },
+    })
+    if (result.accepted) {
+      expect(rectOf(result.layout.items.find((item) => item.id === 'sidebar')!)).toEqual({
+        x: 100,
+        y: 0,
+        w: 100,
+        h: 200,
+      })
+    }
   })
 })

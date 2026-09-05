@@ -1,0 +1,64 @@
+name: Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  BUN_VERSION: 1.3.14
+
+jobs:
+  build:
+    name: Build and test the site artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install --frozen-lockfile
+      - run: bun run build
+      - run: bun run scripts/build-site.ts
+      - run: bun run --filter gridla-website check-links
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+      - run: bunx playwright install --with-deps chromium
+      - name: Smoke-test the exact artifact before publishing
+        run: bunx playwright test --project=chromium --grep @smoke
+        env:
+          GRIDLA_SITE_DIR: site-dist
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site-dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
+      - name: Verify the public URL serves the deployed revision
+        run: |
+          for i in $(seq 1 12); do
+            if curl -fsSL "${{ steps.deployment.outputs.page_url }}" | grep -q "${{ github.sha }}"; then
+              echo "deployed revision verified"; exit 0
+            fi
+            sleep 10
+          done
+          echo "deployed page does not carry revision ${{ github.sha }}"; exit 1
