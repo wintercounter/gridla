@@ -325,6 +325,12 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
           y: pointer.y - interaction.grabOffset.y,
         }
         const activeRect: GridRect = { ...interaction.origin, ...position }
+        // While another canvas previews the item, this canvas shows its base
+        // layout with no preview; only the active item follows the pointer.
+        if (state.transferring) {
+          store.set({ ...state, activeRect, preview: null })
+          return
+        }
         const result = moveItem({
           layout,
           itemId: interaction.itemId,
@@ -342,7 +348,6 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
           ...state,
           activeRect,
           preview: result.accepted ? preview : state.preview,
-          transferring: false,
         })
       },
       updateResize: (pointer, modifiers) => {
@@ -381,7 +386,9 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
       setTransferring: (transferring) => {
         const state = store.getSnapshot()
         if (state.transferring === transferring) return
-        store.set({ ...state, transferring })
+        // Entering another canvas drops this canvas' own move preview so
+        // siblings settle back and the outline disappears here.
+        store.set({ ...state, transferring, preview: transferring ? null : state.preview })
       },
       commit: () => {
         const state = store.getSnapshot()
