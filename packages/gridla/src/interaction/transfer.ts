@@ -58,19 +58,21 @@ function containsPoint(element: HTMLElement, client: GridPoint, shift: GridPoint
 const NO_SHIFT: GridPoint = { x: 0, y: 0 }
 
 /**
- * How far the current target's preview has moved the item that hosts
- * `element`, right now. A drop preview pushes neighbors aside, and one of
- * them may be the canvas the drag came from (or another candidate). Hit-testing
- * the moving rect would let that canvas reclaim the pointer as it slides
- * under it, clear the preview, slide back, and reclaim again. Comparing
- * against the resting rect keeps the target stable until the pointer really
- * moves elsewhere.
+ * How far a canvas' drop preview has moved the item that hosts `element`,
+ * right now, in client pixels. A preview pushes neighbors aside, and one of
+ * them may be another canvas that a drag is being hit-tested against (the
+ * source it came from, or a candidate target). Testing the moving rect lets
+ * that canvas win as it slides under the pointer, which clears the preview,
+ * slides it back, and repeats. Subtract this displacement from the element's
+ * rect to test against its resting position instead. Returns zero when
+ * `element` is not inside `targetElement` or no preview is active.
  */
-function previewShift(target: TransferRegistration | null, element: HTMLElement): GridPoint {
-  const targetElement = target?.getElement()
-  if (!target || !targetElement || !targetElement.contains(element)) return NO_SHIFT
-  const state = target.store.getSnapshot()
-  if (!state.preview) return NO_SHIFT
+export function measurePreviewShift(
+  targetElement: HTMLElement,
+  state: Pick<GridState, 'layout' | 'preview'>,
+  element: HTMLElement,
+): GridPoint {
+  if (!targetElement.contains(element) || !state.preview) return NO_SHIFT
   // The target's own child item that contains `element`.
   let host: HTMLElement | null = element.closest('[data-gridla-item]')
   while (host && host.parentElement?.closest('[data-gridla-canvas]') !== targetElement) {
@@ -87,6 +89,12 @@ function previewShift(target: TransferRegistration | null, element: HTMLElement)
     x: hostRect.left - (canvasRect.left + base.x * scaleX),
     y: hostRect.top - (canvasRect.top + base.y * scaleY),
   }
+}
+
+function previewShift(target: TransferRegistration | null, element: HTMLElement): GridPoint {
+  const targetElement = target?.getElement()
+  if (!target || !targetElement) return NO_SHIFT
+  return measurePreviewShift(targetElement, target.store.getSnapshot(), element)
 }
 
 /**

@@ -30,7 +30,7 @@ import type { GridController, GridControllerOptions, GridStore, GridStoreListene
 
 ### createGridController
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L192">interaction/controller.ts:192</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L196">interaction/controller.ts:196</a></span>
 
 Create a [`GridController`](/api/angular/provider#gridcontroller). Give it a `layout` (controlled: every accepted
 change is reported through `onLayoutChange` and the store follows the next
@@ -71,7 +71,7 @@ export function observeSize(element: Element, callback: (size: GridSize) => void
 
 ### renderLayout
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L124">interaction/controller.ts:124</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L128">interaction/controller.ts:128</a></span>
 
 Project `source` onto the measured `size` (when `config.responsive`), then
 fit the canvas to its content. Without a size, or when not responsive, the
@@ -88,7 +88,7 @@ export function renderLayout<TData>(
 
 ### resolveControllerConfig
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L149">interaction/controller.ts:149</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L153">interaction/controller.ts:153</a></span>
 
 Resolve [`GridControllerConfig`](/api/svelte/types#gridcontrollerconfig) from controller options by applying the
 defaults (`responsive: true`, `dragThreshold: 4`, `keyboardStep: 8`, `gap: 0`).
@@ -103,7 +103,7 @@ export function resolveControllerConfig<TData>(
 
 ### GridController
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L77">interaction/controller.ts:77</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/controller.ts#L81">interaction/controller.ts:81</a></span>
 
 Framework-neutral owner of one canvas: layout state, projection onto the
 measured size, the gesture API, and the imperative actions. Adapters render
@@ -169,7 +169,11 @@ export type GridControllerOptions<TData = unknown> = SolveOptions & {
    * when omitted.
    */
   id?: string
-  /** Controlled layout. Pair with `onLayoutChange` and forward updates with `setOptions`. */
+  /**
+   * Controlled layout. Pair with `onLayoutChange` and forward updates with
+   * `setOptions`. Accepted changes render immediately; passing the emitted
+   * layout back is a no-op, passing a different one overrides it.
+   */
   layout?: GridLayout<TData>
   /** Initial layout for uncontrolled use. */
   defaultLayout?: GridLayout<TData>
@@ -203,7 +207,7 @@ export type GridControllerOptions<TData = unknown> = SolveOptions & {
 | Member | Type | Description |
 | --- | --- | --- |
 | `id?` | `string` | Stable id of this controller, unique within a `TransferScope`. Generated when omitted. |
-| `layout?` | `GridLayout\<TData\>` | Controlled layout. Pair with `onLayoutChange` and forward updates with `setOptions`. |
+| `layout?` | `GridLayout\<TData\>` | Controlled layout. Pair with `onLayoutChange` and forward updates with `setOptions`. Accepted changes render immediately; passing the emitted layout back is a no-op, passing a different one overrides it. |
 | `defaultLayout?` | `GridLayout\<TData\>` | Initial layout for uncontrolled use. |
 | `onLayoutChange?` | `((layout: GridLayout\<TData\>, detail: GridChangeDetail) =\> void)` | Called with the next layout after every accepted change. The layout is expressed in the canvas size it was rendered at. |
 | `onCommit?` | `((detail: GridChangeDetail) =\> void)` | Fires with the solver strategy on every accepted interactive commit. |

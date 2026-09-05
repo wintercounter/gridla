@@ -158,7 +158,7 @@ describe('mountGrid', () => {
     element.remove()
   })
 
-  it('reports changes without applying them in controlled mode until setLayout is called', () => {
+  it('applies changes immediately in controlled mode and lets the owner override', () => {
     const element = canvasElement()
     const layout = layoutFixture()
     const onLayoutChange = mock(
@@ -167,13 +167,17 @@ describe('mountGrid', () => {
     const handle = mountGrid(element, { layout, responsive: false, onLayoutChange })
     expect(handle.controller.actions.move('a', { x: 500, y: 0 })).toBe(true)
     expect(onLayoutChange).toHaveBeenCalledTimes(1)
-    expect(item(element, 'a')!.style.transform).toBe('translate(0px, 0px)')
+    // Rendered right away, so a second event in the same tick sees the new layout.
+    expect(item(element, 'a')!.style.transform).toBe('translate(500px, 0px)')
     const [next] = onLayoutChange.mock.calls[0]!
     handle.setLayout(next)
-    expect(item(element, 'a')!.style.transform).toBe('translate(500px, 0px)')
+    expect(handle.getLayout()).toBe(next)
     // A later option change must not revert to the mount-time layout.
     handle.setOptions({ gap: 4 })
     expect(handle.getLayout()).toBe(next)
+    // The owner can still reject the change by passing another layout.
+    handle.setLayout(layout)
+    expect(item(element, 'a')!.style.transform).toBe('translate(0px, 0px)')
     handle.destroy()
     element.remove()
   })

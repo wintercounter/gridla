@@ -81,6 +81,7 @@ function Registrar({
         actions,
         gesture: context.gesture,
         getLayout: () => context.store.getSnapshot().layout,
+        getState: () => context.store.getSnapshot(),
         subscribe: context.store.subscribe,
         accepts: () => !lockedRef.current,
       }),

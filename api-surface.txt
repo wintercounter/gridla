@@ -182,6 +182,7 @@ gridla/interaction function createGridController
 gridla/interaction function createGridStore
 gridla/interaction function createPointerGesture
 gridla/interaction function createTransferScope
+gridla/interaction function measurePreviewShift
 gridla/interaction function observeSize
 gridla/interaction function renderLayout
 gridla/interaction function resolveControllerConfig

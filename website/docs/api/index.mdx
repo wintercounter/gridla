@@ -27,7 +27,7 @@ Gridla publishes one package with three entry points. `gridla` is the framework-
 | --- | --- | --- |
 | [Controller](/api/interaction/controller) | `createGridController`, `createGridStore`, `GridController`, `GridControllerOptions`, `GridStore`, `GridStoreListener`, +3 more | `createGridController` owns layout and gesture state for one canvas without any framework: a store to render from, imperative actions, the gesture API, projection onto the measured size, and controlled or uncontrolled layout sync. |
 | [Pointer gesture](/api/interaction/gesture) | `createPointerGesture`, `GRID_DATA`, `GridKeyboardEventLike`, `GridPointerEventLike`, `GridPointerGesture`, `GridPointerGestureDeps`, +1 more | The pointer and keyboard state machine over a minimal event shape: drag threshold, click versus drag, axis lock, snap bypass, resize edges, pointer capture, keyboard nudges. |
-| [Transfer scope](/api/interaction/transfer) | `createTransferScope`, `TransferRegistration`, `TransferScope` | Move items between controllers. |
+| [Transfer scope](/api/interaction/transfer) | `createTransferScope`, `measurePreviewShift`, `TransferRegistration`, `TransferScope` | Move items between controllers. |
 | [Types](/api/interaction/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridControllerConfig`, `GridGestureApi`, `GridInteraction`, +3 more | State, action, gesture, and change types shared by the controller and every adapter. |
 
 ## `gridla/react`

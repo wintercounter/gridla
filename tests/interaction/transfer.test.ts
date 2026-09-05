@@ -5,7 +5,9 @@ import {
   createGridController,
   createPointerGesture,
   createTransferScope,
+  measurePreviewShift,
   type GridController,
+  type GridPreview,
 } from 'gridla/interaction'
 
 const padding = { top: 0, right: 0, bottom: 0, left: 0 }
@@ -247,5 +249,53 @@ describe('createTransferScope', () => {
     root.remove()
     source.destroy()
     target.destroy()
+  })
+})
+
+describe('measurePreviewShift', () => {
+  it('reports how far the target preview moved the host item of an element', () => {
+    const canvas = document.createElement('div')
+    canvas.setAttribute('data-gridla-canvas', '')
+    const host = document.createElement('div')
+    host.setAttribute('data-gridla-item', 'group')
+    const inner = document.createElement('div')
+    host.append(inner)
+    canvas.append(host)
+    document.body.append(canvas)
+    const rect = (x: number, y: number, w: number, h: number) => ({
+      x,
+      y,
+      left: x,
+      top: y,
+      right: x + w,
+      bottom: y + h,
+      width: w,
+      height: h,
+      toJSON: () => ({}),
+    })
+    Object.defineProperty(canvas, 'getBoundingClientRect', { value: () => rect(0, 0, 400, 600) })
+    // The group rests at y=0 but is currently drawn at y=120 by a preview.
+    Object.defineProperty(host, 'getBoundingClientRect', { value: () => rect(0, 120, 400, 200) })
+    const layout = {
+      canvas: {
+        width: 400,
+        height: 600,
+        padding: { top: 0, right: 0, bottom: 0, left: 0 },
+        heightMode: 'bounded' as const,
+      },
+      items: [{ id: 'group', x: 0, y: 0, w: 400, h: 200, minW: 1, minH: 1 }],
+    }
+    const shifted = { ...layout, items: [{ ...layout.items[0], y: 120 }] }
+    const preview: GridPreview = {
+      layout: shifted,
+      item: shifted.items[0],
+      strategy: 'push-y',
+      shiftedSiblings: false,
+      accepted: true,
+    }
+    expect(measurePreviewShift(canvas, { layout, preview }, inner)).toEqual({ x: 0, y: 120 })
+    expect(measurePreviewShift(canvas, { layout, preview: null }, inner)).toEqual({ x: 0, y: 0 })
+    expect(measurePreviewShift(canvas, { layout, preview }, document.body)).toEqual({ x: 0, y: 0 })
+    canvas.remove()
   })
 })
