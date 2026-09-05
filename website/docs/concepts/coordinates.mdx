@@ -104,7 +104,7 @@ const canvas: GridCanvas = {
 const item: GridItem = { id: 'a', x: 16, y: 16, w: 200, h: 120 }
 
 toInnerItem(item, canvas) // x: 0, y: 0
-toCanvasItem(toInnerItem(item, canvas), canvas) // back to x: 16, y: 16
+toCanvasItem(toInnerItem(item, canvas), canvas) // x: 16, y: 16 — back in canvas coordinates
 ```
 
 ## Root coordinates

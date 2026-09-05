@@ -25,7 +25,7 @@ const rendered = projectLayout(authored, { width: 900, height: 540 }, { gap: 12 
 Items that overlap on the perpendicular axis form a _chain_: items sharing vertical extent form a horizontal chain, items sharing horizontal extent a vertical one. Within a chain:
 
 - fixed-axis items keep their pixel size;
-- gaps equal to `options.gap` stay exactly that size;
+- gaps equal to `options.gap` (within 2px, as are touching edges) stay exactly that size;
 - empty space scales with the canvas;
 - free items absorb the remainder proportionally to their authored size.
 

@@ -10,46 +10,66 @@ description: Hooks exports of gridla/react. Generated from the source declaratio
 Subscribe to slices of provider state with minimal rerenders, read the rendered or visible layout, and reach the imperative actions.
 
 ```ts
-import { useElementSize, useGridActions, useGridContext, useGridInteractionState, useGridItem, useGridItemView, useGridLayout, useGridPreview, useGridSelection, useGridSourceLayout, useGridStore, useGridVisibleLayout } from 'gridla/react'
+import {
+  useElementSize,
+  useGridActions,
+  useGridContext,
+  useGridInteractionState,
+  useGridItem,
+  useGridItemView,
+  useGridLayout,
+  useGridPreview,
+  useGridSelection,
+  useGridSourceLayout,
+  useGridStore,
+  useGridVisibleLayout,
+} from 'gridla/react'
 import type { GridContextValue, GridItemView } from 'gridla/react'
 ```
 
-| Export | Kind | Summary |
-| --- | --- | --- |
-| [`GridContextValue`](#gridcontextvalue) | type | Value provided by `GridProvider`: its id, the state store, the imperative actions, the resolved config, and the internal gesture API. |
-| [`GridItemView`](#griditemview) | type | Everything needed to paint one item: its current and pre-gesture rectangles plus its active, selected, shifted, and transferring flags. |
-| [`useElementSize`](#useelementsize) | hook | Observe an element's content box size with `ResizeObserver`. |
-| [`useGridActions`](#usegridactions) | hook | Imperative layout and selection actions. |
-| [`useGridContext`](#usegridcontext) | hook | Read the nearest `GridProvider` context. |
-| [`useGridInteractionState`](#usegridinteractionstate) | hook | The gesture in progress, or `null` when idle. |
-| [`useGridItem`](#usegriditem) | hook | One item as it should be painted right now. |
-| [`useGridItemView`](#usegriditemview) | hook | Everything a rendered item needs, with minimal rerenders. |
-| [`useGridLayout`](#usegridlayout) | hook | The rendered layout (projected onto the measured canvas size). |
-| [`useGridPreview`](#usegridpreview) | hook | The solver's latest preview for the gesture in progress, or `null` when idle. |
-| [`useGridSelection`](#usegridselection) | hook | Id of the selected item, or `null` when nothing is selected. |
-| [`useGridSourceLayout`](#usegridsourcelayout) | hook | The layout the provider was given, in its own coordinates. |
-| [`useGridStore`](#usegridstore) | hook | Subscribe to a slice of provider state. |
-| [`useGridVisibleLayout`](#usegridvisiblelayout) | hook | The layout that should be painted right now: the preview during a gesture, else the rendered layout. |
+| Export                                                | Kind | Summary                                                                                                                                 |
+| ----------------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [`GridContextValue`](#gridcontextvalue)               | type | Value provided by `GridProvider`: its id, the state store, the imperative actions, the resolved config, and the internal gesture API.   |
+| [`GridItemView`](#griditemview)                       | type | Everything needed to paint one item: its current and pre-gesture rectangles plus its active, selected, shifted, and transferring flags. |
+| [`useElementSize`](#useelementsize)                   | hook | Observe an element's content box size with `ResizeObserver`.                                                                            |
+| [`useGridActions`](#usegridactions)                   | hook | Imperative layout and selection actions.                                                                                                |
+| [`useGridContext`](#usegridcontext)                   | hook | Read the nearest `GridProvider` context.                                                                                                |
+| [`useGridInteractionState`](#usegridinteractionstate) | hook | The gesture in progress, or `null` when idle.                                                                                           |
+| [`useGridItem`](#usegriditem)                         | hook | One item as it should be painted right now.                                                                                             |
+| [`useGridItemView`](#usegriditemview)                 | hook | Everything a rendered item needs, with minimal rerenders.                                                                               |
+| [`useGridLayout`](#usegridlayout)                     | hook | The rendered layout (projected onto the measured canvas size).                                                                          |
+| [`useGridPreview`](#usegridpreview)                   | hook | The solver's latest preview for the gesture in progress, or `null` when idle.                                                           |
+| [`useGridSelection`](#usegridselection)               | hook | Id of the selected item, or `null` when nothing is selected.                                                                            |
+| [`useGridSourceLayout`](#usegridsourcelayout)         | hook | The layout the provider was given, in its own coordinates.                                                                              |
+| [`useGridStore`](#usegridstore)                       | hook | Subscribe to a slice of provider state.                                                                                                 |
+| [`useGridVisibleLayout`](#usegridvisiblelayout)       | hook | The layout that should be painted right now: the preview during a gesture, else the rendered layout.                                    |
 
 ## Hooks
 
 ### useElementSize
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L9">react/measure.ts:9</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L9">
+    react/measure.ts:9
+  </a>
+</span>
 
 Observe an element's content box size with `ResizeObserver`. Returns
 `null` until the first measurement. Safe to import during server rendering.
 
 ```ts
-export function useElementSize(
-  ref: RefObject<HTMLElement | null>,
-  enabled = true,
-): GridSize | null
+export function useElementSize(ref: RefObject<HTMLElement | null>, enabled = true): GridSize | null
 ```
 
 ### useGridActions
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L54">react/hooks.ts:54</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L54">
+    react/hooks.ts:54
+  </a>
+</span>
 
 Imperative layout and selection actions. Stable for the provider's lifetime.
 
@@ -59,7 +79,12 @@ export function useGridActions<TData = unknown>(): GridActions<TData>
 
 ### useGridContext
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L59">react/context.ts:59</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L59">
+    react/context.ts:59
+  </a>
+</span>
 
 Read the nearest [`GridProvider`](/api/react/provider#gridprovider) context. Throws when called outside a provider.
 
@@ -69,7 +94,12 @@ export function useGridContext<TData = unknown>(): GridContextValue<TData>
 
 ### useGridInteractionState
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L139">react/hooks.ts:139</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L139">
+    react/hooks.ts:139
+  </a>
+</span>
 
 The gesture in progress, or `null` when idle.
 
@@ -79,7 +109,12 @@ export function useGridInteractionState(): GridInteraction | null
 
 ### useGridItem
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L74">react/hooks.ts:74</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L74">
+    react/hooks.ts:74
+  </a>
+</span>
 
 One item as it should be painted right now. `null` when absent.
 
@@ -89,7 +124,12 @@ export function useGridItem<TData = unknown>(itemId: string): GridItem<TData> | 
 
 ### useGridItemView
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L105">react/hooks.ts:105</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L105">
+    react/hooks.ts:105
+  </a>
+</span>
 
 Everything a rendered item needs, with minimal rerenders.
 
@@ -99,7 +139,12 @@ export function useGridItemView<TData = unknown>(itemId: string): GridItemView
 
 ### useGridLayout
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L59">react/hooks.ts:59</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L59">
+    react/hooks.ts:59
+  </a>
+</span>
 
 The rendered layout (projected onto the measured canvas size).
 
@@ -109,7 +154,12 @@ export function useGridLayout<TData = unknown>(): GridLayout<TData>
 
 ### useGridPreview
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L144">react/hooks.ts:144</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L144">
+    react/hooks.ts:144
+  </a>
+</span>
 
 The solver's latest preview for the gesture in progress, or `null` when idle.
 
@@ -119,7 +169,12 @@ export function useGridPreview<TData = unknown>(): GridPreview<TData> | null
 
 ### useGridSelection
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L149">react/hooks.ts:149</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L149">
+    react/hooks.ts:149
+  </a>
+</span>
 
 Id of the selected item, or `null` when nothing is selected.
 
@@ -129,7 +184,12 @@ export function useGridSelection(): string | null
 
 ### useGridSourceLayout
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L64">react/hooks.ts:64</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L64">
+    react/hooks.ts:64
+  </a>
+</span>
 
 The layout the provider was given, in its own coordinates.
 
@@ -139,7 +199,12 @@ export function useGridSourceLayout<TData = unknown>(): GridLayout<TData>
 
 ### useGridStore
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L13">react/hooks.ts:13</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L13">
+    react/hooks.ts:13
+  </a>
+</span>
 
 Subscribe to a slice of provider state. Rerenders only when the selected
 value changes (by `Object.is`).
@@ -153,7 +218,12 @@ export function useGridStore<TData = unknown, TSlice = GridState<TData>>(
 
 ### useGridVisibleLayout
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L69">react/hooks.ts:69</a></span>
+<span className="g-api-meta">
+  hook ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L69">
+    react/hooks.ts:69
+  </a>
+</span>
 
 The layout that should be painted right now: the preview during a gesture, else the rendered layout.
 
@@ -165,7 +235,12 @@ export function useGridVisibleLayout<TData = unknown>(): GridLayout<TData>
 
 ### GridContextValue
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L12">react/context.ts:12</a></span>
+<span className="g-api-meta">
+  type ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L12">
+    react/context.ts:12
+  </a>
+</span>
 
 Value provided by [`GridProvider`](/api/react/provider#gridprovider): its id, the state store, the imperative
 actions, the resolved config, and the internal gesture API.
@@ -182,17 +257,22 @@ export type GridContextValue<TData = unknown> = {
 }
 ```
 
-| Member | Type | Description |
-| --- | --- | --- |
-| `id` | `string` | Unique id of this provider. Used by transfer scopes. |
-| `store` | `Store\<GridState\<TData\>\>` |  |
-| `actions` | `GridActions\<TData\>` |  |
-| `config` | `GridProviderConfig` |  |
-| `gesture` | `GridGestureApi\<TData\>` | Internal gesture API used by `useGridInteraction`. |
+| Member    | Type                          | Description                                          |
+| --------- | ----------------------------- | ---------------------------------------------------- |
+| `id`      | `string`                      | Unique id of this provider. Used by transfer scopes. |
+| `store`   | `Store\<GridState\<TData\>\>` |                                                      |
+| `actions` | `GridActions\<TData\>`        |                                                      |
+| `config`  | `GridProviderConfig`          |                                                      |
+| `gesture` | `GridGestureApi\<TData\>`     | Internal gesture API used by `useGridInteraction`.   |
 
 ### GridItemView
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L88">react/hooks.ts:88</a></span>
+<span className="g-api-meta">
+  type ·{' '}
+  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/hooks.ts#L88">
+    react/hooks.ts:88
+  </a>
+</span>
 
 Everything needed to paint one item: its current and pre-gesture rectangles
 plus its active, selected, shifted, and transferring flags. Returned by
@@ -216,13 +296,13 @@ export type GridItemView = {
 }
 ```
 
-| Member | Type | Description |
-| --- | --- | --- |
-| `rect` | `GridRect` | Where the item is painted right now (preview-aware). |
-| `baseRect` | `GridRect` | Where the item was before the current gesture. |
-| `activeRect` | `GridRect \\| null` | Cursor-tracked rect while this item is active; `null` otherwise. |
-| `isActive` | `boolean` |  |
-| `isSelected` | `boolean` |  |
-| `isShifted` | `boolean` | True when this item moved in the preview because another item pushed it. |
-| `isTransferring` | `boolean` | True while the active item is being previewed in another canvas. |
-| `interaction` | `GridInteraction \\| null` |  |
+| Member           | Type                | Description                                                              |
+| ---------------- | ------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| `rect`           | `GridRect`          | Where the item is painted right now (preview-aware).                     |
+| `baseRect`       | `GridRect`          | Where the item was before the current gesture.                           |
+| `activeRect`     | `GridRect \\        | null`                                                                    | Cursor-tracked rect while this item is active; `null` otherwise. |
+| `isActive`       | `boolean`           |                                                                          |
+| `isSelected`     | `boolean`           |                                                                          |
+| `isShifted`      | `boolean`           | True when this item moved in the preview because another item pushed it. |
+| `isTransferring` | `boolean`           | True while the active item is being previewed in another canvas.         |
+| `interaction`    | `GridInteraction \\ | null`                                                                    |                                                                  |

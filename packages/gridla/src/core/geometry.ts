@@ -245,20 +245,20 @@ export function normalizeItem<T>(item: GridItem<T>, canvas: GridCanvas): GridIte
     canvas.heightMode === 'scrollable'
       ? Number.POSITIVE_INFINITY
       : canvas.height - canvas.padding.bottom
-  const x = Math.max(canvas.padding.left, roundValue(rounded.x))
-  const y = Math.max(canvas.padding.top, roundValue(rounded.y))
+  // Honor the item's own constraints first, then pull the rectangle back
+  // inside the canvas by moving it, and only clip when even the minimum
+  // size does not fit.
+  const wantedW = Math.min(maxW ?? Number.POSITIVE_INFINITY, Math.max(minW, roundValue(rounded.w)))
+  const wantedH = Math.min(maxH ?? Number.POSITIVE_INFINITY, Math.max(minH, roundValue(rounded.h)))
+  const x = Math.max(canvas.padding.left, Math.min(roundValue(rounded.x), maxRight - wantedW))
+  const y =
+    canvas.heightMode === 'scrollable'
+      ? Math.max(canvas.padding.top, roundValue(rounded.y))
+      : Math.max(canvas.padding.top, Math.min(roundValue(rounded.y), maxBottom - wantedH))
   const availableW = Math.max(1, maxRight - x)
   const availableH = Math.max(1, maxBottom - y)
-  const w = Math.min(
-    availableW,
-    maxW ?? Number.POSITIVE_INFINITY,
-    Math.max(minW, roundValue(rounded.w)),
-  )
-  const h = Math.min(
-    availableH,
-    maxH ?? Number.POSITIVE_INFINITY,
-    Math.max(minH, roundValue(rounded.h)),
-  )
+  const w = Math.min(availableW, wantedW)
+  const h = Math.min(availableH, wantedH)
 
   return {
     ...rounded,

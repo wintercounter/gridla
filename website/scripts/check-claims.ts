@@ -125,7 +125,13 @@ function isExpression(source: string): boolean {
 
 /** Find top-level expression statements with a trailing claim comment. */
 function findClaims(code: string): { claims: Claim[]; statements: ts.ExpressionStatement[] } {
-  const source = ts.createSourceFile('block.ts', code, ts.ScriptTarget.ES2022, true, ts.ScriptKind.TS)
+  const source = ts.createSourceFile(
+    'block.ts',
+    code,
+    ts.ScriptTarget.ES2022,
+    true,
+    ts.ScriptKind.TS,
+  )
   const claims: Claim[] = []
   const statements: ts.ExpressionStatement[] = []
   for (const statement of source.statements) {
@@ -280,7 +286,12 @@ for (const page of walk(DOCS_DIR)) {
       })
     }
     if (run.status !== 0) {
-      const stderr = run.stderr.replace(scratch, '<scratch>').trim().split('\n').slice(0, 6).join('\n')
+      const stderr = run.stderr
+        .replace(scratch, '<scratch>')
+        .trim()
+        .split('\n')
+        .slice(0, 6)
+        .join('\n')
       errors.push({ page: block.page, index: block.index, message: stderr || 'exit ' + run.status })
     } else {
       for (const claim of transformed.claims) {

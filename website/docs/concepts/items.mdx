@@ -61,7 +61,7 @@ Inputs from storage or from users may be out of bounds or contradictory. The nor
 
 - `normalizePadding` rounds and clamps padding to non-negative integers.
 - `normalizeCanvas` fills in defaults from `DEFAULT_CANVAS` (1200 × 720, no padding, bounded) and makes the canvas at least one pixel larger than its padding on both axes.
-- `normalizeItem(item, canvas)` rounds, enforces `min` and `max`, and fits the item inside the padded area. It shrinks before it moves: the position only shifts when the minimum size would not fit otherwise. Scrollable canvases do not clamp `y` or `h`.
+- `normalizeItem(item, canvas)` rounds, makes `max` at least `min`, applies the item's own `min`/`max` to its size, then moves the rectangle back inside the padded area. Size is clipped only when even the minimum size does not fit at the padding edge. Scrollable canvases do not clamp `y` or `h`.
 - `normalizeLayout` applies both.
 
 ```ts
@@ -76,7 +76,7 @@ const raw: GridLayout = {
   },
   items: [{ id: 'a', x: 350, y: 250, w: 200, h: 200, minW: 100, minH: 100 }],
 }
-normalizeLayout(raw).items[0] // { x: 200, y: 100, w: 200, h: 200, minW: 100, minH: 100, ... }
+normalizeLayout(raw).items[0] // { x: 200, y: 100, w: 200, h: 200, minW: 100, minH: 100, ... } — moved back inside, size kept
 ```
 
 `clampItem(item, bounds)` is the solver-facing variant that works on `GridBounds` and respects fixed axes.

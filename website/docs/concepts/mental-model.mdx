@@ -40,7 +40,7 @@ declare const layout: GridLayout
 
 const result = moveItem({ layout, itemId: 'note', position: { x: 0, y: 0 }, options: { gap: 12 } })
 result.accepted // true
-result.strategy // 'swap'
+result.strategy // 'push-x' — chart slid right to make room
 result.layout // a new layout; `layout` is untouched
 ```
 
