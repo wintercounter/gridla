@@ -5,6 +5,10 @@ import type { GridItem, GridLayout, GridResizeEdge } from '../core'
 import type { GridActions, GridPreview, GridProviderConfig, GridState } from './types'
 import type { Store } from './store'
 
+/**
+ * Value provided by `GridProvider`: its id, the state store, the imperative
+ * actions, the resolved config, and the internal gesture API.
+ */
 export type GridContextValue<TData = unknown> = {
   /** Unique id of this provider. Used by transfer scopes. */
   id: string
@@ -51,6 +55,7 @@ export type GridGestureApi<TData = unknown> = {
 
 export const GridContext = createContext<GridContextValue | null>(null)
 
+/** Read the nearest `GridProvider` context. Throws when called outside a provider. */
 export function useGridContext<TData = unknown>(): GridContextValue<TData> {
   const value = useContext(GridContext)
   if (!value) {

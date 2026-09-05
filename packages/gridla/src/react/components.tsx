@@ -21,6 +21,10 @@ import { applyMeasuredSize } from './provider'
 // GridCanvas
 // ---------------------------------------------------------------------------
 
+/**
+ * Props for `GridCanvas`: `div` attributes (except `onKeyDown`, which the canvas
+ * owns) plus `UseGridInteractionOptions`.
+ */
 export type GridCanvasProps = Omit<HTMLAttributes<HTMLDivElement>, 'onKeyDown'> &
   UseGridInteractionOptions & {
     children?: ReactNode
@@ -83,6 +87,10 @@ export const GridCanvas = forwardRef<HTMLDivElement, GridCanvasProps>(function G
 // GridItem
 // ---------------------------------------------------------------------------
 
+/**
+ * Passed to a `GridItem` render function: the item's `GridItemView` plus props
+ * for drag and resize handles.
+ */
 export type GridItemRenderProps = GridItemView & {
   /** Spread on the element that starts a move. */
   dragHandleProps: { [GRID_DATA.dragHandle]: string }
@@ -93,6 +101,10 @@ export type GridItemRenderProps = GridItemView & {
   }
 }
 
+/**
+ * Props for `GridItem`. `id` selects the item; the rest control drag surfaces,
+ * built-in resize handles, and how the element is positioned.
+ */
 export type GridItemProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'id'> & {
   /** Id of the item in the layout. */
   id: string
@@ -249,6 +261,10 @@ export const GridItem = forwardRef<HTMLDivElement, GridItemProps>(function GridI
 // GridPreview
 // ---------------------------------------------------------------------------
 
+/**
+ * Props for `GridPreviewOutline`: `div` attributes plus the positioning mode
+ * (`transform` by default).
+ */
 export type GridPreviewOutlineProps = HTMLAttributes<HTMLDivElement> & {
   positioning?: 'transform' | 'absolute'
 }

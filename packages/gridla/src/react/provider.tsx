@@ -29,6 +29,11 @@ import type {
   GridState,
 } from './types'
 
+/**
+ * Props for `GridProvider`: every `SolveOptions` field, a controlled or
+ * uncontrolled layout, change and transfer callbacks, and `GridProviderConfig`
+ * overrides.
+ */
 export type GridProviderProps<TData = unknown> = SolveOptions & {
   /** Controlled layout. Pair with `onLayoutChange`. */
   layout?: GridLayout<TData>

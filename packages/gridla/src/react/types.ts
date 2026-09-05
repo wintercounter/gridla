@@ -10,6 +10,7 @@ import type {
   SolveStrategy,
 } from '../core'
 
+/** Kind of gesture: dragging an item or resizing it. */
 export type GridInteractionMode = 'move' | 'resize'
 
 /** The gesture currently in progress. */
@@ -35,6 +36,10 @@ export type GridPreview<TData = unknown> = {
   accepted: boolean
 }
 
+/**
+ * Provider state held in the store. `layout` is what interactions operate on;
+ * `source` is what the caller owns.
+ */
 export type GridState<TData = unknown> = {
   /** The layout the provider was given (or owns). */
   source: GridLayout<TData>
@@ -51,6 +56,7 @@ export type GridState<TData = unknown> = {
   transferring: boolean
 }
 
+/** Why the layout changed, as reported in `GridChangeDetail`. */
 export type GridChangeReason =
   | 'move'
   | 'resize'
@@ -60,12 +66,20 @@ export type GridChangeReason =
   | 'transfer'
   | 'set'
 
+/**
+ * Describes an accepted change: the reason, the affected item when there is one,
+ * and the solver strategy for solved operations.
+ */
 export type GridChangeDetail = {
   reason: GridChangeReason
   itemId?: string
   strategy?: SolveStrategy
 }
 
+/**
+ * Resolved provider configuration: every `SolveOptions` field plus the
+ * responsive, drag-threshold, and keyboard-step settings with defaults applied.
+ */
 export type GridProviderConfig = SolveOptions & {
   /**
    * Project the layout onto the measured canvas size. When `false`, the
@@ -78,6 +92,10 @@ export type GridProviderConfig = SolveOptions & {
   keyboardStep: number
 }
 
+/**
+ * Imperative layout and selection API exposed by the provider. The object is
+ * stable for the provider's lifetime.
+ */
 export type GridActions<TData = unknown> = {
   /** Replace the whole layout. */
   setLayout: (layout: GridLayout<TData>) => void

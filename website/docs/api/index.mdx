@@ -11,23 +11,23 @@ Gridla publishes one package with two entry points. `gridla` is the framework-ne
 
 ## `gridla`
 
-| Module                                       | Exports                                                                                                                              | What it covers                                                                                       |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
-| [Model](/api/core/model)                     | `DEFAULT_CANVAS`, `DEFAULT_SNAP_DISTANCE`, `EMPTY_PADDING`, `GridAxis`, `GridBounds`, `GridCanvas`, +19 more                         | The public data model.                                                                               |
-| [Geometry](/api/core/geometry)               | `boundsFromCanvas`, `canPlaceItem`, `canvasesEqual`, `canvasInnerHeight`, `canvasInnerRect`, `canvasInnerWidth`, +29 more            | Rectangle math, normalization, bounds and clamping, content extent, validation, and gap enforcement. |
-| [Projection](/api/core/projection)           | `applyGap`, `ApplyGapOptions`, `preserveGaps`, `projectFloatingRect`, `ProjectionStrategy`, `projectItemsByChain`, +6 more           | Re-fit a layout to a different canvas size.                                                          |
-| [Solvers](/api/core/solvers)                 | `edgeAlignedSlots`, `moveItem`, `MoveItemInput`, `NewGridItem`, `placeItem`, `PlaceItemInput`, +10 more                              | Move, resize, place, and transfer.                                                                   |
-| [Nested](/api/core/nested)                   | `compactLayout`, `CompactOptions`, `CompactResult`, `findContainerAt`, `FindContainerOptions`, `findFirstUnlockedAncestor`, +20 more | Trees of layouts.                                                                                    |
-| [Presets](/api/core/presets)                 | `applyPreset`, `LayoutPreset`, `PresetOptions`                                                                                       | Arrange items into rows, columns, or a grid that fills the canvas.                                   |
-| [Instrumentation](/api/core/instrumentation) | `SolveStrategy`, `TraceCallback`, `TraceEvent`                                                                                       | Optional tracing.                                                                                    |
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Model](/api/core/model) | `DEFAULT_CANVAS`, `DEFAULT_SNAP_DISTANCE`, `EMPTY_PADDING`, `GridAxis`, `GridBounds`, `GridCanvas`, +19 more | The public data model. |
+| [Geometry](/api/core/geometry) | `boundsFromCanvas`, `canPlaceItem`, `canvasesEqual`, `canvasInnerHeight`, `canvasInnerRect`, `canvasInnerWidth`, +29 more | Rectangle math, normalization, bounds and clamping, content extent, validation, and gap enforcement. |
+| [Projection](/api/core/projection) | `applyGap`, `ApplyGapOptions`, `preserveGaps`, `projectFloatingRect`, `ProjectionStrategy`, `projectItemsByChain`, +6 more | Re-fit a layout to a different canvas size. |
+| [Solvers](/api/core/solvers) | `edgeAlignedSlots`, `moveItem`, `MoveItemInput`, `NewGridItem`, `placeItem`, `PlaceItemInput`, +10 more | Move, resize, place, and transfer. |
+| [Nested](/api/core/nested) | `compactLayout`, `CompactOptions`, `CompactResult`, `findContainerAt`, `FindContainerOptions`, `findFirstUnlockedAncestor`, +20 more | Trees of layouts. |
+| [Presets](/api/core/presets) | `applyPreset`, `LayoutPreset`, `PresetOptions` | Arrange items into rows, columns, or a grid that fills the canvas. |
+| [Instrumentation](/api/core/instrumentation) | `SolveStrategy`, `TraceCallback`, `TraceEvent` | Optional tracing. |
 
 ## `gridla/react`
 
-| Module                                | Exports                                                                                                                      | What it covers                                                                                                                       |
-| ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| [Provider](/api/react/provider)       | `applyMeasuredSize`, `createStore`, `GridProvider`, `GridProviderProps`, `Store`                                             | `GridProvider` owns layout and gesture state for one canvas.                                                                         |
-| [Components](/api/react/components)   | `GridCanvas`, `GridCanvasProps`, `GridItem`, `GridItemProps`, `GridItemRenderProps`, `GridPreviewOutline`, +1 more           | Headless building blocks.                                                                                                            |
-| [Hooks](/api/react/hooks)             | `GridContextValue`, `GridItemView`, `useElementSize`, `useGridActions`, `useGridContext`, `useGridInteractionState`, +8 more | Subscribe to slices of provider state with minimal rerenders, read the rendered or visible layout, and reach the imperative actions. |
-| [Interaction](/api/react/interaction) | `GRID_DATA`, `GridPointerHandlers`, `useGridInteraction`, `UseGridInteractionOptions`                                        | Pointer and keyboard orchestration for a canvas element you render yourself.                                                         |
-| [Transfer scope](/api/react/transfer) | `GridTransferScope`                                                                                                          | Move items between providers.                                                                                                        |
-| [Types](/api/react/types)             | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridPreview`, +2 more      | State, action, and event types shared by the provider, hooks, and components.                                                        |
+| Module | Exports | What it covers |
+| --- | --- | --- |
+| [Provider](/api/react/provider) | `applyMeasuredSize`, `createStore`, `GridProvider`, `GridProviderProps`, `Store` | `GridProvider` owns layout and gesture state for one canvas. |
+| [Components](/api/react/components) | `GridCanvas`, `GridCanvasProps`, `GridItem`, `GridItemProps`, `GridItemRenderProps`, `GridPreviewOutline`, +1 more | Headless building blocks. |
+| [Hooks](/api/react/hooks) | `GridContextValue`, `GridItemView`, `useElementSize`, `useGridActions`, `useGridContext`, `useGridInteractionState`, +8 more | Subscribe to slices of provider state with minimal rerenders, read the rendered or visible layout, and reach the imperative actions. |
+| [Interaction](/api/react/interaction) | `GRID_DATA`, `GridPointerHandlers`, `useGridInteraction`, `UseGridInteractionOptions` | Pointer and keyboard orchestration for a canvas element you render yourself. |
+| [Transfer scope](/api/react/transfer) | `GridTransferScope` | Move items between providers. |
+| [Types](/api/react/types) | `GridActions`, `GridChangeDetail`, `GridChangeReason`, `GridInteraction`, `GridInteractionMode`, `GridPreview`, +2 more | State, action, and event types shared by the provider, hooks, and components. |

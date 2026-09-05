@@ -38,6 +38,11 @@ export type SolveStrategy =
   | 'pointer-overlap'
   | 'rejected'
 
+/**
+ * One record per solve: the operation, the strategy that produced the result,
+ * whether it was accepted, and the active item's resulting rectangle in canvas
+ * coordinates.
+ */
 export type TraceEvent = {
   operation: 'move' | 'resize' | 'place' | 'transfer'
   strategy: SolveStrategy
@@ -49,4 +54,5 @@ export type TraceEvent = {
   h?: number
 }
 
+/** Receives a `TraceEvent` for every solve. Pass it as `SolveOptions.onTrace`. */
 export type TraceCallback = (event: TraceEvent) => void

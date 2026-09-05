@@ -32,6 +32,10 @@ import {
   type GridLayout,
 } from '../model'
 
+/**
+ * Tuning shared by every solver: minimum gap, snapping, and tracing. Every field
+ * is optional.
+ */
 export type SolveOptions = {
   /** Minimum distance kept between neighbors. Default `0`. */
   gap?: number

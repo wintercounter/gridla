@@ -93,8 +93,10 @@ export type GridLayout<TData = unknown> = {
   items: GridItem<TData>[]
 }
 
+/** A point in canvas pixel coordinates. */
 export type GridPoint = { x: number; y: number }
 
+/** A width and height in pixels. */
 export type GridSize = { w: number; h: number }
 
 /** Edge-based rectangle used for hit testing and viewport math. */
@@ -108,6 +110,7 @@ export type GridEdges = {
 /** Compass edge or corner used to resize an item. */
 export type GridResizeEdge = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw'
 
+/** Horizontal (`x`) or vertical (`y`) axis. */
 export type GridAxis = 'x' | 'y'
 
 /**
@@ -120,6 +123,7 @@ export type GridBounds = {
   padding: GridPadding
 }
 
+/** Zero padding on every side. Frozen; shared by `DEFAULT_CANVAS`. */
 export const EMPTY_PADDING: Readonly<GridPadding> = Object.freeze({
   top: 0,
   right: 0,
@@ -127,6 +131,10 @@ export const EMPTY_PADDING: Readonly<GridPadding> = Object.freeze({
   left: 0,
 })
 
+/**
+ * Canvas used when none is given: 1200 x 720 pixels, no padding, `bounded`
+ * height mode. Frozen.
+ */
 export const DEFAULT_CANVAS: Readonly<GridCanvas> = Object.freeze({
   width: 1200,
   height: 720,
@@ -140,22 +148,33 @@ export const DEFAULT_SNAP_DISTANCE = 24
 /** Smallest width or height an item may have. */
 export const MIN_ITEM_SIZE = 1
 
+/**
+ * True when the item's collision policy is `ignore`, so solvers move, resize,
+ * and place other items straight through it.
+ */
 export function isGhost(item: Pick<GridItem, 'policy'>): boolean {
   return item.policy?.collision === 'ignore'
 }
 
+/**
+ * True when the item's movement policy is `locked`: it still blocks, but never
+ * moves or resizes as a side effect of another item's operation.
+ */
 export function isLocked(item: Pick<GridItem, 'policy'>): boolean {
   return item.policy?.movement === 'locked'
 }
 
+/** True when `sizeMode` pins the width (`fixed-w` or `fixed`). */
 export function isFixedWidth(item: Pick<GridItem, 'sizeMode'>): boolean {
   return item.sizeMode === 'fixed-w' || item.sizeMode === 'fixed'
 }
 
+/** True when `sizeMode` pins the height (`fixed-h` or `fixed`). */
 export function isFixedHeight(item: Pick<GridItem, 'sizeMode'>): boolean {
   return item.sizeMode === 'fixed-h' || item.sizeMode === 'fixed'
 }
 
+/** True when `sizeMode` pins the given axis: the width for `x`, the height for `y`. */
 export function isFixedOnAxis(item: Pick<GridItem, 'sizeMode'>, axis: GridAxis): boolean {
   return axis === 'x' ? isFixedWidth(item) : isFixedHeight(item)
 }

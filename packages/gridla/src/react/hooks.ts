@@ -80,6 +80,11 @@ export function useGridItem<TData = unknown>(itemId: string): GridItem<TData> | 
   return useGridStore<TData, GridItem<TData> | null>(select)
 }
 
+/**
+ * Everything needed to paint one item: its current and pre-gesture rectangles
+ * plus its active, selected, shifted, and transferring flags. Returned by
+ * `useGridItemView`.
+ */
 export type GridItemView = {
   /** Where the item is painted right now (preview-aware). */
   rect: GridRect
@@ -130,14 +135,17 @@ export function useGridItemView<TData = unknown>(itemId: string): GridItemView {
   return useGridStore<TData, GridItemView>(select, itemViewsEqual)
 }
 
+/** The gesture in progress, or `null` when idle. */
 export function useGridInteractionState(): GridInteraction | null {
   return useGridStore(selectInteraction)
 }
 
+/** The solver's latest preview for the gesture in progress, or `null` when idle. */
 export function useGridPreview<TData = unknown>(): GridPreview<TData> | null {
   return useGridStore<TData, GridPreview<TData> | null>(selectPreview)
 }
 
+/** Id of the selected item, or `null` when nothing is selected. */
 export function useGridSelection(): string | null {
   return useGridStore(selectSelectedId)
 }

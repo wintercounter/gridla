@@ -10,6 +10,11 @@ import type { GridItem, GridLayout, GridPoint, GridSize } from '../model'
 import { placeItem } from './place'
 import { emitTrace, findById, removeItem, resolveOptions, type SolveOptions } from './shared'
 
+/**
+ * Input for `transferItem`: move an item out of one layout and into another at a
+ * pointer location.
+ * @example transferItem({ source, target, itemId: 'card', pointer: { x: 120, y: 80 } })
+ */
 export type TransferItemInput<T = unknown> = {
   /** Layout the item currently lives in. */
   source: GridLayout<T>
@@ -26,6 +31,11 @@ export type TransferItemInput<T = unknown> = {
   options?: SolveOptions
 }
 
+/**
+ * Result of `transferItem`: both layouts after the operation, the item as placed
+ * in the target, and the strategy used. When `accepted` is `false` both layouts
+ * equal their inputs.
+ */
 export type TransferResult<T = unknown> = {
   accepted: boolean
   /** Source layout without the item. Equals the input when rejected. */

@@ -46,6 +46,10 @@ function setSelectionSuppressed(active: boolean) {
   }
 }
 
+/**
+ * Pointer and keyboard handlers returned by `useGridInteraction`. Spread them
+ * onto the canvas element.
+ */
 export type GridPointerHandlers = {
   onPointerDown: (event: PointerEvent<HTMLElement>) => void
   onPointerMove: (event: PointerEvent<HTMLElement>) => void
@@ -54,6 +58,7 @@ export type GridPointerHandlers = {
   onKeyDown: (event: KeyboardEvent<HTMLElement>) => void
 }
 
+/** Options for `useGridInteraction`. `GridCanvas` accepts the same fields as props. */
 export type UseGridInteractionOptions = {
   /**
    * Called with the item id when a press does not turn into a drag (a click).

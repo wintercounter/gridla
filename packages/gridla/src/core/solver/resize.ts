@@ -187,6 +187,11 @@ export function resizeByShrinkingNeighbors<T>({
   return { item: resized, items: [...next, resized] }
 }
 
+/**
+ * Input for `resizeItem`. Use `edge` + `delta` for a drag, or `rect` for a
+ * programmatic size.
+ * @example resizeItem({ layout, itemId: 'chart', edge: 'se', delta: { x: 40, y: 0 } })
+ */
 export type ResizeItemInput<T = unknown> = {
   layout: GridLayout<T>
   itemId: string

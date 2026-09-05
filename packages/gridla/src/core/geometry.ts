@@ -20,14 +20,17 @@ import {
 // Rect helpers
 // ---------------------------------------------------------------------------
 
+/** Right edge of a rectangle (`x + w`). */
 export function itemRight(item: Pick<GridRect, 'x' | 'w'>): number {
   return item.x + item.w
 }
 
+/** Bottom edge of a rectangle (`y + h`). */
 export function itemBottom(item: Pick<GridRect, 'y' | 'h'>): number {
   return item.y + item.h
 }
 
+/** Area of a rectangle in square pixels (`w * h`). */
 export function itemArea(item: Pick<GridRect, 'w' | 'h'>): number {
   return item.w * item.h
 }
@@ -53,6 +56,7 @@ export function rectsViolateGap(left: GridRect, right: GridRect, gap: number): b
   )
 }
 
+/** Area shared by two rectangles in square pixels. `0` when they do not overlap. */
 export function overlapArea(left: GridRect, right: GridRect): number {
   const width = Math.max(0, Math.min(itemRight(left), itemRight(right)) - Math.max(left.x, right.x))
   const height = Math.max(
@@ -85,6 +89,7 @@ export function pointInEdges(point: GridPoint, rect: GridEdges): boolean {
   )
 }
 
+/** True when the point lies inside the rectangle. Edges are inclusive. */
 export function pointInRect(point: GridPoint, rect: GridRect): boolean {
   return (
     point.x >= rect.x &&
@@ -94,6 +99,7 @@ export function pointInRect(point: GridPoint, rect: GridRect): boolean {
   )
 }
 
+/** Convert an `x`/`y`/`w`/`h` rectangle into `top`/`right`/`bottom`/`left` edges. */
 export function rectToEdges(rect: GridRect): GridEdges {
   return { top: rect.y, right: rect.x + rect.w, bottom: rect.y + rect.h, left: rect.x }
 }
@@ -105,6 +111,7 @@ export function rectToViewportEdges(origin: GridPoint, rect: GridRect): GridEdge
   return { top, right: left + rect.w, bottom: top + rect.h, left }
 }
 
+/** Shallow-copy every item into a new array. `data` is shared, not cloned. */
 export function cloneItems<T>(items: readonly GridItem<T>[]): GridItem<T>[] {
   return items.map((item) => ({ ...item }))
 }
@@ -118,6 +125,10 @@ export function roundValue(value: number): number {
 // Normalization
 // ---------------------------------------------------------------------------
 
+/**
+ * Fill in missing sides with `0`, round each side to a whole pixel, and clamp
+ * negative values to `0`.
+ */
 export function normalizePadding(value: Partial<GridPadding> = {}): GridPadding {
   return {
     top: Math.max(0, roundValue(value.top ?? 0)),
@@ -147,14 +158,20 @@ export function normalizeCanvas(
   }
 }
 
+/** Width of the canvas inside its left and right padding, in pixels. Never less than `1`. */
 export function canvasInnerWidth(canvas: GridCanvas): number {
   return Math.max(1, canvas.width - canvas.padding.left - canvas.padding.right)
 }
 
+/** Height of the canvas inside its top and bottom padding, in pixels. Never less than `1`. */
 export function canvasInnerHeight(canvas: GridCanvas): number {
   return Math.max(1, canvas.height - canvas.padding.top - canvas.padding.bottom)
 }
 
+/**
+ * The area inside the canvas padding as a rectangle in canvas coordinates:
+ * origin at the padding offset, size from `canvasInnerWidth` and `canvasInnerHeight`.
+ */
 export function canvasInnerRect(canvas: GridCanvas): GridRect {
   return {
     x: canvas.padding.left,
@@ -164,6 +181,10 @@ export function canvasInnerRect(canvas: GridCanvas): GridRect {
   }
 }
 
+/**
+ * True when two canvases have the same width, height, and padding on every side.
+ * `heightMode` is not compared.
+ */
 export function canvasesEqual(a: GridCanvas, b: GridCanvas): boolean {
   return (
     a.width === b.width &&
@@ -254,6 +275,7 @@ export function normalizeItem<T>(item: GridItem<T>, canvas: GridCanvas): GridIte
   }
 }
 
+/** Apply `normalizeItem` to every item: round its geometry and clamp it into the canvas. */
 export function normalizeItems<T>(
   items: readonly GridItem<T>[],
   canvas: GridCanvas,
@@ -271,6 +293,10 @@ export function normalizeLayout<T>(layout: GridLayout<T>): GridLayout<T> {
 // Bounds and clamping
 // ---------------------------------------------------------------------------
 
+/**
+ * Derive solver bounds from a canvas. `height` becomes `null` for `scrollable`
+ * canvases so items may extend below the visible height.
+ */
 export function boundsFromCanvas(canvas: GridCanvas): GridBounds {
   return {
     width: canvas.width,
@@ -385,10 +411,18 @@ export function resizeRect<T>(
 // Content extent
 // ---------------------------------------------------------------------------
 
+/**
+ * Lowest bottom edge among the items, in canvas coordinates. Returns the top
+ * padding when there are no items.
+ */
 export function contentBottom(items: readonly GridRect[], canvas: GridCanvas): number {
   return items.reduce((bottom, item) => Math.max(bottom, itemBottom(item)), canvas.padding.top)
 }
 
+/**
+ * Rightmost right edge among the items, in canvas coordinates. Returns the left
+ * padding when there are no items.
+ */
 export function contentRight(items: readonly GridRect[], canvas: GridCanvas): number {
   return items.reduce((right, item) => Math.max(right, itemRight(item)), canvas.padding.left)
 }
@@ -409,6 +443,12 @@ export function fitCanvasToContent(canvas: GridCanvas, items: readonly GridRect[
 // Item creation and validation
 // ---------------------------------------------------------------------------
 
+/**
+ * Build a `GridItem` from an id, a size (with optional constraints), and a
+ * top-left position (default `0, 0`). `w` and `h` are clamped to `MIN_ITEM_SIZE`;
+ * constraint fields and `data` are copied only when defined.
+ * @example createItem('chart', { w: 320, h: 240, minW: 120 }, 24, 24)
+ */
 export function createItem<T = unknown>(
   id: string,
   size: GridItemSize,
@@ -468,6 +508,10 @@ export function layoutIsValid(
   return items.every((item) => canPlaceItem(items, item, bounds, gap))
 }
 
+/**
+ * One problem reported by `findLayoutViolations`: an item outside the canvas
+ * bounds, or two solid items that overlap.
+ */
 export type LayoutViolation =
   | { kind: 'out-of-bounds'; itemId: string }
   | { kind: 'overlap'; itemId: string; otherId: string }

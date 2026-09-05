@@ -22,6 +22,11 @@ import { projectItemsByChain } from '../projection/chain'
 // Node model and adapter
 // ---------------------------------------------------------------------------
 
+/**
+ * Per-node flags that control how a node takes part in nesting: whether it is a
+ * container, accepts drops, confines its children, is locked, or keeps its
+ * height during compaction. Every flag is optional.
+ */
 export type GridNodeBehavior = {
   /** Treat the node as a container even without children. Defaults to `layout !== undefined`. */
   container?: boolean
@@ -59,6 +64,10 @@ export type GridTreeAdapter<TNode> = {
   getPadding?(node: TNode): Partial<GridPadding> | undefined
 }
 
+/**
+ * The `GridTreeAdapter` for plain `GridNode` trees. `flattenLayout` uses it
+ * when no adapter is given.
+ */
 export const gridNodeAdapter: GridTreeAdapter<GridNode> = {
   getId: (node) => node.id,
   getChildren: (node) => node.children ?? [],
@@ -85,6 +94,10 @@ function resolveAdapter<TNode>(adapter: GridTreeAdapter<TNode>): ResolvedAdapter
 // Flat layout
 // ---------------------------------------------------------------------------
 
+/**
+ * One node of a flattened tree: its rectangle in root coordinates, its place in
+ * the hierarchy, its rendered and authored layouts, and its resolved behavior flags.
+ */
 export type FlatItem<TNode = GridNode> = {
   id: string
   /** Id of the enclosing container, or `null` for the root. */
@@ -114,6 +127,10 @@ export type FlatItem<TNode = GridNode> = {
   scrollable: boolean
 }
 
+/**
+ * Result of `flattenLayout`: every node in paint order (each parent before its
+ * children) plus lookups by id and by parent id. The root's parent id is `null`.
+ */
 export type FlatLayout<TNode = GridNode> = {
   rootId: string
   items: readonly FlatItem<TNode>[]
@@ -121,6 +138,7 @@ export type FlatLayout<TNode = GridNode> = {
   childrenByParentId: ReadonlyMap<string | null, readonly string[]>
 }
 
+/** Options for `flattenLayout`. */
 export type FlattenOptions<TNode> = {
   /** Reads your own tree shape. Defaults to the `GridNode` adapter. */
   adapter?: GridTreeAdapter<TNode>
@@ -280,6 +298,7 @@ export function hitTest<TNode>(
   return null
 }
 
+/** Options for `findContainerAt`. */
 export type FindContainerOptions = {
   /**
    * Containers other than `sourceId` must contain the point at least this
@@ -545,11 +564,13 @@ export function toRenderedLayout<TNode>(
 // Compaction
 // ---------------------------------------------------------------------------
 
+/** Options for `compactLayout`. */
 export type CompactOptions = {
   /** Items that keep their height. Fixed-height items always do. */
   isRigid?: (item: GridItem) => boolean
 }
 
+/** Result of `compactLayout`: the compacted layout and whether everything fit. */
 export type CompactResult<T = unknown> = {
   layout: GridLayout<T>
   /** `false` when rigid heights, minimums, and gaps exceed the canvas. */

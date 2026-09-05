@@ -14,24 +14,19 @@ import { applyMeasuredSize, createStore, GridProvider } from 'gridla/react'
 import type { GridProviderProps, Store } from 'gridla/react'
 ```
 
-| Export                                    | Kind      | Summary                                             |
-| ----------------------------------------- | --------- | --------------------------------------------------- |
-| [`applyMeasuredSize`](#applymeasuredsize) | function  | Update the measured size.                           |
-| [`createStore`](#createstore)             | function  |                                                     |
-| [`GridProvider`](#gridprovider)           | component | Owns layout state and gesture state for one canvas. |
-| [`GridProviderProps`](#gridproviderprops) | type      |                                                     |
-| [`Store`](#store)                         | type      |                                                     |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`applyMeasuredSize`](#applymeasuredsize) | function | Update the measured size. |
+| [`createStore`](#createstore) | function | Create a `Store` holding `initial`. |
+| [`GridProvider`](#gridprovider) | component | Owns layout state and gesture state for one canvas. |
+| [`GridProviderProps`](#gridproviderprops) | type | Props for `GridProvider`: every `SolveOptions` field, a controlled or uncontrolled layout, change and transfer callbacks, and `GridProviderConfig` overrides. |
+| [`Store`](#store) | type | Minimal external store: a snapshot getter, a subscribe function, and a setter. |
 
 ## Functions
 
 ### applyMeasuredSize
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L510">
-    react/provider.tsx:510
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L515">react/provider.tsx:515</a></span>
 
 Update the measured size. Used by [`GridCanvas`](/api/react/components#gridcanvas); exposed for custom canvases.
 
@@ -45,12 +40,10 @@ export function applyMeasuredSize<TData>(
 
 ### createStore
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L16">
-    react/store.ts:16
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L24">react/store.ts:24</a></span>
+
+Create a [`Store`](#store) holding `initial`. Listeners fire only when `set` changes the
+state reference (compared with `Object.is`).
 
 ```ts
 export function createStore<S>(initial: S): Store<S>
@@ -60,12 +53,7 @@ export function createStore<S>(initial: S): Store<S>
 
 ### GridProvider
 
-<span className="g-api-meta">
-  component ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L102">
-    react/provider.tsx:102
-  </a>
-</span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L107">react/provider.tsx:107</a></span>
 
 Owns layout state and gesture state for one canvas. Place a [`GridCanvas`](/api/react/components#gridcanvas)
 (or your own element wired with [`useGridInteraction`](/api/react/interaction#usegridinteraction)) inside it.
@@ -78,12 +66,11 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>)
 
 ### GridProviderProps
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L32">
-    react/provider.tsx:32
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L37">react/provider.tsx:37</a></span>
+
+Props for [`GridProvider`](#gridprovider): every [`SolveOptions`](/api/core/solvers#solveoptions) field, a controlled or
+uncontrolled layout, change and transfer callbacks, and [`GridProviderConfig`](/api/react/types#gridproviderconfig)
+overrides.
 
 ```ts
 export type GridProviderProps<TData = unknown> = SolveOptions & {
@@ -114,30 +101,28 @@ export type GridProviderProps<TData = unknown> = SolveOptions & {
 }
 ```
 
-| Member                | Type                                                                 | Description                                                                                                             |
-| --------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `layout?`             | `GridLayout\<TData\>`                                                | Controlled layout. Pair with `onLayoutChange`.                                                                          |
-| `defaultLayout?`      | `GridLayout\<TData\>`                                                | Initial layout for uncontrolled use.                                                                                    |
-| `onLayoutChange?`     | `((layout: GridLayout\<TData\>, detail: GridChangeDetail) =\> void)` | Called with the next layout after every accepted change. The layout is expressed in the canvas size it was rendered at. |
-| `onCommit?`           | `((detail: GridChangeDetail) =\> void)`                              | Fires with the solver strategy on every accepted interactive commit.                                                    |
-| `onTransferOut?`      | `((itemId: string, targetId: string) =\> void)`                      | Called when an item moves to another canvas inside a `GridTransferScope`.                                               |
-| `onTransferIn?`       | `((item: GridItem\<TData\>, sourceId: string) =\> void)`             | Called when an item arrives from another canvas.                                                                        |
-| `acceptTransfers?`    | `boolean \\                                                          | ((item: GridItem\<TData\>, sourceId: string) =\> boolean)`                                                              | Whether items from other canvases may be dropped here. Default `true`. |
-| `responsive?`         | `boolean`                                                            |                                                                                                                         |
-| `dragThreshold?`      | `number`                                                             |                                                                                                                         |
-| `keyboardStep?`       | `number`                                                             |                                                                                                                         |
-| `selectedId?`         | `string \\                                                           | null`                                                                                                                   | Controlled selection.                                                  |
-| `onSelectedIdChange?` | `((itemId: string \\                                                 | null) =\> void)`                                                                                                        |                                                                        |
-| `children?`           | `ReactNode`                                                          |                                                                                                                         |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout?` | `GridLayout\<TData\>` | Controlled layout. Pair with `onLayoutChange`. |
+| `defaultLayout?` | `GridLayout\<TData\>` | Initial layout for uncontrolled use. |
+| `onLayoutChange?` | `((layout: GridLayout\<TData\>, detail: GridChangeDetail) =\> void)` | Called with the next layout after every accepted change. The layout is expressed in the canvas size it was rendered at. |
+| `onCommit?` | `((detail: GridChangeDetail) =\> void)` | Fires with the solver strategy on every accepted interactive commit. |
+| `onTransferOut?` | `((itemId: string, targetId: string) =\> void)` | Called when an item moves to another canvas inside a `GridTransferScope`. |
+| `onTransferIn?` | `((item: GridItem\<TData\>, sourceId: string) =\> void)` | Called when an item arrives from another canvas. |
+| `acceptTransfers?` | `boolean \\| ((item: GridItem\<TData\>, sourceId: string) =\> boolean)` | Whether items from other canvases may be dropped here. Default `true`. |
+| `responsive?` | `boolean` |  |
+| `dragThreshold?` | `number` |  |
+| `keyboardStep?` | `number` |  |
+| `selectedId?` | `string \\| null` | Controlled selection. |
+| `onSelectedIdChange?` | `((itemId: string \\| null) =\> void)` |  |
+| `children?` | `ReactNode` |  |
 
 ### Store
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L9">
-    react/store.ts:9
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L13">react/store.ts:13</a></span>
+
+Minimal external store: a snapshot getter, a subscribe function, and a setter.
+Shaped for `useSyncExternalStore`.
 
 ```ts
 export type Store<S> = {
@@ -148,8 +133,8 @@ export type Store<S> = {
 }
 ```
 
-| Member        | Type                                   | Description                  |
-| ------------- | -------------------------------------- | ---------------------------- | ------------------------------------------------------------------ |
-| `getSnapshot` | `() =\> S`                             |                              |
-| `subscribe`   | `(listener: Listener) =\> () =\> void` |                              |
-| `set`         | `(next: S \\                           | ((prev: S) =\> S)) =\> void` | Replace the state. Listeners fire only when the reference changes. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `getSnapshot` | `() =\> S` |  |
+| `subscribe` | `(listener: Listener) =\> () =\> void` |  |
+| `set` | `(next: S \\| ((prev: S) =\> S)) =\> void` | Replace the state. Listeners fire only when the reference changes. |

@@ -10,40 +10,29 @@ description: Types exports of gridla/react. Generated from the source declaratio
 State, action, and event types shared by the provider, hooks, and components.
 
 ```ts
-import {} from 'gridla/react'
-import type {
-  GridActions,
-  GridChangeDetail,
-  GridChangeReason,
-  GridInteraction,
-  GridInteractionMode,
-  GridPreview,
-  GridProviderConfig,
-  GridState,
-} from 'gridla/react'
+import {  } from 'gridla/react'
+import type { GridActions, GridChangeDetail, GridChangeReason, GridInteraction, GridInteractionMode, GridPreview, GridProviderConfig, GridState } from 'gridla/react'
 ```
 
-| Export                                        | Kind | Summary                                                 |
-| --------------------------------------------- | ---- | ------------------------------------------------------- |
-| [`GridActions`](#gridactions)                 | type |                                                         |
-| [`GridChangeDetail`](#gridchangedetail)       | type |                                                         |
-| [`GridChangeReason`](#gridchangereason)       | type |                                                         |
-| [`GridInteraction`](#gridinteraction)         | type | The gesture currently in progress.                      |
-| [`GridInteractionMode`](#gridinteractionmode) | type |                                                         |
-| [`GridPreview`](#gridpreview)                 | type | The solver's latest answer for the gesture in progress. |
-| [`GridProviderConfig`](#gridproviderconfig)   | type |                                                         |
-| [`GridState`](#gridstate)                     | type |                                                         |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`GridActions`](#gridactions) | type | Imperative layout and selection API exposed by the provider. |
+| [`GridChangeDetail`](#gridchangedetail) | type | Describes an accepted change: the reason, the affected item when there is one, and the solver strategy for solved operations. |
+| [`GridChangeReason`](#gridchangereason) | type | Why the layout changed, as reported in `GridChangeDetail`. |
+| [`GridInteraction`](#gridinteraction) | type | The gesture currently in progress. |
+| [`GridInteractionMode`](#gridinteractionmode) | type | Kind of gesture: dragging an item or resizing it. |
+| [`GridPreview`](#gridpreview) | type | The solver's latest answer for the gesture in progress. |
+| [`GridProviderConfig`](#gridproviderconfig) | type | Resolved provider configuration: every `SolveOptions` field plus the responsive, drag-threshold, and keyboard-step settings with defaults applied. |
+| [`GridState`](#gridstate) | type | Provider state held in the store. |
 
 ## Types
 
 ### GridActions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L81">
-    react/types.ts:81
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L99">react/types.ts:99</a></span>
+
+Imperative layout and selection API exposed by the provider. The object is
+stable for the provider's lifetime.
 
 ```ts
 export type GridActions<TData = unknown> = {
@@ -72,25 +61,23 @@ export type GridActions<TData = unknown> = {
 }
 ```
 
-| Member      | Type                                                                        | Description                                                                 |
-| ----------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `setLayout` | `(layout: GridLayout\<TData\>) =\> void`                                    | Replace the whole layout.                                                   |
-| `move`      | `(itemId: string, position: GridPoint, options?: SolveOptions) =\> boolean` | Move an item programmatically. Returns whether the solver accepted it.      |
-| `resize`    | `(itemId: string, change: \{ edge: GridResizeEdge; delta: GridPoint; \} \\  | \{ rect: Partial\<GridRect\>; \}, options?: SolveOptions) =\> boolean`      | Resize an item programmatically.                       |
-| `place`     | `(item: NewGridItem\<TData\>, at: \{ position: GridPoint; \} \\             | \{ pointer: GridPoint; \}, options?: SolveOptions) =\> boolean`             | Insert an item at a position or centered on a pointer. |
-| `remove`    | `(itemId: string) =\> void`                                                 |                                                                             |
-| `update`    | `(itemId: string, patch: Partial\<GridItem\<TData\>\>) =\> void`            | Patch an item's fields (constraints, policy, data). Geometry is re-clamped. |
-| `select`    | `(itemId: string \\                                                         | null) =\> void`                                                             |                                                        |
-| `cancel`    | `() =\> void`                                                               | Cancel the gesture in progress without committing.                          |
+| Member | Type | Description |
+| --- | --- | --- |
+| `setLayout` | `(layout: GridLayout\<TData\>) =\> void` | Replace the whole layout. |
+| `move` | `(itemId: string, position: GridPoint, options?: SolveOptions) =\> boolean` | Move an item programmatically. Returns whether the solver accepted it. |
+| `resize` | `(itemId: string, change: \{ edge: GridResizeEdge; delta: GridPoint; \} \\| \{ rect: Partial\<GridRect\>; \}, options?: SolveOptions) =\> boolean` | Resize an item programmatically. |
+| `place` | `(item: NewGridItem\<TData\>, at: \{ position: GridPoint; \} \\| \{ pointer: GridPoint; \}, options?: SolveOptions) =\> boolean` | Insert an item at a position or centered on a pointer. |
+| `remove` | `(itemId: string) =\> void` |  |
+| `update` | `(itemId: string, patch: Partial\<GridItem\<TData\>\>) =\> void` | Patch an item's fields (constraints, policy, data). Geometry is re-clamped. |
+| `select` | `(itemId: string \\| null) =\> void` |  |
+| `cancel` | `() =\> void` | Cancel the gesture in progress without committing. |
 
 ### GridChangeDetail
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L63">
-    react/types.ts:63
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L73">react/types.ts:73</a></span>
+
+Describes an accepted change: the reason, the affected item when there is one,
+and the solver strategy for solved operations.
 
 ```ts
 export type GridChangeDetail = {
@@ -100,34 +87,32 @@ export type GridChangeDetail = {
 }
 ```
 
-| Member      | Type               | Description |
-| ----------- | ------------------ | ----------- |
-| `reason`    | `GridChangeReason` |             |
-| `itemId?`   | `string`           |             |
-| `strategy?` | `SolveStrategy`    |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `reason` | `GridChangeReason` |  |
+| `itemId?` | `string` |  |
+| `strategy?` | `SolveStrategy` |  |
 
 ### GridChangeReason
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L54">
-    react/types.ts:54
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L60">react/types.ts:60</a></span>
+
+Why the layout changed, as reported in [`GridChangeDetail`](#gridchangedetail).
 
 ```ts
 export type GridChangeReason =
-  'move' | 'resize' | 'place' | 'remove' | 'update' | 'transfer' | 'set'
+  | 'move'
+  | 'resize'
+  | 'place'
+  | 'remove'
+  | 'update'
+  | 'transfer'
+  | 'set'
 ```
 
 ### GridInteraction
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L16">
-    react/types.ts:16
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L17">react/types.ts:17</a></span>
 
 The gesture currently in progress.
 
@@ -146,24 +131,21 @@ export type GridInteraction = {
 }
 ```
 
-| Member       | Type                  | Description                                                   |
-| ------------ | --------------------- | ------------------------------------------------------------- | --- |
-| `itemId`     | `string`              |                                                               |
-| `mode`       | `GridInteractionMode` |                                                               |
-| `edge?`      | `GridResizeEdge`      |                                                               |
-| `pointerId`  | `number \\            | null`                                                         |     |
-| `grabOffset` | `GridPoint`           | Where the pointer grabbed the item, relative to its top-left. |
-| `origin`     | `GridRect`            | Item rect at gesture start, in rendered canvas pixels.        |
-| `start`      | `GridPoint`           | Pointer position at gesture start, in rendered canvas pixels. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `itemId` | `string` |  |
+| `mode` | `GridInteractionMode` |  |
+| `edge?` | `GridResizeEdge` |  |
+| `pointerId` | `number \\| null` |  |
+| `grabOffset` | `GridPoint` | Where the pointer grabbed the item, relative to its top-left. |
+| `origin` | `GridRect` | Item rect at gesture start, in rendered canvas pixels. |
+| `start` | `GridPoint` | Pointer position at gesture start, in rendered canvas pixels. |
 
 ### GridInteractionMode
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L13">
-    react/types.ts:13
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L14">react/types.ts:14</a></span>
+
+Kind of gesture: dragging an item or resizing it.
 
 ```ts
 export type GridInteractionMode = 'move' | 'resize'
@@ -171,12 +153,7 @@ export type GridInteractionMode = 'move' | 'resize'
 
 ### GridPreview
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L30">
-    react/types.ts:30
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L31">react/types.ts:31</a></span>
 
 The solver's latest answer for the gesture in progress.
 
@@ -190,22 +167,20 @@ export type GridPreview<TData = unknown> = {
 }
 ```
 
-| Member            | Type                  | Description |
-| ----------------- | --------------------- | ----------- |
-| `layout`          | `GridLayout\<TData\>` |             |
-| `item`            | `GridItem\<TData\>`   |             |
-| `strategy`        | `SolveStrategy`       |             |
-| `shiftedSiblings` | `boolean`             |             |
-| `accepted`        | `boolean`             |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout` | `GridLayout\<TData\>` |  |
+| `item` | `GridItem\<TData\>` |  |
+| `strategy` | `SolveStrategy` |  |
+| `shiftedSiblings` | `boolean` |  |
+| `accepted` | `boolean` |  |
 
 ### GridProviderConfig
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L69">
-    react/types.ts:69
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L83">react/types.ts:83</a></span>
+
+Resolved provider configuration: every [`SolveOptions`](/api/core/solvers#solveoptions) field plus the
+responsive, drag-threshold, and keyboard-step settings with defaults applied.
 
 ```ts
 export type GridProviderConfig = SolveOptions & {
@@ -221,20 +196,18 @@ export type GridProviderConfig = SolveOptions & {
 }
 ```
 
-| Member          | Type      | Description                                                                                                                        |
-| --------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `responsive`    | `boolean` | Project the layout onto the measured canvas size. When `false`, the canvas element is sized to the layout instead. Default `true`. |
-| `dragThreshold` | `number`  | Minimum pointer travel before a press becomes a drag. Default `4`.                                                                 |
-| `keyboardStep`  | `number`  | Pixels moved per arrow key press. Default `8`; Shift multiplies by 4.                                                              |
+| Member | Type | Description |
+| --- | --- | --- |
+| `responsive` | `boolean` | Project the layout onto the measured canvas size. When `false`, the canvas element is sized to the layout instead. Default `true`. |
+| `dragThreshold` | `number` | Minimum pointer travel before a press becomes a drag. Default `4`. |
+| `keyboardStep` | `number` | Pixels moved per arrow key press. Default `8`; Shift multiplies by 4. |
 
 ### GridState
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L38">
-    react/types.ts:38
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L43">react/types.ts:43</a></span>
+
+Provider state held in the store. `layout` is what interactions operate on;
+`source` is what the caller owns.
 
 ```ts
 export type GridState<TData = unknown> = {
@@ -254,13 +227,13 @@ export type GridState<TData = unknown> = {
 }
 ```
 
-| Member         | Type                     | Description                                                          |
-| -------------- | ------------------------ | -------------------------------------------------------------------- | ------------------------------------------------------------------ |
-| `source`       | `GridLayout\<TData\>`    | The layout the provider was given (or owns).                         |
-| `size`         | `GridSize \\             | null`                                                                | Measured canvas element size, or `null` until measured.            |
-| `layout`       | `GridLayout\<TData\>`    | `source` projected onto `size`. Interactions operate on this layout. |
-| `interaction`  | `GridInteraction \\      | null`                                                                |                                                                    |
-| `activeRect`   | `GridRect \\             | null`                                                                | Rect that tracks the pointer during a gesture, in rendered pixels. |
-| `preview`      | `GridPreview\<TData\> \\ | null`                                                                |                                                                    |
-| `selectedId`   | `string \\               | null`                                                                |                                                                    |
-| `transferring` | `boolean`                | True while the active item is being previewed in another canvas.     |
+| Member | Type | Description |
+| --- | --- | --- |
+| `source` | `GridLayout\<TData\>` | The layout the provider was given (or owns). |
+| `size` | `GridSize \\| null` | Measured canvas element size, or `null` until measured. |
+| `layout` | `GridLayout\<TData\>` | `source` projected onto `size`. Interactions operate on this layout. |
+| `interaction` | `GridInteraction \\| null` |  |
+| `activeRect` | `GridRect \\| null` | Rect that tracks the pointer during a gesture, in rendered pixels. |
+| `preview` | `GridPreview\<TData\> \\| null` |  |
+| `selectedId` | `string \\| null` |  |
+| `transferring` | `boolean` | True while the active item is being previewed in another canvas. |
