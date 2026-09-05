@@ -6,10 +6,6 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      tag:
-        description: npm dist-tag (e.g. next for prereleases)
-        default: latest
 
 concurrency:
   group: release
