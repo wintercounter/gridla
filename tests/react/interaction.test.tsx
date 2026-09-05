@@ -283,8 +283,7 @@ describe('transfer scope', () => {
     expect(b.getAttribute('style')).toBe(restingB)
     expect(b.hasAttribute('data-gridla-shifted')).toBe(false)
 
-    // Coming back re-enables the source preview on the next move.
-    act(() => pointer('pointermove', leftCanvas, 200, 50))
+    // Coming back restores the source preview within the same move.
     act(() => pointer('pointermove', leftCanvas, 200, 50))
     expect(a.hasAttribute('data-gridla-transferring')).toBe(false)
     expect(container.querySelector('[data-testid="right-outline"]')).toBeNull()
