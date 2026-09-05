@@ -1,6 +1,13 @@
 import { useMemo, useState } from 'react'
 
-import { moveItem, placeItem, resizeItem, type GridLayout, type SolveResult } from 'gridla'
+import {
+  applyGap,
+  moveItem,
+  placeItem,
+  resizeItem,
+  type GridLayout,
+  type SolveResult,
+} from 'gridla'
 import { dashboardLayout, formatRect } from '@gridla/demo-kit'
 import {
   Button,
@@ -201,7 +208,11 @@ export function ProgrammaticOpsDemo() {
               min={0}
               max={32}
               step={2}
-              onChange={(gap) => update({ gap })}
+              onChange={(gap) => {
+                // Re-space the committed layout so the new gap is visible at once.
+                setLayout((current) => applyGap(current, gap))
+                update({ gap })
+              }}
             />
             <RangeField
               label="Snap distance"

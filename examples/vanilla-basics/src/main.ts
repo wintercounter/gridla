@@ -56,7 +56,7 @@ function project() {
 }
 
 function paint(layout: GridLayout) {
-  renderLayout(canvasEl, layout)
+  renderLayout(canvasEl, layout, { draggable: true })
   dataEl.textContent = formatLayout(layout)
 }
 
@@ -139,7 +139,7 @@ canvasEl.addEventListener('pointermove', (event) => {
     gesture.result = result
     // Paint siblings from the solver result so pushes and swaps are visible
     // live; keep the active element under the pointer while moving.
-    renderLayout(canvasEl, result.layout)
+    renderLayout(canvasEl, result.layout, { draggable: true })
     if (gesture.mode === 'move') {
       const active = canvasEl.querySelector<HTMLElement>(`[data-id="${CSS.escape(gesture.id)}"]`)
       if (active)

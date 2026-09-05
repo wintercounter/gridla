@@ -9,5 +9,7 @@ export * from '@rspress/core/theme-original'
 
 /** Rspress layout with the Gridla nav title, app links, and 404 page. */
 export function Layout() {
-  return <BaseLayout navTitle={<NavTitle />} afterNavMenu={<NavApps />} NotFoundLayout={NotFound} />
+  return (
+    <BaseLayout navTitle={<NavTitle />} afterNavTitle={<NavApps />} NotFoundLayout={NotFound} />
+  )
 }

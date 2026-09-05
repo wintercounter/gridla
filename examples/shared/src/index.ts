@@ -5,6 +5,15 @@
 
 import { createItem, type GridItem, type GridLayout, type GridRect } from 'gridla'
 
+export {
+  highlightHtml,
+  renderCode,
+  tokenize,
+  tokenizeWithOffsets,
+  type Token,
+  type TokenKind,
+} from './highlight'
+
 export const NO_PADDING = { top: 0, right: 0, bottom: 0, left: 0 }
 
 export function canvas(width: number, height: number, padding = 0, scrollable = false) {
@@ -121,6 +130,11 @@ export function formatLayout(layout: GridLayout): string {
 export type RenderOptions = {
   label?: (item: GridItem) => string
   className?: string
+  /**
+   * Mark items as draggable (`data-draggable`) so they get the grab cursor.
+   * Static paintings leave it off and keep the default cursor.
+   */
+  draggable?: boolean | ((item: GridItem) => boolean)
 }
 
 /**
@@ -144,10 +158,17 @@ export function renderLayout(
         '<div class="gd-item-head"><span></span><span class="gd-item-coords"></span></div><div class="gd-item-body"></div>'
       container.append(element)
     }
+    const draggable =
+      typeof options.draggable === 'function'
+        ? options.draggable(item)
+        : (options.draggable ?? false)
+    element.toggleAttribute('data-draggable', draggable)
     const data = (item.data ?? {}) as { label?: string }
     const label = options.label?.(item) ?? data.label ?? item.id
-    element.querySelector('.gd-item-head span')!.textContent = label
-    element.querySelector('.gd-item-coords')!.textContent = formatRect(item)
+    const head = element.querySelector('.gd-item-head span')
+    if (head) head.textContent = label
+    const coords = element.querySelector('.gd-item-coords')
+    if (coords) coords.textContent = formatRect(item)
     element.style.position = 'absolute'
     element.style.left = '0'
     element.style.top = '0'

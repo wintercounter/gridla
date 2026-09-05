@@ -12,6 +12,9 @@
     "check-claims": "bun run scripts/check-claims.ts",
     "check": "bun run generate && bun run build && bun run check-links && bun run check-snippets && bun run check-claims"
   },
+  "dependencies": {
+    "gridla": "workspace:*"
+  },
   "devDependencies": {
     "@rspress/core": "2.0.21",
     "@rspress/plugin-llms": "2.0.21",

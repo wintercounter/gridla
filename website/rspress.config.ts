@@ -1,3 +1,4 @@
+import * as fs from 'node:fs'
 import * as path from 'node:path'
 
 import { defineConfig } from '@rspress/core'
@@ -7,6 +8,10 @@ import { pluginSitemap } from '@rspress/plugin-sitemap'
 const BASE = '/gridla/'
 const ORIGIN = 'https://wintercounter.github.io'
 const SITE_URL = `${ORIGIN}${BASE}`
+/** Library version, read at build time and shown in the site footer. */
+const VERSION: string = JSON.parse(
+  fs.readFileSync(path.join(__dirname, '../packages/gridla/package.json'), 'utf8'),
+).version
 const DESCRIPTION =
   'Pixel-precise grids and nested layouts. A framework-neutral layout engine with move, resize, place, and transfer solving, responsive projection, and an optional React adapter.'
 
@@ -58,9 +63,6 @@ export default defineConfig({
     darkMode: true,
     enableScrollToTop: true,
     lastUpdated: false,
-    footer: {
-      message: 'Gridla is MIT licensed. Hand-authored assets; no generated raster images.',
-    },
     socialLinks: [
       { icon: 'github', mode: 'link', content: 'https://github.com/wintercounter/gridla' },
       { icon: 'npm', mode: 'link', content: 'https://www.npmjs.com/package/gridla' },
@@ -70,9 +72,9 @@ export default defineConfig({
         text: 'Guide',
         link: '/getting-started/install',
         activeMatch: '^/(getting-started|concepts|recipes|guides)/',
+        position: 'left',
       },
-      { text: 'API', link: '/api/', activeMatch: '^/api/' },
-      { text: 'Playground', link: '/playground', activeMatch: '^/playground' },
+      { text: 'API', link: '/api/', activeMatch: '^/api/', position: 'left' },
     ],
     sidebar: {
       '/api/': [
@@ -153,7 +155,6 @@ export default defineConfig({
             { text: 'Changelog', link: '/guides/changelog' },
           ],
         },
-        { text: 'Playground', link: '/playground' },
       ],
     },
   },
@@ -166,6 +167,11 @@ export default defineConfig({
     }),
   ],
   builderConfig: {
+    source: {
+      define: {
+        'process.env.GRIDLA_VERSION': JSON.stringify(VERSION),
+      },
+    },
     html: {
       meta: {
         'og:title': 'Gridla',

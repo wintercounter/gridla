@@ -41,13 +41,15 @@ type Data = { label: string }
 
 const DEFAULTS = { snapDistance: 24, snap: true, gap: 12, item: 'card', x: 120, y: 340 }
 
-function build(): GridLayout<Data> {
+function build(gap = DEFAULTS.gap): GridLayout<Data> {
   return {
     canvas: canvas(960, 600, 24),
     items: [
       createItem('header', { w: 912, h: 72, sizeMode: 'fixed-h' }, 24, 24, { label: 'Header' }),
-      createItem('chart', { w: 540, h: 220, minW: 120, minH: 80 }, 24, 108, { label: 'Chart' }),
-      createItem('sidebar', { w: 348, h: 340, minW: 120, minH: 80 }, 588, 108, {
+      createItem('chart', { w: 540, h: 220, minW: 120, minH: 80 }, 24, 96 + gap, {
+        label: 'Chart',
+      }),
+      createItem('sidebar', { w: 372 - gap, h: 340, minW: 120, minH: 80 }, 564 + gap, 96 + gap, {
         label: 'Sidebar',
       }),
       createItem('card', { w: 220, h: 140, minW: 80, minH: 60 }, 120, 340, {
@@ -75,16 +77,17 @@ function guides(layout: GridLayout, item: GridLayout['items'][number]) {
 
 export function SnapAlignmentDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
-  const [layout, setLayout] = useState<GridLayout<Data>>(build)
+  const [layout, setLayout] = useState<GridLayout<Data>>(() => build(DEFAULTS.gap))
   const [preview, setPreview] = useState<SolveResult<Data> | null>(null)
   const options = useMemo(
     () => ({ gap: state.gap, snapDistance: state.snapDistance, snap: state.snap }),
     [state.gap, state.snapDistance, state.snap],
   )
+  const canDrag = (id: string) => id !== 'header'
   const drag = useCoreDrag<Data>({
     layout,
     options,
-    canDrag: (id) => id !== 'header',
+    canDrag,
     onPreview: setPreview,
     onCommit: (result) => {
       if (result.accepted) setLayout(result.layout)
@@ -113,6 +116,7 @@ export function SnapAlignmentDemo() {
           onPointerDown={drag.onPointerDown}
           onPointerMove={drag.onPointerMove}
           onPointerUp={drag.onPointerUp}
+          draggable={(item) => canDrag(item.id)}
         >
           {lines.xs.map((at) => (
             <Guide key={`x${at}`} axis="x" at={at} />
@@ -155,7 +159,19 @@ export function SnapAlignmentDemo() {
               min={0}
               max={32}
               step={2}
-              onChange={(gap) => update({ gap })}
+              onChange={(gap) => {
+                // The frame is rebuilt around the new gap; the card stays where
+                // you dragged it so the snap targets visibly move under it.
+                setLayout((current) => {
+                  const card = current.items.find((item) => item.id === 'card')
+                  const next = build(gap)
+                  return {
+                    ...next,
+                    items: next.items.map((item) => (item.id === 'card' && card ? card : item)),
+                  }
+                })
+                update({ gap })
+              }}
               format={(v) => `${v}px`}
             />
           </ControlGroup>
@@ -198,7 +214,7 @@ export function SnapAlignmentDemo() {
             <Button
               onClick={() => {
                 reset()
-                setLayout(build())
+                setLayout(build(DEFAULTS.gap))
                 setPreview(null)
               }}
             >

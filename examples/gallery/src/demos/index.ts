@@ -1,5 +1,9 @@
 import type { ComponentType } from 'react'
 
+// Styles owned by individual demos (nested groups, cross-container transfer).
+// oxlint-disable-next-line import/no-unassigned-import
+import './demos.css'
+
 import { StaticLayoutDemo } from './01-static-layout'
 import { ResponsiveProjectionDemo } from './02-responsive-projection'
 import { SizingModesDemo } from './03-sizing-modes'
@@ -32,7 +36,7 @@ export type DemoEntry = {
   component: ComponentType
 }
 
-const list: Omit<DemoEntry, 'number' | 'group'>[] = [
+const list: (Omit<DemoEntry, 'number' | 'group'> & { group?: DemoEntry['group'] })[] = [
   {
     id: 'static-layout',
     title: 'Static layout and projection',
@@ -106,15 +110,17 @@ const list: Omit<DemoEntry, 'number' | 'group'>[] = [
   {
     id: 'nested-groups',
     title: 'Nested groups and coordinates',
-    goal: 'Flatten a node tree into root-space rects and compare each item’s canonical rect with its projected one.',
-    tags: ['flattenLayout', 'GridNode', 'hitTest', 'FlatItem'],
+    goal: 'Groups are items that host their own canvas: drag tiles within and between them, lock a subtree, and read each item’s root rect next to its canonical one.',
+    tags: ['GridTransferScope', 'flattenLayout', 'GridNode', 'FlatItem', 'locked'],
+    group: 'react',
     component: NestedGroupsDemo,
   },
   {
     id: 'cross-transfer',
     title: 'Cross-container transfer',
-    goal: 'Move an item between two layouts with transferItem, driven by a pointer position rather than DOM drag and drop.',
-    tags: ['transferItem', 'placeItem', 'TransferResult'],
+    goal: 'Drag items between two canvases of different scale inside one GridTransferScope, or make the same move with a single transferItem call.',
+    tags: ['GridTransferScope', 'transferItem', 'TransferResult', 'onTransferIn'],
+    group: 'react',
     component: CrossTransferDemo,
   },
   {
@@ -178,5 +184,5 @@ const list: Omit<DemoEntry, 'number' | 'group'>[] = [
 export const demos: DemoEntry[] = list.map((entry, index) => ({
   ...entry,
   number: index + 1,
-  group: index < 12 ? 'core' : 'react',
+  group: entry.group ?? (index < 12 ? 'core' : 'react'),
 }))

@@ -4,7 +4,7 @@
  * private banned-words list. The list lives outside version control; when it
  * is missing the check is skipped so CI still passes.
  */
-import { readFileSync, existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const root = resolve(import.meta.dir, '..')
@@ -30,6 +30,8 @@ const files = proc.stdout
   .filter(
     (file) => !file.startsWith('docs/') && !file.includes('node_modules/') && file !== 'bun.lock',
   )
+  // Tracked files can be deleted in the working tree before the deletion is staged.
+  .filter((file) => existsSync(resolve(root, file)))
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const patterns = words.map((word) => new RegExp(`(?<![a-z0-9])${escape(word)}(?![a-z0-9])`, 'gi'))

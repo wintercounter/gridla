@@ -47,26 +47,36 @@ const DEFAULTS = {
 function build(modes: [GridSizeMode, GridSizeMode, GridSizeMode, GridSizeMode]): GridLayout<{
   label: string
 }> {
-  const c = canvas(960, 600, 0)
+  const pad = 16
+  const c = canvas(960, 600, pad)
   const gap = 20
-  const w = (960 - gap * 3) / 4
+  const inner = 960 - pad * 2
+  const w = (inner - gap * 3) / 4
   const ids = ['tile-a', 'tile-b', 'tile-c', 'tile-d']
   return {
     canvas: c,
     items: [
-      createItem('banner', { w: 960, h: 80, sizeMode: 'fixed-h' }, 0, 0, {
+      createItem('banner', { w: inner, h: 80, sizeMode: 'fixed-h' }, pad, pad, {
         label: 'Banner · fixed-h',
       }),
       ...ids.map((id, index) =>
         createItem(
           id,
           { w, h: 300, minW: 60, minH: 60, sizeMode: modes[index] },
-          index * (w + gap),
-          100,
+          pad + index * (w + gap),
+          pad + 80 + gap,
           { label: `${id} · ${modes[index]}` },
         ),
       ),
-      createItem('footer', { w: 960, h: 180, minH: 60 }, 0, 420, { label: 'Footer · free' }),
+      createItem(
+        'footer',
+        { w: inner, h: 600 - pad * 2 - 80 - 300 - gap * 2, minH: 60 },
+        pad,
+        pad + 80 + gap + 300 + gap,
+        {
+          label: 'Footer · free',
+        },
+      ),
     ],
   }
 }

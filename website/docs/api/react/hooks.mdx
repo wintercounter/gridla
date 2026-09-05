@@ -35,10 +35,12 @@ import type { GridContextValue, GridItemView } from 'gridla/react'
 
 ### useElementSize
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L9">react/measure.ts:9</a></span>
+<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L14">react/measure.ts:14</a></span>
 
-Observe an element's content box size with `ResizeObserver`. Returns
-`null` until the first measurement. Safe to import during server rendering.
+Observe an element's content box size with `ResizeObserver`. The first
+measurement happens in a layout effect so the projected layout paints on the
+first frame. Returns `null` until measured. Safe to import during server
+rendering.
 
 ```ts
 export function useElementSize(

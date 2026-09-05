@@ -3,6 +3,46 @@
  * Depends on tokens.css. Class prefix: `gd-`.
  */
 
+:root {
+  /* Stage */
+  --gd-stage-pad: 12px;
+
+  /* Syntax colours (light): restrained, ink-toned, one hue per token kind. */
+  --gd-tok-keyword: oklch(46% 0.15 300);
+  --gd-tok-string: oklch(48% 0.12 150);
+  --gd-tok-number: oklch(52% 0.14 60);
+  --gd-tok-type: oklch(46% 0.11 205);
+  --gd-tok-fn: oklch(40% 0.12 262);
+  --gd-tok-tag: oklch(48% 0.14 240);
+  --gd-tok-attr: oklch(48% 0.09 320);
+  --gd-tok-comment: var(--g-fg-faint);
+  --gd-tok-punc: var(--g-fg-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --gd-tok-keyword: oklch(78% 0.12 300);
+    --gd-tok-string: oklch(78% 0.12 150);
+    --gd-tok-number: oklch(80% 0.13 70);
+    --gd-tok-type: oklch(78% 0.1 205);
+    --gd-tok-fn: oklch(82% 0.08 262);
+    --gd-tok-tag: oklch(76% 0.12 240);
+    --gd-tok-attr: oklch(78% 0.08 320);
+  }
+}
+
+:root[data-theme='dark'] {
+  --gd-tok-keyword: oklch(78% 0.12 300);
+  --gd-tok-string: oklch(78% 0.12 150);
+  --gd-tok-number: oklch(80% 0.13 70);
+  --gd-tok-type: oklch(78% 0.1 205);
+  --gd-tok-fn: oklch(82% 0.08 262);
+  --gd-tok-tag: oklch(76% 0.12 240);
+  --gd-tok-attr: oklch(78% 0.08 320);
+}
+
+/* Frame */
+
 .gd-frame {
   container-type: inline-size;
   display: flex;
@@ -12,10 +52,21 @@
   margin-block: var(--g-space-5);
 }
 
+/* Stage column: the stage plus its caption row. */
+.gd-stage-col {
+  flex: 1 1 30rem;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-space-2);
+}
+
 .gd-stage {
   flex: 1 1 30rem;
   min-width: 0;
   position: relative;
+  box-sizing: border-box;
+  padding: var(--gd-stage-pad);
   border: var(--g-border-w) solid var(--g-line);
   border-radius: var(--g-radius-3);
   background-color: var(--g-bg-sunken);
@@ -23,9 +74,17 @@
     linear-gradient(var(--g-grid-line) 1px, transparent 1px),
     linear-gradient(90deg, var(--g-grid-line) 1px, transparent 1px);
   background-size: 24px 24px;
-  background-position: -0.5px -0.5px;
+  background-position: calc(var(--gd-stage-pad) - 0.5px) calc(var(--gd-stage-pad) - 0.5px);
   overflow: hidden;
   contain: layout paint;
+}
+
+.gd-stage-col > .gd-stage {
+  flex: 1 1 auto;
+}
+
+.gd-stage-col > .gd-stage[data-fixed] {
+  flex: 0 0 auto;
 }
 
 .gd-stage[data-scrollable] {
@@ -33,16 +92,41 @@
   contain: layout;
 }
 
+/* The measured box: canvases fill it, so the padding never touches the frame. */
+.gd-stage-inner {
+  position: relative;
+  height: 100%;
+  min-width: 0;
+}
+
+/* Caption row under the stage (never over the playground). */
+.gd-stage-caption {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--g-space-2) var(--g-space-3);
+  min-height: 1.25rem;
+  padding-inline: var(--g-space-1);
+}
+
 .gd-stage-label {
-  position: absolute;
-  inset-inline-end: var(--g-space-3);
-  inset-block-end: var(--g-space-2);
-  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--g-space-2);
+  font: 500 var(--g-text-xs) / 1.2 var(--g-font-mono);
   color: var(--g-fg-faint);
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  pointer-events: none;
-  z-index: 3;
+  font-variant-numeric: tabular-nums;
+}
+
+.gd-stage-label::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--g-line-strong);
+  border-radius: 1px;
+  flex: none;
 }
 
 /* Items */
@@ -53,7 +137,7 @@
   border: var(--g-border-w) solid var(--g-line-strong);
   box-shadow: var(--g-shadow-1);
   color: var(--g-fg);
-  cursor: grab;
+  cursor: default;
   display: grid;
   grid-template-rows: auto 1fr;
   overflow: hidden;
@@ -63,6 +147,16 @@
     height var(--g-duration) var(--g-ease-out),
     box-shadow var(--g-duration-fast) var(--g-ease-out),
     border-color var(--g-duration-fast) var(--g-ease-out);
+}
+
+/* Only interactive items invite a grab: adapter canvases and explicit opt-in. */
+[data-gridla-canvas] .gd-item,
+.gd-item[data-draggable] {
+  cursor: grab;
+}
+
+.gd-item[data-static] {
+  cursor: default;
 }
 
 .gd-item[data-gridla-active] {
@@ -166,7 +260,7 @@
   min-width: 14rem;
   display: flex;
   flex-direction: column;
-  gap: var(--g-space-3);
+  gap: var(--g-space-4);
   padding: var(--g-space-4);
   border: var(--g-border-w) solid var(--g-line);
   border-radius: var(--g-radius-3);
@@ -175,60 +269,259 @@
   font-size: var(--g-text-sm);
 }
 
+/* A titled group: tight rhythm inside, a rule and air between groups. */
+.gd-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--g-space-3);
+}
+
+.gd-group + .gd-group,
+.gd-group + .gd-actions,
+.gd-group + .gd-field,
+.gd-group + .gd-toggle {
+  padding-top: var(--g-space-4);
+  border-top: var(--g-border-w) solid var(--g-line);
+}
+
 .gd-controls h4 {
   margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--g-space-2);
   font: 600 var(--g-text-xs) / 1 var(--g-font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--g-fg-faint);
 }
 
+.gd-controls h4::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--g-line-strong);
+  flex: none;
+}
+
 .gd-field {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--g-space-1) var(--g-space-3);
+  min-width: 0;
 }
 
 .gd-field > label {
   color: var(--g-fg-muted);
+  line-height: 1.3;
+  min-width: 0;
 }
 
+/* Value chip */
 .gd-field > output {
-  font-family: var(--g-font-mono);
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
   font-variant-numeric: tabular-nums;
-  font-size: var(--g-text-xs);
   color: var(--g-fg);
+  padding: 3px 6px;
+  border-radius: var(--g-radius-1);
+  background: var(--g-bg-sunken);
+  border: var(--g-border-w) solid var(--g-line);
+  white-space: nowrap;
+  justify-self: end;
 }
 
-.gd-field > input[type='range'] {
+/* Range: filled track, round thumb; WebKit and Gecko pseudo-elements. */
+.gd-field > input[type='range'],
+.gd-range {
+  --gd-fill: 0%;
   grid-column: 1 / -1;
-  accent-color: var(--g-accent);
+  appearance: none;
+  -webkit-appearance: none;
   width: 100%;
+  height: 20px;
+  margin: 0;
+  background: transparent;
+  cursor: pointer;
+  accent-color: var(--g-accent);
 }
 
+.gd-field > input[type='range']:focus-visible,
+.gd-range:focus-visible {
+  box-shadow: none;
+}
+
+.gd-field > input[type='range']::-webkit-slider-runnable-track,
+.gd-range::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(
+    to right,
+    var(--g-accent) var(--gd-fill),
+    var(--g-line-strong) var(--gd-fill)
+  );
+}
+
+.gd-field > input[type='range']::-webkit-slider-thumb,
+.gd-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--g-bg-raised);
+  border: 2px solid var(--g-accent);
+  box-shadow: var(--g-shadow-1);
+  transition: transform var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-field > input[type='range']:active::-webkit-slider-thumb,
+.gd-range:active::-webkit-slider-thumb {
+  transform: scale(1.12);
+}
+
+.gd-field > input[type='range']:focus-visible::-webkit-slider-thumb,
+.gd-range:focus-visible::-webkit-slider-thumb {
+  box-shadow: var(--g-focus);
+}
+
+.gd-field > input[type='range']::-moz-range-track,
+.gd-range::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--g-line-strong);
+}
+
+.gd-field > input[type='range']::-moz-range-progress,
+.gd-range::-moz-range-progress {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--g-accent);
+}
+
+.gd-field > input[type='range']::-moz-range-thumb,
+.gd-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--g-bg-raised);
+  border: 2px solid var(--g-accent);
+  box-shadow: var(--g-shadow-1);
+}
+
+.gd-field > input[type='range']:focus-visible::-moz-range-thumb,
+.gd-range:focus-visible::-moz-range-thumb {
+  box-shadow: var(--g-focus);
+}
+
+/* Text-like inputs and selects */
 .gd-field > select,
 .gd-field > input[type='number'],
-.gd-field > input[type='text'] {
+.gd-field > input[type='text'],
+.gd-select,
+.gd-input {
   grid-column: 1 / -1;
-  font: inherit;
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 2rem;
+  font: 500 var(--g-text-sm) / 1.2 var(--g-font-body);
   padding: var(--g-space-1) var(--g-space-2);
   border-radius: var(--g-radius-1);
   border: var(--g-border-w) solid var(--g-line-strong);
   background: var(--g-bg);
   color: var(--g-fg);
+  transition: border-color var(--g-duration-fast) var(--g-ease-out);
 }
 
+.gd-field > select:hover,
+.gd-field > input:hover,
+.gd-select:hover,
+.gd-input:hover {
+  border-color: var(--g-fg-faint);
+}
+
+.gd-field > input[type='number'],
+.gd-input[type='number'] {
+  font-family: var(--g-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Custom chevron; the stroke is a mid grey that reads on paper and ink. */
+.gd-field > select,
+.gd-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-inline-end: 1.9rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%238b8a96' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--g-space-2) center;
+  background-size: 12px 12px;
+  cursor: pointer;
+}
+
+/* Switch */
 .gd-toggle {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--g-space-3);
   color: var(--g-fg-muted);
+  cursor: pointer;
+  line-height: 1.3;
 }
 
-.gd-toggle input {
-  accent-color: var(--g-accent);
+.gd-toggle > span {
+  min-width: 0;
+}
+
+.gd-toggle input[type='checkbox'],
+.gd-switch {
+  appearance: none;
+  -webkit-appearance: none;
+  position: relative;
+  flex: none;
+  width: 32px;
+  height: 18px;
+  margin: 0;
+  border-radius: 999px;
+  border: var(--g-border-w) solid var(--g-line-strong);
+  background: var(--g-bg-sunken);
+  cursor: pointer;
+  transition:
+    background var(--g-duration-fast) var(--g-ease-out),
+    border-color var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-toggle input[type='checkbox']::before,
+.gd-switch::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--g-fg-faint);
+  transition:
+    transform var(--g-duration) var(--g-ease-out),
+    background var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-toggle input[type='checkbox']:checked,
+.gd-switch:checked {
+  background: var(--g-accent);
+  border-color: var(--g-accent-strong);
+}
+
+.gd-toggle input[type='checkbox']:checked::before,
+.gd-switch:checked::before {
+  transform: translateX(14px);
+  background: var(--g-accent-fg);
+}
+
+.gd-toggle:hover input[type='checkbox']:not(:checked) {
+  border-color: var(--g-fg-faint);
 }
 
 .gd-segmented {
@@ -241,6 +534,7 @@
   border: var(--g-border-w) solid var(--g-line-strong);
   border-radius: var(--g-radius-2);
   overflow: hidden;
+  background: var(--g-bg);
 }
 
 .gd-segmented button {
@@ -250,6 +544,13 @@
   background: transparent;
   color: var(--g-fg-muted);
   cursor: pointer;
+  transition:
+    background var(--g-duration-fast) var(--g-ease-out),
+    color var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-segmented button:hover {
+  color: var(--g-fg);
 }
 
 .gd-segmented button + button {
@@ -261,6 +562,11 @@
   color: var(--g-bg);
 }
 
+.gd-segmented button:focus-visible {
+  box-shadow: inset var(--g-focus);
+  z-index: 1;
+}
+
 .gd-button {
   font: 500 var(--g-text-sm) / 1 var(--g-font-body);
   padding: var(--g-space-2) var(--g-space-3);
@@ -269,11 +575,19 @@
   background: var(--g-bg);
   color: var(--g-fg);
   cursor: pointer;
-  transition: background var(--g-duration-fast) var(--g-ease-out);
+  transition:
+    background var(--g-duration-fast) var(--g-ease-out),
+    border-color var(--g-duration-fast) var(--g-ease-out);
 }
 
 .gd-button:hover {
   background: var(--g-bg-sunken);
+  border-color: var(--g-fg-faint);
+}
+
+.gd-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .gd-button[data-variant='primary'] {
@@ -292,27 +606,129 @@
   color: var(--g-fg-muted);
 }
 
+.gd-button[data-variant='ghost']:hover {
+  background: var(--g-bg-sunken);
+  border-color: transparent;
+  color: var(--g-fg);
+}
+
 .gd-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--g-space-2);
 }
 
+/* Readouts: a grid of label-over-value cells separated by hairlines. */
+
+.gd-stats {
+  display: grid;
+  grid-template-columns: repeat(var(--gd-stat-columns, auto-fit), minmax(7.5rem, 1fr));
+  gap: 1px;
+  margin: 0;
+  border: var(--g-border-w) solid var(--g-line);
+  border-radius: var(--g-radius-2);
+  background: var(--g-bg-raised);
+  overflow: hidden;
+}
+
+.gd-stat {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: var(--g-space-2) var(--g-space-3);
+  background: var(--g-bg-raised);
+  /* Hairlines between cells; empty grid tracks stay paper-coloured. */
+  box-shadow: 0 0 0 1px var(--g-line);
+}
+
+.gd-stats[data-dense] .gd-stat {
+  padding: 6px var(--g-space-3);
+  gap: 3px;
+}
+
+.gd-stat dt {
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--g-fg-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gd-stat dd {
+  margin: 0;
+  font: 500 var(--g-text-sm) / 1.3 var(--g-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--g-fg);
+  overflow-wrap: anywhere;
+}
+
+.gd-stat dd small {
+  display: block;
+  font-size: var(--g-text-xs);
+  font-weight: 400;
+  color: var(--g-fg-muted);
+  margin-top: 1px;
+}
+
+.gd-stat[data-tone='accent'] dd {
+  color: var(--g-accent);
+}
+
+.gd-stat[data-tone='muted'] dd {
+  color: var(--g-fg-muted);
+}
+
+.gd-stat[data-tone='warn'] dd {
+  color: var(--g-accent);
+}
+
+.gd-stat[data-tone='warn'] dd small {
+  color: var(--g-accent);
+  font-weight: 500;
+}
+
 /* Inspector */
 
 .gd-inspector {
   flex: 1 1 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
-  gap: var(--g-space-2);
+  gap: var(--g-space-3);
+  align-content: start;
 }
 
+.gd-inspector > *,
+.gd-disclosure,
+.gd-disclosure-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Status chips: each span is a chip, `b` is its value. */
 .gd-inspector-bar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--g-space-2) var(--g-space-4);
-  font: 400 var(--g-text-xs) / 1.4 var(--g-font-mono);
+  gap: var(--g-space-2);
+  font: 400 var(--g-text-xs) / 1 var(--g-font-mono);
+  font-variant-numeric: tabular-nums;
   color: var(--g-fg-muted);
+}
+
+.gd-inspector-bar > span,
+.gd-chip {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4em;
+  padding: 5px 9px;
+  border-radius: 999px;
+  border: var(--g-border-w) solid var(--g-line);
+  background: var(--g-bg-raised);
+  white-space: nowrap;
 }
 
 .gd-inspector-bar b {
@@ -320,29 +736,138 @@
   color: var(--g-fg);
 }
 
-.gd-inspector-bar [data-strategy] {
+.gd-inspector-bar [data-strategy],
+.gd-stat [data-strategy] {
   color: var(--g-accent);
 }
 
-.gd-inspector pre {
-  margin: 0;
-  max-height: 16rem;
-  overflow: auto;
-  padding: var(--g-space-3);
-  border-radius: var(--g-radius-2);
-  border: var(--g-border-w) solid var(--g-line);
-  background: var(--g-bg-raised);
-  font: 400 var(--g-text-xs) / 1.5 var(--g-font-mono);
-  tab-size: 2;
+.gd-inspector-bar > span:has([data-strategy]),
+.gd-chip[data-tone='accent'] {
+  border-color: color-mix(in oklch, var(--g-accent) 45%, var(--g-line));
+  background: var(--g-accent-soft);
 }
 
+/* Disclosures ("Layout data", "Code"): a button with a chevron. */
+.gd-disclosure > summary,
 .gd-inspector details > summary {
-  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--g-space-2);
+  padding: 6px var(--g-space-3) 6px 10px;
+  border-radius: var(--g-radius-2);
+  border: var(--g-border-w) solid var(--g-line-strong);
+  background: var(--g-bg);
   font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--g-fg-faint);
-  padding-block: var(--g-space-1);
+  color: var(--g-fg-muted);
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  transition:
+    background var(--g-duration-fast) var(--g-ease-out),
+    color var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-disclosure > summary::-webkit-details-marker,
+.gd-inspector details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.gd-disclosure > summary::before,
+.gd-inspector details > summary::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  margin-inline-end: 1px;
+  border-inline-end: 1.5px solid currentColor;
+  border-block-end: 1.5px solid currentColor;
+  transform: translateY(-1px) rotate(-45deg);
+  transition: transform var(--g-duration-fast) var(--g-ease-out);
+}
+
+.gd-disclosure[open] > summary::before,
+.gd-inspector details[open] > summary::before {
+  transform: translateY(-2px) rotate(45deg);
+}
+
+.gd-disclosure > summary:hover,
+.gd-inspector details > summary:hover {
+  background: var(--g-bg-sunken);
+  color: var(--g-fg);
+}
+
+.gd-disclosure-body,
+.gd-inspector details > :not(summary) {
+  margin-top: var(--g-space-3);
+}
+
+.gd-inspector > details,
+.gd-inspector > .gd-disclosure {
+  margin-top: var(--g-space-1);
+}
+
+/* Code */
+
+.gd-code,
+.gd-inspector pre {
+  margin: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: var(--g-space-3) var(--g-space-4);
+  border-radius: var(--g-radius-2);
+  border: var(--g-border-w) solid var(--g-line);
+  background: var(--g-bg-raised);
+  color: var(--g-fg);
+  font: 400 var(--g-text-xs) / 1.6 var(--g-font-mono);
+  font-variant-ligatures: none;
+  overflow: auto;
+  tab-size: 2;
+}
+
+.gd-inspector pre {
+  max-height: 16rem;
+}
+
+.gd-code code {
+  font: inherit;
+}
+
+.gd-tok-keyword {
+  color: var(--gd-tok-keyword);
+}
+
+.gd-tok-string {
+  color: var(--gd-tok-string);
+}
+
+.gd-tok-number {
+  color: var(--gd-tok-number);
+}
+
+.gd-tok-type {
+  color: var(--gd-tok-type);
+}
+
+.gd-tok-fn {
+  color: var(--gd-tok-fn);
+}
+
+.gd-tok-tag {
+  color: var(--gd-tok-tag);
+}
+
+.gd-tok-attr {
+  color: var(--gd-tok-attr);
+}
+
+.gd-tok-comment {
+  color: var(--gd-tok-comment);
+  font-style: italic;
+}
+
+.gd-tok-punc {
+  color: var(--gd-tok-punc);
 }
 
 .gd-table {

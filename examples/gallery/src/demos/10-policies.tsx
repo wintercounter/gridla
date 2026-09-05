@@ -1,6 +1,14 @@
 import { useMemo, useState } from 'react'
 
-import { createItem, isGhost, isLocked, moveItem, type GridLayout, type SolveResult } from 'gridla'
+import {
+  applyGap,
+  createItem,
+  isGhost,
+  isLocked,
+  moveItem,
+  type GridLayout,
+  type SolveResult,
+} from 'gridla'
 import { canvas, formatRect } from '@gridla/demo-kit'
 import { Button, ControlGroup, DemoFrame, RangeField, Toggle } from '@gridla/demo-kit/react'
 
@@ -69,10 +77,12 @@ export function PoliciesDemo() {
   )
   const [preview, setPreview] = useState<SolveResult<Data> | null>(null)
   const options = useMemo(() => ({ gap: state.gap, snapDistance: 16 }), [state.gap])
+  const canDrag = (id: string) =>
+    id !== 'header' && !layout.items.some((item) => item.id === id && isLocked(item))
   const drag = useCoreDrag<Data>({
     layout,
     options,
-    canDrag: (id) => id !== 'header',
+    canDrag,
     onPreview: setPreview,
     onCommit: (result) => {
       if (result.accepted) setOverride(result.layout.items)
@@ -98,6 +108,7 @@ export function PoliciesDemo() {
           onPointerDown={drag.onPointerDown}
           onPointerMove={drag.onPointerMove}
           onPointerUp={drag.onPointerUp}
+          draggable={(item) => canDrag(item.id)}
         >
           {live ? (
             <RectOutline
@@ -127,7 +138,10 @@ export function PoliciesDemo() {
               min={0}
               max={32}
               step={2}
-              onChange={(gap) => update({ gap })}
+              onChange={(gap) => {
+                setOverride(applyGap(layout, gap).items)
+                update({ gap })
+              }}
             />
           </ControlGroup>
           <ControlGroup title="Move chart (keyboard)">

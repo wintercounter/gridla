@@ -18,10 +18,10 @@ const SNIPPET = `import { GridProvider, GridCanvas, GridTransferScope } from 'gr
 
 // Wrap providers in a GridTransferScope and drags can cross between them.
 <GridTransferScope>
-  <GridProvider layout={c} onLayoutChange={setC} onTransferOut={(id, to) => log(id, '→', to)}>
+  <GridProvider layout={c} onLayoutChange={setC} onTransferOut={(id, to) => log(id, 'to', to)}>
     <GridCanvas />
   </GridProvider>
-  <GridProvider layout={d} onLayoutChange={setD} acceptTransfers={(item) => item.w < 400} onTransferIn={(item, from) => log(item.id, '←', from)}>
+  <GridProvider layout={d} onLayoutChange={setD} acceptTransfers={(item) => item.w < 400} onTransferIn={(item, from) => log(item.id, 'from', from)}>
     <GridCanvas />
   </GridProvider>
 </GridTransferScope>`
