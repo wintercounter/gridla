@@ -18,14 +18,48 @@ function pointToCanvas(element: HTMLElement, client: GridPoint): GridPoint {
   return { x: client.x - rect.left, y: client.y - rect.top }
 }
 
-function containsPoint(element: HTMLElement, client: GridPoint): boolean {
+function containsPoint(element: HTMLElement, client: GridPoint, shift: GridPoint): boolean {
   const rect = element.getBoundingClientRect()
   return (
-    client.x >= rect.left &&
-    client.x <= rect.right &&
-    client.y >= rect.top &&
-    client.y <= rect.bottom
+    client.x >= rect.left - shift.x &&
+    client.x <= rect.right - shift.x &&
+    client.y >= rect.top - shift.y &&
+    client.y <= rect.bottom - shift.y
   )
+}
+
+const NO_SHIFT: GridPoint = { x: 0, y: 0 }
+
+/**
+ * How far the current target's preview has moved the item that hosts
+ * `element`, right now. A drop preview pushes neighbors aside, and one of
+ * them may be the canvas the drag came from (or another candidate). Hit-testing
+ * the moving rect would let that canvas reclaim the pointer as it slides
+ * under it, clear the preview, slide back, and reclaim again. Comparing
+ * against the resting rect keeps the target stable until the pointer really
+ * moves elsewhere.
+ */
+function previewShift(target: TransferRegistration | null, element: HTMLElement): GridPoint {
+  const targetElement = target?.getElement()
+  if (!target || !targetElement || !targetElement.contains(element)) return NO_SHIFT
+  const state = target.store.getSnapshot()
+  if (!state.preview) return NO_SHIFT
+  // The target's own child item that contains `element`.
+  let host: HTMLElement | null = element.closest('[data-gridla-item]')
+  while (host && host.parentElement?.closest('[data-gridla-canvas]') !== targetElement) {
+    host = host.parentElement?.closest('[data-gridla-item]') ?? null
+  }
+  const hostId = host?.getAttribute('data-gridla-item')
+  const base = hostId ? state.layout.items.find((item) => item.id === hostId) : undefined
+  if (!host || !base) return NO_SHIFT
+  const canvasRect = targetElement.getBoundingClientRect()
+  const scaleX = canvasRect.width / Math.max(1, state.layout.canvas.width)
+  const scaleY = canvasRect.height / Math.max(1, state.layout.canvas.height)
+  const hostRect = host.getBoundingClientRect()
+  return {
+    x: hostRect.left - (canvasRect.left + base.x * scaleX),
+    y: hostRect.top - (canvasRect.top + base.y * scaleY),
+  }
 }
 
 /**
@@ -48,22 +82,22 @@ export function GridTransferScope({ children }: { children?: ReactNode }) {
 
     const findTarget = (source: TransferRegistration, item: GridItem, client: GridPoint) => {
       const sourceElement = source.getElement()
+      const current = session.current?.targetId
+        ? (registrations.current.get(session.current.targetId) ?? null)
+        : null
+      const insideSource =
+        !!sourceElement &&
+        containsPoint(sourceElement, client, previewShift(current, sourceElement))
       const candidates: Array<{ registration: TransferRegistration; area: number; depth: number }> =
         []
       for (const registration of registrations.current.values()) {
         if (registration.id === source.id) continue
         const element = registration.getElement()
-        if (!element || !containsPoint(element, client)) continue
+        if (!element || !containsPoint(element, client, previewShift(current, element))) continue
         if (!registration.accepts(item, source.id)) continue
         // Only descendants of the source may win while the pointer is still
         // inside the source; siblings and ancestors wait until it leaves.
-        if (
-          sourceElement &&
-          containsPoint(sourceElement, client) &&
-          !sourceElement.contains(element)
-        ) {
-          continue
-        }
+        if (sourceElement && insideSource && !sourceElement.contains(element)) continue
         const rect = element.getBoundingClientRect()
         let depth = 0
         for (let node = element.parentElement; node; node = node.parentElement) depth += 1
