@@ -6,7 +6,13 @@
 import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react'
 
 import type { GridLayout, GridResizeEdge, SolveStrategy } from 'gridla'
-import { GridItem, GridPreviewOutline, useGridPreview, useGridVisibleLayout } from 'gridla/react'
+import {
+  GridItem,
+  GridPreviewOutline,
+  useGridPreview,
+  useGridStore,
+  useGridVisibleLayout,
+} from 'gridla/react'
 
 import { applyTheme, formatLayout, formatRect, readTheme, type Theme } from './index'
 
@@ -145,7 +151,7 @@ export function Segmented<T extends string>({
   ariaLabel: string
 }) {
   return (
-    <div className="gd-segmented" role="group" aria-label={ariaLabel}>
+    <fieldset className="gd-segmented" aria-label={ariaLabel}>
       {options.map((option) => (
         <button
           key={option.value}
@@ -156,7 +162,7 @@ export function Segmented<T extends string>({
           {option.label}
         </button>
       ))}
-    </div>
+    </fieldset>
   )
 }
 
@@ -227,10 +233,12 @@ export function DemoPreview() {
 export function Inspector({ title = 'Layout data' }: { title?: string }) {
   const layout = useGridVisibleLayout()
   const preview = useGridPreview()
-  const [last, setLast] = useState<SolveStrategy | null>(null)
-  useEffect(() => {
-    if (preview?.strategy) setLast(preview.strategy)
-  }, [preview?.strategy])
+  // Keep the last strategy visible after a gesture ends: the selector keeps
+  // its previous value whenever the store has no preview.
+  const last = useGridStore<unknown, SolveStrategy | null>(
+    (state) => state.preview?.strategy ?? null,
+    (previous, next) => next === null || previous === next,
+  )
   return (
     <div className="gd-inspector">
       <div className="gd-inspector-bar">
@@ -291,12 +299,10 @@ export function LayoutTable({
 }
 
 export function ThemeSwitch() {
-  const [theme, setTheme] = useState<Theme>('system')
+  const [theme, setTheme] = useState<Theme>(() => readTheme())
   useEffect(() => {
-    const stored = readTheme()
-    setTheme(stored)
-    applyTheme(stored)
-  }, [])
+    applyTheme(theme)
+  }, [theme])
   return (
     <Segmented
       ariaLabel="Theme"

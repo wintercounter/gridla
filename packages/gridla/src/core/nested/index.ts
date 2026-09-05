@@ -72,12 +72,12 @@ type ResolvedAdapter<TNode> = Required<GridTreeAdapter<TNode>>
 
 function resolveAdapter<TNode>(adapter: GridTreeAdapter<TNode>): ResolvedAdapter<TNode> {
   return {
-    getId: adapter.getId,
-    getChildren: adapter.getChildren,
-    getLayout: adapter.getLayout,
-    getBehavior: adapter.getBehavior ?? (() => undefined),
-    getGap: adapter.getGap ?? (() => undefined),
-    getPadding: adapter.getPadding ?? (() => undefined),
+    getId: (node) => adapter.getId(node),
+    getChildren: (node) => adapter.getChildren(node),
+    getLayout: (node) => adapter.getLayout(node),
+    getBehavior: (node) => adapter.getBehavior?.(node),
+    getGap: (node) => adapter.getGap?.(node),
+    getPadding: (node) => adapter.getPadding?.(node),
   }
 }
 
