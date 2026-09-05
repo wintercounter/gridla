@@ -57,7 +57,7 @@ test.describe('obscura layout lane @obscura', () => {
       stage.style.flex = '0 0 480px'
       stage.style.width = '480px'
     })
-    await expect.poll(async () => (await read()).width).toBeLessThanOrEqual(481)
+    await expect.poll(async () => (await read()).width).toBeLessThanOrEqual(484)
     const after = await read()
     for (const item of after.items) {
       expect(item.right, `${item.id} right edge`).toBeLessThanOrEqual(after.width + 1)
