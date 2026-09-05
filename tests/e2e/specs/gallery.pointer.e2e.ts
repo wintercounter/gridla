@@ -227,9 +227,10 @@ test.describe('gallery: pointer interactions', () => {
     await page.mouse.down()
     for (let i = 1; i <= 16; i += 1) await page.mouse.move(start.x, start.y + (dy * i) / 16)
 
+    // Firefox delivers the last pointer move a frame later than Chromium.
+    await expect.poll(async () => (await itemRect(page, 'chart')).h).toBeGreaterThan(before.h)
     const live = await itemRect(page, 'chart')
     expect(live.y).toBe(before.y)
-    expect(live.h).toBeGreaterThan(before.h)
     // The pointer sits 400 px below the original bottom; the rect stopped at
     // the last valid size (the canvas inner bottom) instead of following it.
     expect(live.y + live.h).toBeLessThanOrEqual(INNER_BOTTOM + 2)

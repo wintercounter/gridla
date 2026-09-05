@@ -34,7 +34,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx playwright install --with-deps chromium
+      - run: bunx playwright install --with-deps chromium ffmpeg
       - name: Smoke-test the exact artifact before publishing
         run: bunx playwright test --project=chromium --grep @smoke
         env:

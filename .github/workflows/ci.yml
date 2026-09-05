@@ -125,7 +125,7 @@ jobs:
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('bun.lock') }}
-      - run: bunx playwright install --with-deps ${{ matrix.project }}
+      - run: bunx playwright install --with-deps ${{ matrix.project }} ffmpeg
       - run: bunx playwright test --project=${{ matrix.project }}
         env:
           GRIDLA_SITE_DIR: site-dist
@@ -154,6 +154,7 @@ jobs:
           name: site
           path: site-dist
       - run: bun run tests/e2e/obscura/install.ts
+      - run: bunx playwright install ffmpeg
       - run: bunx playwright test --project=obscura
         env:
           GRIDLA_SITE_DIR: site-dist
