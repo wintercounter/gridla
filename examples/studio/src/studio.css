@@ -198,10 +198,7 @@ kbd {
   background: var(--g-warn);
 }
 
-.st-save-status[data-status='saving'] .st-save-dot {
-  background: var(--g-accent);
-}
-
+.st-save-status[data-status='none'] .st-save-dot,
 .st-save-status[data-status='unavailable'] .st-save-dot {
   background: var(--g-fg-faint);
 }

@@ -29,6 +29,7 @@ import {
   loadStoredDocument,
   markWelcomeSeen,
   usePersistence,
+  type BootSource,
 } from './hooks/persistence'
 import { useShortcuts } from './hooks/shortcuts'
 import { StudioContext, initialState, studioReducer } from './store'
@@ -45,9 +46,11 @@ const TABS: readonly { id: Tab; label: string }[] = [
 
 function Studio({
   initial,
+  boot,
   storageError,
 }: {
   initial: StudioDocument
+  boot: { source: BootSource; savedRaw: string | null }
   storageError: string | null
 }) {
   const [state, dispatch] = useReducer(studioReducer, initial, initialState)
@@ -65,11 +68,11 @@ function Studio({
   const [debug, setDebug] = useState(false)
   const [tab, setTab] = useState<Tab>('canvas')
 
-  const persistence = usePersistence(state.doc, dispatch, notify)
+  const persistence = usePersistence(state.doc, dispatch, notify, boot)
 
   useEffect(() => {
     if (storageError) {
-      notify(`Ignored an unreadable saved layout (${storageError}). Starting fresh.`, 'error')
+      notify(`Ignored an unreadable stored layout (${storageError}).`, 'error')
     }
   }, [storageError, notify])
 
@@ -200,11 +203,20 @@ function Studio({
 export function App() {
   const [boot] = useState(() => {
     const stored = loadStoredDocument()
-    return { doc: stored.doc ?? createDocument(), error: stored.error }
+    return {
+      doc: stored.doc ?? createDocument(),
+      source: stored.source,
+      savedRaw: stored.savedRaw,
+      error: stored.error,
+    }
   })
   return (
     <NoticesProvider>
-      <Studio initial={boot.doc} storageError={boot.error} />
+      <Studio
+        initial={boot.doc}
+        boot={{ source: boot.source, savedRaw: boot.savedRaw }}
+        storageError={boot.error}
+      />
     </NoticesProvider>
   )
 }

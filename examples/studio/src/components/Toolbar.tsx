@@ -37,10 +37,10 @@ function savedLabel(status: SaveStatus, savedAt: number | null): string {
       return savedAt
         ? `Saved ${new Date(savedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
         : 'Saved'
-    case 'saving':
-      return 'Saving…'
     case 'unsaved':
       return 'Unsaved changes'
+    case 'none':
+      return 'Not saved yet'
     default:
       return 'Storage unavailable'
   }
@@ -102,7 +102,7 @@ export function Toolbar(props: ToolbarProps) {
           type="button"
           className="st-tool"
           onClick={props.onSave}
-          title="Save to this browser now"
+          title="Save a copy in this browser"
         >
           Save
         </button>
@@ -110,7 +110,7 @@ export function Toolbar(props: ToolbarProps) {
           type="button"
           className="st-tool"
           onClick={props.onLoad}
-          title="Load the saved copy"
+          title="Go back to the saved copy"
         >
           Load
         </button>
@@ -118,7 +118,7 @@ export function Toolbar(props: ToolbarProps) {
           type="button"
           className="st-tool"
           onClick={props.onClear}
-          title="Forget the saved copy"
+          title="Forget the saved copy and the draft"
         >
           Clear
         </button>

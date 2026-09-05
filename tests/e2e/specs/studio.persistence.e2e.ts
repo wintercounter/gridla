@@ -1,8 +1,22 @@
-import { expect, itemRect, openStudioTemplate, pickTemplate, test } from '../fixtures'
+import {
+  STUDIO_DRAFT_KEY,
+  STUDIO_SAVED_KEY,
+  expect,
+  itemRect,
+  openStudioTemplate,
+  pickTemplate,
+  test,
+  waitForDraft,
+} from '../fixtures'
 import { actionsDocument } from '../studio-documents'
 import { canvasOf, item, settleAll } from '../studio-helpers'
 
-/** Save / Load / Clear against localStorage, and JSON export / import. */
+/**
+ * Save / Load / Clear against localStorage, and JSON export / import. The
+ * studio keeps two keys: the saved copy (explicit Save, restored by Load) and
+ * the draft (autosaved after edits, restored at boot). Tests that edit after
+ * saving wait for the draft to land before acting so they hold on any engine.
+ */
 test.use({ viewport: { width: 2000, height: 1100 } })
 
 const ROOT_ITEMS = `${canvasOf('root')} > [data-gridla-item]`
@@ -17,6 +31,16 @@ async function firstHeadingId(page: Parameters<typeof itemRect>[0]) {
   return id
 }
 
+async function storageKeys(page: Parameters<typeof itemRect>[0]) {
+  return page.evaluate(
+    ([savedKey, draftKey]) => ({
+      saved: localStorage.getItem(savedKey),
+      draft: localStorage.getItem(draftKey),
+    }),
+    [STUDIO_SAVED_KEY, STUDIO_DRAFT_KEY],
+  )
+}
+
 test.describe('studio: persistence', () => {
   test('save, reload: the saved page comes back with the same geometry', async ({ page }) => {
     await openStudioTemplate(page, 'Dashboard')
@@ -25,13 +49,18 @@ test.describe('studio: persistence', () => {
     const before = await itemRect(page, heading)
     const items = await page.locator('[data-gridla-item]').count()
 
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'none')
     await page.getByRole('button', { name: 'Save', exact: true }).click()
     await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
+    const keys = await storageKeys(page)
+    expect(keys.saved).not.toBeNull()
+    expect(keys.draft).toBeNull()
 
     await page.reload()
     await expect(page.locator('dialog')).toHaveCount(0)
     await expect(page.locator('[data-gridla-item]')).toHaveCount(items)
     await expect(page.locator('[data-gridla-canvas]')).toHaveCount(2)
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
     await expect.poll(() => itemRect(page, heading)).toEqual(before)
   })
 
@@ -46,9 +75,14 @@ test.describe('studio: persistence', () => {
     await page.locator(item(heading)).click()
     await page.keyboard.press('Delete')
     await expect(page.locator(item(heading))).toHaveCount(0)
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'unsaved')
+    // The edit autosaves as a draft; it must not touch the saved copy.
+    await waitForDraft(page)
 
     await page.getByRole('button', { name: 'Load', exact: true }).click()
     await expect(page.locator(item(heading))).toHaveCount(1)
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
+    expect((await storageKeys(page)).draft).toBeNull()
     await expect
       .poll(() => itemRect(page, heading).then(({ x, y, h }) => ({ x, y, h })))
       .toEqual({
@@ -70,8 +104,36 @@ test.describe('studio: persistence', () => {
     await page.locator(item(heading)).click()
     await page.keyboard.press('Delete')
     await expect(page.locator(item(heading))).toHaveCount(0)
+    await waitForDraft(page)
     await page.getByRole('button', { name: 'Load', exact: true }).click()
     await expect.poll(() => itemRect(page, heading)).toEqual(before)
+  })
+
+  test('reload after an edit opens the draft as unsaved changes; load goes back', async ({
+    page,
+  }) => {
+    await openStudioTemplate(page, 'Dashboard')
+    await settleAll(page)
+    const heading = await firstHeadingId(page)
+    const items = await page.locator('[data-gridla-item]').count()
+    await page.getByRole('button', { name: 'Save', exact: true }).click()
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
+
+    await page.locator(item(heading)).click()
+    await page.keyboard.press('Delete')
+    await expect(page.locator(item(heading))).toHaveCount(0)
+    await waitForDraft(page)
+
+    await page.reload()
+    await expect(page.locator('dialog')).toHaveCount(0)
+    await expect(page.locator('[data-gridla-item]')).toHaveCount(items - 1)
+    await expect(page.locator(item(heading))).toHaveCount(0)
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'unsaved')
+
+    await page.getByRole('button', { name: 'Load', exact: true }).click()
+    await expect(page.locator(item(heading))).toHaveCount(1)
+    await expect(page.locator('[data-gridla-item]')).toHaveCount(items)
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
   })
 
   test('clear forgets the saved copy', async ({ page }) => {
@@ -80,6 +142,7 @@ test.describe('studio: persistence', () => {
     await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
     await page.getByRole('button', { name: 'Clear', exact: true }).click()
     await expect(page.locator('.st-notice').last()).toContainText('Cleared')
+    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'none')
   })
 
   test('after clear the storage stays empty and load reports nothing saved', async ({ page }) => {
@@ -88,7 +151,7 @@ test.describe('studio: persistence', () => {
     await page.getByRole('button', { name: 'Clear', exact: true }).click()
     await expect(page.locator('.st-notice').last()).toContainText('Cleared')
     await page.waitForTimeout(1_000)
-    expect(await page.evaluate(() => localStorage.getItem('gridla-studio-document'))).toBeNull()
+    expect(await storageKeys(page)).toEqual({ saved: null, draft: null })
     await page.getByRole('button', { name: 'Load', exact: true }).click()
     await expect(page.locator('.st-notice').last()).toContainText('Nothing saved')
   })
@@ -139,12 +202,13 @@ test.describe('studio: persistence', () => {
     await expect(dialog).toHaveCount(1)
   })
 
-  test('the autosave survives switching templates and reloading', async ({ page }) => {
+  test('the draft survives switching templates and reloading', async ({ page }) => {
     await openStudioTemplate(page, 'Dashboard')
     await pickTemplate(page, 'Editorial')
     await expect(page.locator('[data-gridla-canvas]')).toHaveCount(2)
     const items = await page.locator('[data-gridla-item]').count()
-    await expect(page.locator('.st-save-status')).toHaveAttribute('data-status', 'saved')
+    await waitForDraft(page)
+    expect((await storageKeys(page)).saved).toBeNull()
     await page.reload()
     await expect(page.locator('[data-gridla-item]')).toHaveCount(items)
   })

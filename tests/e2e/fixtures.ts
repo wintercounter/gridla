@@ -117,36 +117,51 @@ export function studioPath() {
   return process.env.GRIDLA_STUDIO_PREFIX ?? (process.env.GRIDLA_BASE_URL ? '' : 'studio/')
 }
 
-/** localStorage keys the studio persists under (see examples/studio/src/hooks/persistence.ts). */
-export const STUDIO_STORAGE_KEY = 'gridla-studio-document'
+/**
+ * localStorage keys the studio persists under (see
+ * examples/studio/src/hooks/persistence.ts): the explicit Save copy, the
+ * autosaved draft, and the welcome flag.
+ */
+export const STUDIO_SAVED_KEY = 'gridla-studio-saved'
+export const STUDIO_DRAFT_KEY = 'gridla-studio-draft'
 export const STUDIO_WELCOME_KEY = 'gridla-studio-welcomed'
+
+/** Wait until the studio has autosaved the open page as a draft. */
+export async function waitForDraft(page: Page) {
+  await expect
+    .poll(() => page.evaluate((key) => localStorage.getItem(key), STUDIO_DRAFT_KEY))
+    .not.toBeNull()
+}
 
 export type StudioTemplate = 'Blank' | 'Dashboard' | 'Editorial' | 'Analytics' | 'Freeform'
 
 /**
  * Make studio runs deterministic: wipe the studio's localStorage the first
  * time the tab loads (reloads within the same tab keep what the page wrote
- * since, so persistence can be tested) and optionally seed a document and the
- * welcome flag before the app boots.
+ * since, so persistence can be tested) and optionally seed a document as the
+ * saved copy (with no draft, so boot opens it) and the welcome flag before
+ * the app boots.
  */
 export async function resetStudioStorage(
   page: Page,
   seed: { document?: unknown; welcomed?: boolean } = {},
 ) {
   await page.addInitScript(
-    ({ storageKey, welcomeKey, document, welcomed }) => {
+    ({ savedKey, draftKey, welcomeKey, document, welcomed }) => {
       try {
         if (sessionStorage.getItem('gridla-e2e-reset')) return
         sessionStorage.setItem('gridla-e2e-reset', '1')
         localStorage.clear()
         if (welcomed) localStorage.setItem(welcomeKey, '1')
-        if (document !== null) localStorage.setItem(storageKey, JSON.stringify(document))
+        localStorage.removeItem(draftKey)
+        if (document !== null) localStorage.setItem(savedKey, JSON.stringify(document))
       } catch {
         // Storage can be unavailable; the studio copes and so do the tests.
       }
     },
     {
-      storageKey: STUDIO_STORAGE_KEY,
+      savedKey: STUDIO_SAVED_KEY,
+      draftKey: STUDIO_DRAFT_KEY,
       welcomeKey: STUDIO_WELCOME_KEY,
       document: seed.document ?? null,
       welcomed: seed.welcomed ?? false,
