@@ -1,0 +1,8 @@
+{
+  "gridla": {
+    "gzip": 25500
+  },
+  "gridla/react": {
+    "gzip": 26600
+  }
+}
