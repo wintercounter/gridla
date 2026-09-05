@@ -106,7 +106,21 @@ export async function projected(page: Page, id: string, authoredHeight: number) 
 /** Wait until no CSS transition or animation runs anywhere on the page. */
 export async function settleAll(page: Page) {
   await expect
-    .poll(() => page.evaluate(() => document.getAnimations().length), { timeout: 5_000 })
+    .poll(
+      () =>
+        page.evaluate(
+          () =>
+            // Ignore looping animations (status dots, spinners): only finite ones
+            // mean geometry is still moving.
+            document.getAnimations().filter((animation) => {
+              const timing = animation.effect?.getComputedTiming()
+              return (
+                animation.playState === 'running' && Number.isFinite(timing?.activeDuration ?? 0)
+              )
+            }).length,
+        ),
+      { timeout: 5_000 },
+    )
     .toBe(0)
 }
 
