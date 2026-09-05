@@ -71,10 +71,6 @@ function Registrar({
   useEffect(() => {
     lockedRef.current = locked
   })
-  useEffect(() => {
-    // DEBUG-TEMP
-    ;(window as unknown as Record<string, unknown>)[`__ctx_${groupId}`] = context
-  }, [context, groupId])
   useEffect(
     () =>
       registry.register({
@@ -395,7 +391,16 @@ export function GroupCanvas({
         onPointerDownCapture={onPointerDownCapture}
         onDeleteKey={onDeleteKey}
         onKeyDownCapture={onKeyDown}
-        style={style}
+        // TODO(gridla): a responsive scrollable canvas projects onto its measured
+        // height, and its rendered height (fit to content) sets that same
+        // element's min-height. Once content is taller than the source canvas
+        // the two feed each other and heights run away. Pinning the element to
+        // the settled source height keeps the vertical projection an identity.
+        style={
+          root && layout.canvas.heightMode === 'scrollable'
+            ? { ...style, height: layout.canvas.height, minHeight: layout.canvas.height }
+            : style
+        }
       >
         {content}
         <GridPreviewOutline className="st-preview" />

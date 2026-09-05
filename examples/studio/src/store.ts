@@ -186,10 +186,7 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
   const root = state.doc.root
   switch (action.type) {
     case 'layout-changed': {
-      // DEBUG-TEMP
-      console.warn('layout-changed', action.groupId, action.detail.reason, action.detail.itemId, action.layout.items.map((i) => i.id).join(','))
       const next = reconcileLayout(root, action.groupId, action.layout, action.node)
-      console.warn('  -> changed', next !== root)
       const { reason, itemId } = action.detail
       const key =
         reason === 'move' || reason === 'update' || reason === 'transfer' || reason === 'resize'
@@ -199,11 +196,12 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
       return commit(state, next, key, selection)
     }
     case 'replace-document': {
+      const doc = { ...action.doc, root: settleHeights(action.doc.root) }
       if (action.history === false) {
-        return { doc: action.doc, past: [], future: [], selection: [], lastEntry: null }
+        return { doc, past: [], future: [], selection: [], lastEntry: null }
       }
       return {
-        doc: action.doc,
+        doc,
         past: [...state.past, state.doc].slice(-HISTORY_LIMIT),
         future: [],
         selection: [],
@@ -379,7 +377,13 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
 }
 
 export function initialState(doc: StudioDocument): StudioState {
-  return { doc, past: [], future: [], selection: [], lastEntry: null }
+  return {
+    doc: { ...doc, root: settleHeights(doc.root) },
+    past: [],
+    future: [],
+    selection: [],
+    lastEntry: null,
+  }
 }
 
 // ---------------------------------------------------------------------------

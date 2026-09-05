@@ -919,6 +919,13 @@ h3.st-heading-text {
 .st-stat {
   justify-content: center;
   gap: 2px;
+  overflow: hidden;
+}
+
+.st-stat-label,
+.st-stat-value,
+.st-stat-delta {
+  flex: none;
 }
 
 .st-stat-label {

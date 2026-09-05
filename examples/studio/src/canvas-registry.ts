@@ -44,7 +44,10 @@ function containsPoint(element: HTMLElement, client: GridPoint): boolean {
 export function createCanvasRegistry(): CanvasRegistry {
   const entries = new Map<string, CanvasEntry>()
   const listeners = new Set<() => void>()
+  // Stable snapshot for `useSyncExternalStore`; rebuilt only on changes.
+  let list: CanvasEntry[] = []
   const notify = () => {
+    list = [...entries.values()]
     for (const listener of listeners) listener()
   }
   return {
@@ -65,7 +68,7 @@ export function createCanvasRegistry(): CanvasRegistry {
       }
     },
     get: (groupId) => entries.get(groupId) ?? null,
-    entries: () => [...entries.values()],
+    entries: () => list,
     findAt: (client) => {
       let best: { entry: CanvasEntry; depth: number } | null = null
       for (const entry of entries.values()) {

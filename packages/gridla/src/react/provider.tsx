@@ -83,8 +83,10 @@ function renderLayout<TData>(
   const target = {
     ...canvas,
     width: Math.max(1, size.w),
-    height:
-      canvas.heightMode === 'scrollable' ? Math.max(1, size.h, canvas.height) : Math.max(1, size.h),
+    // A scrollable canvas keeps its authored height: re-projecting vertical
+    // geometry from a measurement that itself depends on content height would
+    // grow without bound. Only the width follows the element.
+    height: canvas.heightMode === 'scrollable' ? canvas.height : Math.max(1, size.h),
   }
   const projected = projectLayout(source, target, { gap: config.gap })
   return { ...projected, canvas: fitCanvasToContent(projected.canvas, projected.items) }
@@ -171,6 +173,7 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
   })
 
   const elementRef = useRef<HTMLElement | null>(null)
+  const gestureRef = useRef<GridGestureApi<TData> | null>(null)
   const incomingRef = useRef<{ item: GridItem<TData>; preview: GridPreview<TData> } | null>(null)
 
   const emitChange = (next: GridLayout<TData>, detail: GridChangeDetail, commitDetail = false) => {
@@ -247,6 +250,10 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
           transferring: false,
         })
       },
+      previewIncoming: (item, pointer) =>
+        gestureRef.current?.previewIncoming(item, pointer) ?? null,
+      commitIncoming: () => gestureRef.current?.commitIncoming() !== null,
+      clearIncoming: () => gestureRef.current?.clearIncoming(),
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [store])
@@ -479,6 +486,8 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>) {
     if (state.selectedId !== controlledSelectedId)
       store.set({ ...state, selectedId: controlledSelectedId })
   }, [controlledSelectedId, store])
+
+  gestureRef.current = gesture
 
   const value = useMemo<GridContextValue<TData>>(
     () => ({ id, store, actions, config, gesture }),
