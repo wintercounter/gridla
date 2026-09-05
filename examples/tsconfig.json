@@ -1,0 +1,22 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "paths": {
+      "gridla": ["../packages/gridla/src/index.ts"],
+      "gridla/react": ["../packages/gridla/src/react.ts"],
+      "@gridla/demo-kit": ["./shared/src/index.ts"],
+      "@gridla/demo-kit/react": ["./shared/src/react.tsx"]
+    }
+  },
+  "include": [
+    "env.d.ts",
+    "shared/src",
+    "vanilla-basics/src",
+    "react-basics/src",
+    "gallery/src",
+    "studio/src",
+    "*/rsbuild.config.ts"
+  ]
+}

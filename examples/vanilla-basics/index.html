@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Gridla · vanilla example</title>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-head">
+        <h1>Gridla without a framework</h1>
+        <p>
+          The engine returns plain objects. This page paints them with a few lines of DOM code,
+          handles pointer events itself, and asks <code>moveItem</code> and <code>resizeItem</code>
+          what the layout should become.
+        </p>
+      </header>
+      <div class="gd-frame" data-controls>
+        <div class="gd-stage" id="stage" style="height: 480px">
+          <span class="gd-stage-label">960 × 600 canvas · projected</span>
+          <div id="canvas" class="canvas"></div>
+          <div id="preview" class="gd-preview" hidden></div>
+        </div>
+        <aside class="gd-controls">
+          <h4>Options</h4>
+          <div class="gd-field">
+            <label for="gap">Gap</label>
+            <output id="gap-out">12</output>
+            <input id="gap" type="range" min="0" max="32" step="2" value="12" />
+          </div>
+          <div class="gd-field">
+            <label for="snap">Snap distance</label>
+            <output id="snap-out">24</output>
+            <input id="snap" type="range" min="0" max="64" step="4" value="24" />
+          </div>
+          <label class="gd-toggle"
+            ><span>Scrollable canvas</span><input id="scrollable" type="checkbox"
+          /></label>
+          <h4>Actions</h4>
+          <div class="gd-actions">
+            <button class="gd-button" id="add">Add item</button>
+            <button class="gd-button" id="rows">Rows</button>
+            <button class="gd-button" id="grid">Grid</button>
+            <button class="gd-button" data-variant="ghost" id="reset">Reset</button>
+          </div>
+        </aside>
+        <div class="gd-inspector">
+          <div class="gd-inspector-bar">
+            <span>strategy <b data-strategy id="strategy">—</b></span>
+            <span>last change <b id="reason">—</b></span>
+          </div>
+          <details open>
+            <summary>Layout data</summary>
+            <pre id="data"></pre>
+          </details>
+        </div>
+      </div>
+    </main>
+  </body>
+</html>
