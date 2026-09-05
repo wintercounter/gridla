@@ -11,6 +11,7 @@
     "**/node_modules/**",
     "**/.rspress/**",
     "CHANGELOG.md",
-    "**/CHANGELOG.md"
+    "**/CHANGELOG.md",
+    "website/docs/api/**"
   ]
 }

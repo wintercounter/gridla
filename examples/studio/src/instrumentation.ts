@@ -99,7 +99,11 @@ export const perf = {
 }
 
 export function usePerf(): PerfSnapshot {
-  return useSyncExternalStore(perf.subscribe, perf.getSnapshot, perf.getSnapshot)
+  return useSyncExternalStore(
+    (listener) => perf.subscribe(listener),
+    () => perf.getSnapshot(),
+    () => perf.getSnapshot(),
+  )
 }
 
 /** Stable trace callback for every provider. */

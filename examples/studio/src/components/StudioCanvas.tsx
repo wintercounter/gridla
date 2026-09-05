@@ -373,7 +373,7 @@ export function GroupCanvas({
     <GridProvider
       layout={visibleLayout}
       onLayoutChange={onLayoutChange}
-      onCommit={perf.commit}
+      onCommit={(detail) => perf.commit(detail)}
       onTrace={traceCallback}
       gap={node.gap ?? 0}
       selectedId={selectedHere}
