@@ -358,7 +358,7 @@ function GroupSection({ node, isRoot }: { node: StudioNode; isRoot: boolean }) {
         {isRoot ? (
           <NumberField
             label="Min height"
-            value={layout.canvas.height}
+            value={node.minHeight ?? layout.canvas.height}
             min={100}
             onCommit={(height) =>
               height !== undefined &&

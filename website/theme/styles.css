@@ -120,9 +120,7 @@ body {
 
 .rp-doc h2 {
   font-size: var(--g-text-lg);
-  border-top: var(--g-border-w) solid var(--g-line);
-  padding-top: var(--g-space-5);
-  margin-top: var(--g-space-7);
+  border-color: var(--g-line);
 }
 
 .rp-doc h3 {
@@ -335,7 +333,12 @@ kbd {
   background:
     linear-gradient(var(--g-grid-line) 1px, transparent 1px) 0 0 / 48px 48px,
     linear-gradient(90deg, var(--g-grid-line) 1px, transparent 1px) 0 0 / 48px 48px;
-  mask-image: linear-gradient(to bottom, rgb(0 0 0 / 0.9) 0, rgb(0 0 0 / 0.9) 60%, transparent 100%);
+  mask-image: linear-gradient(
+    to bottom,
+    rgb(0 0 0 / 0.9) 0,
+    rgb(0 0 0 / 0.9) 60%,
+    transparent 100%
+  );
   -webkit-mask-image: linear-gradient(
     to bottom,
     rgb(0 0 0 / 0.9) 0,

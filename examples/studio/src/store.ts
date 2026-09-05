@@ -24,6 +24,7 @@ import {
   isAncestorOrSelf,
   removeNodes,
   setGroupLayout,
+  settleHeights,
   updateNode,
   type StudioDocument,
   type StudioNode,
@@ -79,10 +80,11 @@ const COALESCE_MS = 600
 
 function commit(
   state: StudioState,
-  root: StudioNode,
+  changed: StudioNode,
   key: string | null,
   selection = state.selection,
 ): StudioState {
+  const root = settleHeights(changed)
   if (root === state.doc.root)
     return selection === state.selection ? state : { ...state, selection }
   const now = Date.now()
@@ -222,11 +224,14 @@ export function studioReducer(state: StudioState, action: StudioAction): StudioS
         return {
           ...node,
           ...(action.patch.gap !== undefined ? { gap: action.patch.gap } : {}),
+          ...(action.patch.height !== undefined ? { minHeight: action.patch.height } : {}),
           layout: {
             ...node.layout,
             canvas: {
               ...canvas,
-              ...(action.patch.height !== undefined ? { height: action.patch.height } : {}),
+              ...(action.patch.height !== undefined && canvas.heightMode !== 'scrollable'
+                ? { height: action.patch.height }
+                : {}),
               ...(action.patch.heightMode ? { heightMode: action.patch.heightMode } : {}),
               padding: { ...canvas.padding, ...action.patch.padding },
             },
