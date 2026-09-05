@@ -21,7 +21,9 @@ import type { SolveStrategy, TraceCallback } from '../instrumentation'
 import {
   DEFAULT_SNAP_DISTANCE,
   MIN_ITEM_SIZE,
+  isFixedHeight,
   isFixedOnAxis,
+  isFixedWidth,
   isGhost,
   isLocked,
   type GridAxis,
@@ -67,7 +69,10 @@ export type SolveResult<T = unknown> = {
   accepted: boolean
   /** The layout after the operation. */
   layout: GridLayout<T>
-  /** The active item as it appears in `layout` (or the rejected candidate). */
+  /**
+   * The active item as it appears in `layout`. When `accepted` is false this
+   * is the rejected candidate, useful for showing where a drop would land.
+   */
   item: GridItem<T>
   /** Which strategy produced this result. */
   strategy: SolveStrategy
@@ -270,6 +275,8 @@ export function pushOverlapsDown<T>(
         const source = moving === left ? right : left
         const moved = clampItem({ ...moving, y: itemBottom(source) + gap }, bounds)
         if (moved.x === moving.x && moved.y === moving.y) return null
+        if (isFixedHeight(moving) && moved.h !== moving.h) return null
+        if (isFixedWidth(moving) && moved.w !== moving.w) return null
         if (moving === left) next[leftIndex] = moved
         else next[rightIndex] = moved
         changed = true
@@ -438,6 +445,8 @@ export function trimCandidate<T>(
   const right = itemRight(source)
   const bottom = itemBottom(source)
   const g = Math.max(0, gap)
+  if ((side === 'top' || side === 'bottom') && isFixedHeight(source)) return null
+  if ((side === 'left' || side === 'right') && isFixedWidth(source)) return null
   if (side === 'top') {
     const y = itemBottom(active) + g
     const h = bottom - y
@@ -479,7 +488,7 @@ export function tryPlaceByTrimmingNeighbor<T>({
     .sort((left, right) => right.area - left.area)
 
   for (const { item: target } of candidates) {
-    if (isGhost(target) || isLocked(target)) continue
+    if (isGhost(target) || isLocked(target) || isFixedWidth(target)) continue
     const others = baseItems.filter((item) => item.id !== target.id)
     const targetMinW = target.minW ?? MIN_ITEM_SIZE
     const targetRight = itemRight(target)
@@ -502,6 +511,27 @@ export function tryPlaceByTrimmingNeighbor<T>({
     }
   }
   return null
+}
+
+/**
+ * True when every item other than `activeId` kept the size of each axis its
+ * `sizeMode` fixes. Solvers use this as a final gate so no strategy can
+ * resize a fixed-size bystander as a side effect.
+ */
+export function fixedAxesPreserved<T>(
+  before: readonly GridItem<T>[],
+  after: readonly GridItem<T>[],
+  activeId: string,
+): boolean {
+  const previous = new Map(before.map((item) => [item.id, item]))
+  for (const item of after) {
+    if (item.id === activeId) continue
+    const source = previous.get(item.id)
+    if (!source) continue
+    if (isFixedWidth(source) && item.w !== source.w) return false
+    if (isFixedHeight(source) && item.h !== source.h) return false
+  }
+  return true
 }
 
 export function emitTrace(

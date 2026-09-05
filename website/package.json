@@ -7,7 +7,9 @@
     "build": "rspress build",
     "preview": "rspress preview",
     "generate": "bun run scripts/generate-api.ts",
-    "check-links": "bun run scripts/check-links.ts"
+    "check-links": "bun run scripts/check-links.ts",
+    "check-snippets": "bun run scripts/check-snippets.ts",
+    "check": "bun run generate && bun run build && bun run check-links && bun run check-snippets"
   },
   "devDependencies": {
     "@rspress/core": "2.0.21",

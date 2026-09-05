@@ -193,10 +193,10 @@ describe('chain projection (default strategy)', () => {
 
     const projected = projectLayout(layout, canvas(600, 200))
 
-    // Proportional share would be 250 px each; `form` is floored at 400
-    // and `note` keeps its 250 px share, packed after it.
+    // Proportional share would be 250 px each; `form` is floored at 400 and
+    // `note` gives up the difference so the chain still fits the canvas.
     expect(rect(byId(projected.items, 'form'))).toEqual({ x: 0, y: 0, w: 400, h: 200 })
-    expect(rect(byId(projected.items, 'note'))).toEqual({ x: 400, y: 0, w: 250, h: 200 })
+    expect(rect(byId(projected.items, 'note'))).toEqual({ x: 400, y: 0, w: 200, h: 200 })
   })
 
   it('caps a minimum width at the available inner width', () => {

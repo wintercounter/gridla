@@ -7,8 +7,30 @@ import { readHashState } from '@gridla/demo-kit'
  * the demo's own shareable parameters, so the whole gallery works under a
  * static sub-path.
  */
+/** Alternate ids used by the documentation site's embeds and links. */
+const DEMO_ALIASES: Record<string, string> = {
+  'static-projection': 'static-layout',
+  'min-max-constraints': 'constraints',
+  'bounded-scrollable': 'height-modes',
+  'programmatic-operations': 'programmatic-ops',
+  'policy-comparison': 'strategy-comparison',
+  'locked-ghost': 'policies',
+  'cross-container-transfer': 'cross-transfer',
+  'react-controlled': 'react-persistence',
+  'custom-renderer': 'react-custom-chrome',
+  'input-methods': 'react-input',
+  'multiple-grids': 'react-multi-grid',
+  ssr: 'react-ssr',
+  stress: 'react-stress',
+  'import-export': 'react-presets',
+}
+
 export function currentDemoId(): string {
-  return readHashState({ demo: '' }).demo
+  // Accept both `#demo=<id>&...` and the shorter `#/<id>` form.
+  const hash = typeof location === 'undefined' ? '' : location.hash
+  const short = hash.match(/^#\/([^&?]+)/)
+  const raw = short ? decodeURIComponent(short[1]) : readHashState({ demo: '' }).demo
+  return DEMO_ALIASES[raw] ?? raw
 }
 
 export function demoHref(id: string): string {

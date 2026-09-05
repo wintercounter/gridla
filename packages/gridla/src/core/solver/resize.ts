@@ -19,6 +19,8 @@ import {
 } from '../geometry'
 import {
   MIN_ITEM_SIZE,
+  isFixedHeight,
+  isFixedWidth,
   isGhost,
   isLocked,
   type GridBounds,
@@ -32,6 +34,7 @@ import {
   capOversizedMinimums,
   emitTrace,
   findById,
+  fixedAxesPreserved,
   nearestValue,
   partitionItems,
   replaceItem,
@@ -147,14 +150,14 @@ export function resizeByShrinkingNeighbors<T>({
         const x = resizedRight + g
         const w = right - x
         if (w >= item.w) continue
-        if (w < minW) return null
+        if (w < minW || isFixedWidth(item)) return null
         next[index] = { ...item, w, x }
         continue
       }
       if (item.x < resized.x && right <= resizedRight) {
         const w = resized.x - g - item.x
         if (w >= item.w) continue
-        if (w < minW) return null
+        if (w < minW || isFixedWidth(item)) return null
         next[index] = { ...item, w }
         continue
       }
@@ -165,14 +168,14 @@ export function resizeByShrinkingNeighbors<T>({
         const y = resizedBottom + g
         const h = bottom - y
         if (h >= item.h) continue
-        if (h < minH) return null
+        if (h < minH || isFixedHeight(item)) return null
         next[index] = { ...item, h, y }
         continue
       }
       if (item.y < resized.y && bottom <= resizedBottom) {
         const h = resized.y - g - item.y
         if (h >= item.h) continue
-        if (h < minH) return null
+        if (h < minH || isFixedHeight(item)) return null
         next[index] = { ...item, h }
         continue
       }
@@ -236,6 +239,16 @@ export function resizeItem<T = unknown>({
     items: GridItem<T>[],
     shiftedSiblings = false,
   ): SolveResult<T> => {
+    if (accepted && !fixedAxesPreserved(currentItems, items, itemId)) {
+      emitTrace(onTrace, 'resize', 'rejected', active, false)
+      return {
+        accepted: false,
+        layout: { canvas: layout.canvas, items: cloneItems(currentItems) },
+        item: active,
+        strategy: 'rejected',
+        shiftedSiblings: false,
+      }
+    }
     emitTrace(onTrace, 'resize', strategy, active, accepted)
     return {
       accepted,

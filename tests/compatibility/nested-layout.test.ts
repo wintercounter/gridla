@@ -1147,15 +1147,13 @@ describe('scaleItems + preserveGaps', () => {
     expect(form.x + form.w).toBe(details.x + details.w)
   })
 
-  it('scaleItems alone scrambles multi-item rows — preserveGaps is the corrective pass', () => {
-    // Regression for a commit scramble. `scaleItems` alone walks the
-    // Y-chain sequentially: chart, panel-a, panel-b, form all share
-    // authored y=90 but each consumes its own chain slot and ends up at
-    // a different y. The commit path used to skip `preserveGaps`, so a
-    // single drag scrambled the authored layout — the header would land
-    // at y~508 inside the root and every "top row" item ended up at a
-    // different y. This test pins both halves: scaleItems alone produces
-    // the scramble, and preserveGaps restores the row.
+  it('scaleItems keeps multi-item rows aligned and preserveGaps restores exact gaps', () => {
+    // Regression for a commit scramble. Four items share authored y=90 in
+    // one vertical chain (a full-width feed below unions them). Walking the
+    // chain item by item used to give each one its own slot, so a single
+    // drag committed four different y values for one row. Lanes fix that:
+    // items that start together are projected together, and preserveGaps
+    // then restores the exact configured gaps and edge anchors.
     const sourceCanvas = boundedCanvas(1200, 720, 0)
     const targetCanvas = boundedCanvas(1718, 888, 0)
     const items: GridItem[] = [
@@ -1179,22 +1177,16 @@ describe('scaleItems + preserveGaps', () => {
 
     const projected = scaleItems(items, sourceCanvas, targetCanvas, 1)
 
-    // Diagnostic: scaleItems alone walks the Y-chain in linear order,
-    // so the four "top row" items end up at four DIFFERENT y values.
-    // This is what produced the reported scramble.
     const findById = (list: GridItem[], id: string): GridItem =>
       list.find((item) => item.id === id)!
-    const scrambledTopYs = new Set([
+    const scaledTopYs = new Set([
       findById(projected, 'chart').y,
       findById(projected, 'panel-a').y,
       findById(projected, 'panel-b').y,
       findById(projected, 'form').y,
     ])
-    expect(scrambledTopYs.size).toBeGreaterThan(1)
+    expect(scaledTopYs.size).toBe(1)
 
-    // After preserveGaps, the row is restored: header at y=0, top-row
-    // items all at y=90, bottom-row items all at the chart bottom + 1 px
-    // gap (= viewport equivalent).
     preserveGaps(projected, items, 1, targetCanvas, sourceCanvas)
 
     const header = findById(projected, 'header')

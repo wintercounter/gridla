@@ -25,7 +25,7 @@ export function CodeExample({ code, title = 'Code' }: { code: string; title?: st
         >
           {copied ? 'Copied' : 'Copy'}
         </button>
-        <pre tabIndex={0}>
+        <pre>
           <code>{code}</code>
         </pre>
       </div>

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test'
-import fc from 'fast-check'
+import * as fc from 'fast-check'
 
 import {
   findLayoutViolations,
@@ -64,7 +64,12 @@ type Applied = {
 
 const TOL = 1
 
-function apply(layout: GridLayout, op: Op, step: number, options: SolveOptions): Applied | null {
+function apply(
+  layout: GridLayout,
+  op: Op,
+  stepIndex: number,
+  options: SolveOptions,
+): Applied | null {
   switch (op.kind) {
     case 'move': {
       const target = pickItem(layout.items, op.index)
@@ -88,7 +93,7 @@ function apply(layout: GridLayout, op: Op, step: number, options: SolveOptions):
       }
     }
     case 'place': {
-      const id = `placed-${step}`
+      const id = `placed-${stepIndex}`
       const item = {
         id,
         w: op.w,
@@ -180,10 +185,20 @@ function assertAccepted(before: GridLayout, applied: Applied): void {
   expect(rectOf(reported!)).toEqual(rectOf(applied.result.item))
 }
 
+type StepMode =
+  /** Every invariant: mutation, determinism, rejection, and accepted-layout checks. */
+  | 'all'
+  /** Only (e): a bystander's fixed axis survives. */
+  | 'fixed-axes'
+  /** Only the rejection contract: rejected results hand back the input items. */
+  | 'rejection'
+  /** Everything except the rejection contract (rejected results are skipped). */
+  | 'accepted'
+
 /**
- * Run one operation against a frozen copy of `layout`, checking mutation,
- * determinism, rejection semantics, and (when accepted) the layout invariants.
- * Returns the layout to continue from.
+ * Run one operation against a frozen copy of `layout`. Depending on `mode`
+ * this checks mutation, determinism, rejection semantics, and the accepted-
+ * layout invariants. Returns the layout to continue from.
  */
 function step(
   layout: GridLayout,
@@ -191,7 +206,7 @@ function step(
   index: number,
   gap: Gap,
   snap: boolean,
-  checkFixedAxes = false,
+  mode: StepMode = 'all',
 ): GridLayout {
   const frozen = deepFreeze(structuredClone(layout))
   const before = snapshot(frozen)
@@ -210,14 +225,24 @@ function step(
   }
 
   const first = apply(frozen, op, index, options)!
+  const { result } = first
+
+  if (mode === 'fixed-axes') {
+    if (result.accepted) assertFixedAxesKept(frozen, result.layout, first.activeId)
+    return result.accepted ? result.layout : frozen
+  }
+  if (mode === 'rejection') {
+    if (!result.accepted) expect(result.layout.items).toEqual(frozen.items)
+    return result.accepted ? result.layout : frozen
+  }
+
   const second = apply(frozen, op, index, options)!
   // (g) inputs untouched, (h) deterministic
   expect(snapshot(frozen)).toBe(before)
   expect(snapshot(second.result)).toBe(snapshot(first.result))
 
-  const { result } = first
   if (!result.accepted) {
-    expect(result.layout.items).toEqual(frozen.items)
+    if (mode === 'all') expect(result.layout.items).toEqual(frozen.items)
     return frozen
   }
 
@@ -228,35 +253,57 @@ function step(
   expect(result.layout.canvas).toEqual(frozen.canvas)
 
   assertAccepted(frozen, first)
-  if (checkFixedAxes) assertFixedAxesKept(frozen, result.layout, first.activeId)
   return result.layout
 }
 
 const snapArb = fc.boolean()
 
 describe('solver invariants', () => {
-  it('moveItem keeps the layout valid', () => {
+  it('rejected results hand back the input items unchanged', () => {
+    fc.assert(
+      fc.property(
+        gappedLayoutArb,
+        fc.oneof(moveOpArb, resizeOpArb, placeOpArb),
+        snapArb,
+        ({ gap, layout }, op, snap) => {
+          step(layout, op, 0, gap, snap, 'rejection')
+        },
+      ),
+      { numRuns: 500 },
+    )
+  })
+
+  it('moveItem keeps every accepted layout valid', () => {
     fc.assert(
       fc.property(gappedLayoutArb, moveOpArb, snapArb, ({ gap, layout }, op, snap) => {
-        step(layout, op, 0, gap, snap)
+        step(layout, op, 0, gap, snap, 'accepted')
       }),
       { numRuns: 500 },
     )
   })
 
-  it('resizeItem keeps the layout valid', () => {
+  it('resizeItem keeps every accepted layout valid', () => {
     fc.assert(
       fc.property(gappedLayoutArb, resizeOpArb, snapArb, ({ gap, layout }, op, snap) => {
-        step(layout, op, 0, gap, snap)
+        step(layout, op, 0, gap, snap, 'accepted')
       }),
       { numRuns: 500 },
     )
   })
 
-  it('placeItem keeps the layout valid', () => {
+  it('placeItem by position keeps every accepted layout valid', () => {
     fc.assert(
       fc.property(gappedLayoutArb, placeOpArb, snapArb, ({ gap, layout }, op, snap) => {
-        step(layout, op, 0, gap, snap)
+        step(layout, { ...op, via: 'position' }, 0, gap, snap, 'accepted')
+      }),
+      { numRuns: 500 },
+    )
+  })
+
+  it('placeItem by pointer keeps every accepted layout valid', () => {
+    fc.assert(
+      fc.property(gappedLayoutArb, placeOpArb, snapArb, ({ gap, layout }, op, snap) => {
+        step(layout, { ...op, via: 'pointer' }, 0, gap, snap, 'accepted')
       }),
       { numRuns: 500 },
     )
@@ -271,7 +318,7 @@ describe('solver invariants', () => {
     )
   })
 
-  it('random operation sequences keep every accepted intermediate layout valid', () => {
+  it('random operation sequences keep every intermediate layout valid', () => {
     fc.assert(
       fc.property(gappedLayoutArb, opSequenceArb, gapArb, snapArb, ({ layout }, ops, gap, snap) => {
         let current = layout
@@ -290,7 +337,7 @@ describe('solver invariants', () => {
         fc.oneof(moveOpArb, resizeOpArb, placeOpArb),
         snapArb,
         ({ gap, layout }, op, snap) => {
-          step(layout, op, 0, gap, snap, true)
+          step(layout, op, 0, gap, snap, 'fixed-axes')
         },
       ),
       { numRuns: 500 },
@@ -318,7 +365,16 @@ describe('solver invariants: minimized counterexamples', () => {
     const layout: GridLayout = {
       canvas: canvas200,
       items: [
-        { id: 'sidebar', x: 0, y: 0, w: 100, h: 200, minW: 20, minH: 20, policy: { movement: 'locked' } },
+        {
+          id: 'sidebar',
+          x: 0,
+          y: 0,
+          w: 100,
+          h: 200,
+          minW: 20,
+          minH: 20,
+          policy: { movement: 'locked' },
+        },
         { id: 'feed-a', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
       ],
     }
@@ -333,6 +389,38 @@ describe('solver invariants: minimized counterexamples', () => {
     } else {
       expect(findLayoutViolations(result.layout)).toEqual([])
     }
+  })
+
+  it('moveItem does not duplicate a ghost sibling when it inserts a row', () => {
+    // Dragging the top-left card down into a row that contains a ghost.
+    // Observed: strategy `insert-row`, accepted: true, and the result holds
+    // six items for a five-item input: the ghost `note` appears twice.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'stat-1', x: 0, y: 0, w: 82, h: 82, minW: 20, minH: 20 },
+        { id: 'stat-2', x: 100, y: 0, w: 100, h: 82, minW: 20, minH: 20 },
+        {
+          id: 'note',
+          x: 0,
+          y: 100,
+          w: 48,
+          h: 100,
+          minW: 20,
+          minH: 20,
+          policy: { collision: 'ignore' },
+        },
+        { id: 'card-1', x: 66, y: 100, w: 48, h: 100, minW: 20, minH: 20 },
+        { id: 'card-2', x: 132, y: 100, w: 68, h: 100, minW: 20, minH: 20 },
+      ],
+    }
+    const result = moveItem({
+      layout,
+      itemId: 'stat-1',
+      position: { x: 0, y: 56 },
+      options: { gap: 18, snap: false },
+    })
+    expect(idsOf(result.layout.items)).toEqual(idsOf(layout.items))
   })
 
   it('placeItem by pointer does not accept a drop that overlaps a sibling', () => {
@@ -365,7 +453,16 @@ describe('solver invariants: minimized counterexamples', () => {
     const layout: GridLayout = {
       canvas: canvas200,
       items: [
-        { id: 'header', x: 0, y: 0, w: 200, h: 82, minW: 20, minH: 20, policy: { movement: 'locked' } },
+        {
+          id: 'header',
+          x: 0,
+          y: 0,
+          w: 200,
+          h: 82,
+          minW: 20,
+          minH: 20,
+          policy: { movement: 'locked' },
+        },
         { id: 'feed-a', x: 0, y: 100, w: 200, h: 100, minW: 20, minH: 20 },
       ],
     }
