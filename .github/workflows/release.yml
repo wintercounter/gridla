@@ -1,5 +1,7 @@
 name: Release
 
+# Opens a version PR from pending changesets. Publishing is manual.
+
 on:
   push:
     branches: [main]
@@ -38,30 +40,17 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run check
       - run: bun run test:package
-      - name: Create release PR or publish
-        id: changesets
+      - name: Open or update the release PR
         uses: changesets/action@v1
         with:
           version: bun run version
-          publish: bun run scripts/publish.ts
           commit: 'chore: release'
           title: 'chore: release'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_CONFIG_PROVENANCE: 'true'
-      - name: Verify the published package from the public registry
-        if: steps.changesets.outputs.published == 'true'
-        run: bun run scripts/verify-published.ts
-        env:
-          PUBLISHED_PACKAGES: ${{ steps.changesets.outputs.publishedPackages }}
-      - name: Create GitHub Release
-        if: steps.changesets.outputs.published == 'true'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: gridla@${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-          name: gridla ${{ fromJson(steps.changesets.outputs.publishedPackages)[0].version }}
-          generate_release_notes: true
-          body_path: packages/gridla/CHANGELOG.md
+      # Publishing to npm is done manually by the maintainer after merging the
+      # release PR: `bun run build && cd packages/gridla && npm publish`.
+      # `scripts/verify-published.ts` checks the published version afterwards.
 
   dry-run:
     name: Dry-run package (pull requests)
