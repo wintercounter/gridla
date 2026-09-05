@@ -14,7 +14,12 @@ import {
 } from 'gridla'
 
 const layout: GridLayout = {
-  canvas: { width: 1200, height: 720, padding: { top: 0, right: 0, bottom: 0, left: 0 }, heightMode: 'bounded' },
+  canvas: {
+    width: 1200,
+    height: 720,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
   items: [
     createItem('a', { w: 600, h: 360, minW: 40, minH: 40 }, 0, 0),
     createItem('b', { w: 600, h: 360, minW: 40, minH: 40 }, 600, 0),
@@ -36,13 +41,22 @@ describe('smoke', () => {
   })
   it('places an item', () => {
     const small = { ...layout, items: layout.items.slice(0, 1) }
-    const result = placeItem({ layout: small, item: { id: 'n', w: 200, h: 100 }, position: { x: 700, y: 50 } })
+    const result = placeItem({
+      layout: small,
+      item: { id: 'n', w: 200, h: 100 },
+      position: { x: 700, y: 50 },
+    })
     expect(result.accepted).toBe(true)
     expect(result.layout.items).toHaveLength(2)
   })
   it('transfers between layouts', () => {
     const empty: GridLayout = { canvas: layout.canvas, items: [] }
-    const result = transferItem({ source: layout, target: empty, itemId: 'a', pointer: { x: 300, y: 200 } })
+    const result = transferItem({
+      source: layout,
+      target: empty,
+      itemId: 'a',
+      pointer: { x: 300, y: 200 },
+    })
     expect(result.accepted).toBe(true)
     expect(result.source.items).toHaveLength(2)
     expect(result.target.items).toHaveLength(1)
@@ -57,7 +71,11 @@ describe('smoke', () => {
     const root: GridNode = {
       id: 'root',
       layout,
-      children: [{ id: 'a' }, { id: 'b' }, { id: 'c', layout: rows, children: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] }],
+      children: [
+        { id: 'a' },
+        { id: 'b' },
+        { id: 'c', layout: rows, children: [{ id: 'a' }, { id: 'b' }, { id: 'c' }] },
+      ],
     }
     const flat = flattenLayout(root, { x: 0, y: 0, w: 600, h: 360 })
     expect(flat.items.map((i) => i.id)).toEqual(['root', 'a', 'b', 'c', 'a', 'b', 'c'])

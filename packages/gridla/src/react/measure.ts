@@ -19,6 +19,8 @@ export function useElementSize(
     const measure = () => {
       const rect = element.getBoundingClientRect()
       const next = { w: Math.round(rect.width), h: Math.round(rect.height) }
+      // A hidden or detached element measures 0x0; keep the last real size.
+      if (next.w <= 0 || next.h <= 0) return
       setSize((prev) => (prev && prev.w === next.w && prev.h === next.h ? prev : next))
     }
     measure()

@@ -179,9 +179,27 @@ export function flattenLayout<TNode = GridNode>(
     const behavior = adapter.getBehavior(node) ?? {}
     const gap = Math.max(0, adapter.getGap(node) ?? 0)
     const isContainer = behavior.container ?? sourceLayout !== null
+    const acceptsChildren = behavior.acceptsChildren ?? isContainer
+    // A drop target without an authored layout still needs a canvas to solve
+    // against, so synthesize an empty one sized to its rect.
     const layout = sourceLayout
       ? renderLayoutForRect(sourceLayout, rect, adapter.getPadding(node), gap)
-      : null
+      : acceptsChildren
+        ? renderLayoutForRect(
+            {
+              canvas: {
+                width: Math.max(1, rect.w),
+                height: Math.max(1, rect.h),
+                padding: { top: 0, right: 0, bottom: 0, left: 0 },
+                heightMode: 'bounded',
+              },
+              items: [],
+            },
+            rect,
+            adapter.getPadding(node),
+            gap,
+          )
+        : null
     return {
       id: adapter.getId(node),
       parentId,
@@ -194,7 +212,7 @@ export function flattenLayout<TNode = GridNode>(
       gap,
       node,
       isContainer,
-      acceptsChildren: behavior.acceptsChildren ?? isContainer,
+      acceptsChildren,
       locked: behavior.locked === true,
       contained: behavior.contained === true,
       scrollable: behavior.scrollable === true,

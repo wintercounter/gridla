@@ -1,4 +1,4 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useRef, useSyncExternalStore } from 'react'
 
 import type { GridItem, GridLayout, GridRect } from '../core'
 import { useGridContext } from './context'
@@ -12,10 +12,42 @@ const EMPTY_RECT: GridRect = { x: 0, y: 0, w: 0, h: 0 }
  */
 export function useGridStore<TData = unknown, TSlice = GridState<TData>>(
   selector: (state: GridState<TData>) => TSlice = (state) => state as unknown as TSlice,
+  isEqual: (a: TSlice, b: TSlice) => boolean = Object.is,
 ): TSlice {
   const { store } = useGridContext<TData>()
-  const getSlice = useCallback(() => selector(store.getSnapshot()), [store, selector])
+  const cache = useRef<{ state: GridState<TData>; slice: TSlice } | null>(null)
+  const getSlice = useCallback(() => {
+    const state = store.getSnapshot()
+    const previous = cache.current
+    if (previous && previous.state === state) return previous.slice
+    const next = selector(state)
+    if (previous && isEqual(previous.slice, next)) {
+      cache.current = { state, slice: previous.slice }
+      return previous.slice
+    }
+    cache.current = { state, slice: next }
+    return next
+  }, [store, selector, isEqual])
   return useSyncExternalStore(store.subscribe, getSlice, getSlice)
+}
+
+function rectsEqual(a: GridRect | null, b: GridRect | null): boolean {
+  if (a === b) return true
+  if (!a || !b) return false
+  return a.x === b.x && a.y === b.y && a.w === b.w && a.h === b.h
+}
+
+function itemViewsEqual(a: GridItemView, b: GridItemView): boolean {
+  return (
+    rectsEqual(a.rect, b.rect) &&
+    rectsEqual(a.baseRect, b.baseRect) &&
+    rectsEqual(a.activeRect, b.activeRect) &&
+    a.isActive === b.isActive &&
+    a.isSelected === b.isSelected &&
+    a.isShifted === b.isShifted &&
+    a.isTransferring === b.isTransferring &&
+    a.interaction === b.interaction
+  )
 }
 
 /** Imperative layout and selection actions. Stable for the provider's lifetime. */
@@ -95,7 +127,7 @@ export function useGridItemView<TData = unknown>(itemId: string): GridItemView {
     },
     [itemId],
   )
-  return useGridStore<TData, GridItemView>(select)
+  return useGridStore<TData, GridItemView>(select, itemViewsEqual)
 }
 
 export function useGridInteractionState(): GridInteraction | null {
