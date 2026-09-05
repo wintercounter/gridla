@@ -7,14 +7,13 @@ import { defineConfig, devices } from '@playwright/test'
  *
  * Projects:
  * - chromium / firefox / webkit: the authoritative cross-engine gate.
- * - obscura: connects over CDP to the Obscura engine when OBSCURA_WS_ENDPOINT
- *   is set (see tests/e2e/obscura/). Tests that need capabilities Obscura
- *   lacks are tagged `@no-obscura` and excluded explicitly.
+ * - obscura: connects over CDP to the Obscura engine (see tests/e2e/obscura/).
+ *   Only `*.obscura.e2e.ts` specs run there because the engine has no pointer
+ *   events; see CAPABILITIES.md for the verified capability set.
  */
 const siteDir = process.env.GRIDLA_SITE_DIR ?? 'site-dist'
 const port = Number(process.env.GRIDLA_SITE_PORT ?? 4173)
 const baseURL = `http://127.0.0.1:${port}/gridla/`
-const obscuraEndpoint = process.env.OBSCURA_WS_ENDPOINT
 
 export default defineConfig({
   testDir: 'tests/e2e/specs',
@@ -39,17 +38,21 @@ export default defineConfig({
     timeout: 30_000,
   },
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
-    { name: 'mobile-chromium', use: { ...devices['Pixel 7'] }, grep: /@mobile/ },
+    { name: 'chromium', testIgnore: /obscura/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', testIgnore: /obscura/, use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', testIgnore: /obscura/, use: { ...devices['Desktop Safari'] } },
     {
+      name: 'mobile-chromium',
+      testIgnore: /obscura/,
+      use: { ...devices['Pixel 7'] },
+      grep: /@mobile/,
+    },
+    {
+      // Obscura CDP lane. Specs live in *.obscura.e2e.ts and connect through
+      // tests/e2e/obscura/fixture.ts; they skip when the engine is absent.
       name: 'obscura',
-      grepInvert: /@no-obscura/,
-      use: {
-        ...devices['Desktop Chrome'],
-        connectOptions: obscuraEndpoint ? { wsEndpoint: obscuraEndpoint } : undefined,
-      },
+      testMatch: /.*\.obscura\.e2e\.ts$/,
+      use: { ...devices['Desktop Chrome'] },
     },
   ],
 })

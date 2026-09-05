@@ -1,0 +1,154 @@
+---
+title: Keyboard controls
+description: What the React adapter binds by default and how to extend it, plus building keyboard support on the core.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Keyboard controls
+
+## Built-in bindings
+
+`GridCanvas` (through `useGridInteraction`) handles these keys when the canvas has focus and an item is selected:
+
+| Key                                                 | Action                                                                                                      |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| <kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> | Move the selected item by `keyboardStep` pixels (default 8) through the solver, without alignment snapping. |
+| <kbd>Shift</kbd> + arrow                            | Multiply the step by 4.                                                                                     |
+| <kbd>Alt</kbd> + arrow                              | Resize from the south-east corner by the step.                                                              |
+| <kbd>Delete</kbd> / <kbd>Backspace</kbd>            | Call `onDeleteKey(itemId)` when provided.                                                                   |
+| <kbd>Escape</kbd>                                   | Cancel the gesture in progress.                                                                             |
+
+During a pointer drag, <kbd>Shift</kbd> locks movement to the dominant axis and <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> bypasses alignment snapping.
+
+The canvas gets `tabIndex={0}` unless you pass your own. Selection happens on pointer down; to select from the keyboard, give items focusable content and call `actions.select` on focus. `keyboardStep` is a provider prop; the canvas reads it from context.
+
+```tsx
+import type { GridLayout } from 'gridla'
+import { GridCanvas, GridItem, GridProvider, useGridActions } from 'gridla/react'
+
+function Items({ ids }: { ids: string[] }) {
+  const actions = useGridActions()
+  return (
+    <>
+      {ids.map((id) => (
+        <GridItem key={id} id={id}>
+          {({ isSelected }) => (
+            <button type="button" onFocus={() => actions.select(id)} aria-pressed={isSelected}>
+              {id}
+            </button>
+          )}
+        </GridItem>
+      ))}
+    </>
+  )
+}
+
+export function KeyboardCanvas({
+  layout,
+  onChange,
+  onDelete,
+}: {
+  layout: GridLayout
+  onChange: (next: GridLayout) => void
+  onDelete: (id: string) => void
+}) {
+  return (
+    <GridProvider layout={layout} onLayoutChange={onChange} keyboardStep={8}>
+      <GridCanvas style={{ height: 480 }} onDeleteKey={onDelete} aria-label="Dashboard layout">
+        <Items ids={layout.items.map((item) => item.id)} />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+```
+
+## Extending the bindings
+
+`GridCanvas` omits `onKeyDown` from its props because the hook owns it. To add keys, render your own canvas element with `useGridInteraction` and compose the handler:
+
+```tsx
+import { useRef, type KeyboardEvent, type ReactNode } from 'react'
+import {
+  GRID_DATA,
+  useGridActions,
+  useGridInteraction,
+  useGridSelection,
+  useGridLayout,
+} from 'gridla/react'
+
+export function CustomCanvas({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const handlers = useGridInteraction(ref)
+  const actions = useGridActions()
+  const selectedId = useGridSelection()
+  const layout = useGridLayout()
+
+  const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (selectedId && event.key === 'Home') {
+      event.preventDefault()
+      actions.move(selectedId, { x: layout.canvas.padding.left, y: layout.canvas.padding.top })
+      return
+    }
+    handlers.onKeyDown(event)
+  }
+
+  return (
+    <div
+      ref={ref}
+      tabIndex={0}
+      style={{ position: 'relative', height: 480 }}
+      {...handlers}
+      onKeyDown={onKeyDown}
+    >
+      {children}
+    </div>
+  )
+}
+
+void GRID_DATA // items rendered with <GridItem> already carry the data attributes the hook looks for
+```
+
+A custom canvas must also feed its measured size to the provider; see [custom rendering](./custom-rendering).
+
+## On the core
+
+There is nothing keyboard-specific in the core: a nudge is `moveItem` with the current position plus a delta, and `snap: false` so the item moves by exactly the step.
+
+```ts
+import { moveItem, resizeItem, type GridLayout } from 'gridla'
+
+export function nudge(layout: GridLayout, itemId: string, key: string, step = 8): GridLayout {
+  const item = layout.items.find((entry) => entry.id === itemId)
+  if (!item) return layout
+  const delta = {
+    ArrowLeft: [-step, 0],
+    ArrowRight: [step, 0],
+    ArrowUp: [0, -step],
+    ArrowDown: [0, step],
+  }[key]
+  if (!delta) return layout
+  const result = moveItem({
+    layout,
+    itemId,
+    position: { x: item.x + delta[0], y: item.y + delta[1] },
+    options: { snap: false },
+  })
+  return result.accepted ? result.layout : layout
+}
+
+export function grow(layout: GridLayout, itemId: string, dw: number, dh: number): GridLayout {
+  const result = resizeItem({
+    layout,
+    itemId,
+    edge: 'se',
+    delta: { x: dw, y: dh },
+    options: { snap: false },
+  })
+  return result.accepted ? result.layout : layout
+}
+```
+
+<Demo id="input-methods" title="Pointer, touch, keyboard, and modifier-key interactions" />
+
+See [accessibility](../guides/accessibility) for focus order, announcements, and reduced motion.

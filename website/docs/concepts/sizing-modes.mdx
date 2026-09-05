@@ -1,0 +1,81 @@
+---
+title: Sizing modes
+description: free, fixed-w, fixed-h, and fixed. How an item's size mode changes projection, pushing, resizing, and compaction.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Sizing modes
+
+`sizeMode` tells the projection engine which axes of an item keep their pixel size when the layout is re-fit to another canvas.
+
+| Mode             | Width    | Height   | Typical use                               |
+| ---------------- | -------- | -------- | ----------------------------------------- |
+| `free` (default) | scales   | scales   | Charts, feeds, anything that fills space. |
+| `fixed-w`        | constant | scales   | Sidebars, rails.                          |
+| `fixed-h`        | scales   | constant | Headers, toolbars, stat rows.             |
+| `fixed`          | constant | constant | Buttons, avatars, fixed-size embeds.      |
+
+```ts
+import type { GridItem } from 'gridla'
+
+const header: GridItem = {
+  id: 'header',
+  x: 0,
+  y: 0,
+  w: 960,
+  h: 80,
+  sizeMode: 'fixed-h',
+  fixedHeight: 80,
+  minH: 80,
+  maxH: 80,
+}
+const rail: GridItem = {
+  id: 'rail',
+  x: 0,
+  y: 92,
+  w: 240,
+  h: 508,
+  sizeMode: 'fixed-w',
+  fixedWidth: 240,
+}
+```
+
+`fixedWidth` and `fixedHeight` hold the pinned pixel size. When they are absent, `w` and `h` are used. `syncFixedDimensions(items)` copies the pinned size into `w`/`h` and the matching `min`/`max` so a layout that was edited by hand is consistent before projection.
+
+## Under projection
+
+With the chain strategy, a fixed axis keeps its pixels and the rest of the chain absorbs the change. A fixed item that touches a canvas edge stays anchored to that edge after projection. With the segment strategy, a segment covered only by fixed items is treated as fixed and never scales.
+
+```ts
+import { projectLayout, type GridLayout } from 'gridla'
+
+const layout: GridLayout = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'rail', x: 0, y: 0, w: 240, h: 600, sizeMode: 'fixed-w', fixedWidth: 240 },
+    { id: 'main', x: 252, y: 0, w: 708, h: 600 },
+  ],
+}
+
+const narrow = projectLayout(layout, { width: 640, height: 600 }, { gap: 12 })
+narrow.items[0].w // 240 — the rail keeps its width
+narrow.items[1].w // 388 — main absorbs the difference; the 12px gap is preserved
+```
+
+## Under solving
+
+The size mode also influences the solvers, because "keep this axis fixed" is a statement about intent:
+
+- **Pushing.** A fixed-axis item that sits flush against the canvas edge opposite the push direction is treated as anchored, and the push is refused (`isEdgeAnchoredAgainstPush`). The solver moves on to the next strategy instead of squeezing it.
+- **Resizing.** `resizeRect` and `clampItem` honor `maxW` / `maxH` only on axes that are fixed; free axes are bounded by the canvas. Minimums apply on every axis.
+- **Compaction.** `compactLayout` treats fixed-height items as rigid: they keep their height while flexible items shrink toward `minH`. Add more rigid items through `CompactOptions.isRigid`.
+
+`isFixedWidth`, `isFixedHeight`, and `isFixedOnAxis(item, axis)` are the predicates the engine uses; they are exported for your own layout logic.
+
+<Demo id="sizing-modes" title="Fixed, flexible, fixed-width, and fixed-height sizing" />

@@ -1,0 +1,59 @@
+---
+title: Troubleshooting
+description: Common problems with Gridla and what causes them.
+---
+
+# Troubleshooting
+
+## Items jump right after mount
+
+The layout was authored at one canvas width and the element measured another; the provider projected it. Expected. To avoid the visible move, save layouts at the rendered width, set `responsive={false}`, or hide the canvas until `state.size` is set. See [server rendering](../recipes/ssr).
+
+## Nothing drags
+
+In order of likelihood:
+
+- The element under the pointer is not inside an element with `data-gridla-drag-handle`. `GridItem` sets it on itself unless `draggable={false}`, in which case only elements spread with `dragHandleProps` start a move.
+- The canvas is not the element the handlers are attached to. With a custom canvas, spread the object returned by `useGridInteraction(ref)` on the same element `ref` points to.
+- The pointer moved less than `dragThreshold` (4px). A press that ends before that is a click and calls `onItemClick`.
+- `enabled={false}` was passed to `GridCanvas`.
+- On touch, the page scrolled instead. The canvas needs `touch-action: none` (set by `GridCanvas`; set it yourself on a custom canvas).
+
+## The move is rejected
+
+`moveItem` returns `accepted: false` and the strategy `rejected` when no strategy applies: typically a locked item is in the way, the request would violate a minimum size, or the canvas is too full. During a drag the adapter keeps showing the last accepted preview, so the item appears to stick. Check the trace with `onTrace` to see which strategies were tried; loosen `minW`/`minH`, remove `locked`, or make the canvas scrollable.
+
+## `onLayoutChange` gives me coordinates in the wrong size
+
+The layout is expressed in the canvas size it was rendered at. Project it to your authoring size with `projectLayout(next, { width, height })` if you need one canonical size. See [controlled state](../recipes/controlled-state).
+
+## "this component must be rendered inside `<GridProvider>`"
+
+A hook or component from `gridla/react` was used outside a provider. `GridTransferScope` is not a provider; each canvas still needs its own `GridProvider` inside the scope.
+
+## Transfers do not happen
+
+- The providers are not inside a common `GridTransferScope`.
+- The target's `acceptTransfers` returned `false` for the item.
+- The pointer is still inside the source canvas element. Siblings and ancestors only become targets after the pointer leaves the source; descendants can win immediately.
+- The target could not place the item at all (which is rare, since the pointer form of `placeItem` falls through to an overlapping placement).
+
+## Items overlap after a pointer placement
+
+The pointer form of `placeItem` never rejects; as a last resort it returns `pointer-overlap` so a preview can be drawn. Check `result.strategy` (or `findLayoutViolations(result.layout)`) before committing.
+
+## Projection ignores my gaps
+
+The chain engine preserves gaps that equal `options.gap` exactly. Pass the same `gap` you use for solving to `projectLayout` (the React provider does this automatically). Gaps of other sizes scale with the layout; `applyGap` normalizes a layout to a single gap first.
+
+## Snapping is too eager or too lazy
+
+`snapDistance` defaults to 24px. Lower it or set `snap: false` for a particular call. Holding <kbd>Ctrl</kbd> / <kbd>Cmd</kbd> during a drag bypasses alignment snapping without changing the options.
+
+## A ghost item blocks nothing but cannot be dropped on either
+
+That is what `collision: 'ignore'` means: other items pass through it, and it is excluded from overlap checks. If the ghost should reserve space, make it solid and `locked` instead.
+
+## React StrictMode double-invokes effects
+
+Fine. The store is created once with `useState`, measurement is idempotent, and gesture state lives in refs.

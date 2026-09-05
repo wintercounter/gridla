@@ -1,0 +1,21 @@
+---
+title: Server rendering
+description: Import safety, what renders on the server, and how to hydrate without jumps.
+---
+
+# Server rendering
+
+Both entry points are safe to import in Node. The core has no environment dependencies at all; the React adapter references `document`, `ResizeObserver`, and `getSelection` only inside effects and event handlers, and guards each use.
+
+What renders on the server:
+
+- `GridProvider` initializes its store with the source layout and no measured size, so the rendered layout equals the normalized source.
+- `GridCanvas` renders its `div` with `position: relative` and the data attributes; the size is whatever you give it in `style`.
+- `GridItem` renders each item at its source coordinates with `transform: translate(x, y)`.
+- `GridPreviewOutline` renders nothing.
+
+After hydration, `GridCanvas` measures itself and the provider projects onto the measured size. If that size differs from the source canvas width, items move once. The [server rendering recipe](../recipes/ssr) shows three ways to avoid the visible jump: author at the rendered width, turn `responsive` off, or fade in after measurement.
+
+The core's projection is the same code on both sides, so when the viewport width is known on the server you can `projectLayout` there and ship markup that already matches.
+
+The repository verifies both claims in CI: a test renders a provider with `renderToString` and asserts the item transforms, and another spawns a bare Node-style process that imports both entry points with no DOM shim.

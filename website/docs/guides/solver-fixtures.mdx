@@ -1,0 +1,131 @@
+---
+title: Adding solver fixtures
+description: How solver behavior is pinned by fixtures, and how to add one for a new case or a regression.
+---
+
+# Adding solver fixtures
+
+Solver behavior is defined by fixtures: a layout, an operation, and the expected outcome including the strategy. When a case behaves unexpectedly, the first step is a fixture that shows it.
+
+## Where fixtures live
+
+- `tests/compatibility/solver.test.ts` and its siblings (`drag-scenarios`, `solver-stability`, `projection-*`, `nested-layout`, `presets`) hold behavior fixtures. They use small helpers so a test reads like a solver call over bounds.
+- `tests/fixtures/` holds shared nested trees (`dashboard-page.ts`, `sharing-page.ts`) built with `node()` and `leaf()` from `nodes.ts`.
+- `tests/invariants/` holds property tests with `fast-check` arbitraries in `arbitraries.ts`.
+- `benchmarks/fixtures.ts` holds seeded layouts for timing; each benchmark case asserts the strategy it expects.
+
+## A behavior fixture
+
+```ts
+import { describe, expect, it } from 'bun:test'
+
+import { moveItem, type GridLayout } from 'gridla'
+
+const canvas: GridLayout['canvas'] = {
+  width: 800,
+  height: 400,
+  padding: { top: 0, right: 0, bottom: 0, left: 0 },
+  heightMode: 'bounded',
+}
+
+describe('move: swap over a same-size sibling', () => {
+  it('swaps when the moved item covers at least half of the sibling', () => {
+    const layout: GridLayout = {
+      canvas,
+      items: [
+        { id: 'chart', x: 0, y: 0, w: 380, h: 200 },
+        { id: 'note', x: 420, y: 0, w: 380, h: 200 },
+      ],
+    }
+    // Drop the note 60% over the chart. A 1px authored gap must not block the swap.
+    const result = moveItem({
+      layout,
+      itemId: 'note',
+      position: { x: 152, y: 0 },
+      options: { gap: 12 },
+    })
+
+    expect(result.accepted).toBe(true)
+    expect(result.strategy).toBe('swap')
+    expect(result.layout.items.find((item) => item.id === 'chart')).toMatchObject({ x: 420, y: 0 })
+    expect(result.layout.items.find((item) => item.id === 'note')).toMatchObject({ x: 0, y: 0 })
+    expect(result.shiftedSiblings).toBe(true)
+  })
+})
+```
+
+Conventions:
+
+- **Name the intent, not the numbers.** The `describe` says what the user did; the comment says why the expectation holds. Keep the "why" when you port or move a fixture.
+- **Assert the strategy.** Geometry can be right by accident; the strategy pins the path. If a change legitimately reroutes a case, update the strategy _and_ say so in the changeset.
+- **Use neutral ids.** `header`, `chart`, `sidebar`, `stat-1`, `group-a`. No product names, no ticket numbers.
+- **Do not weaken assertions to go green.** A failing fixture is a candidate behavior drift; report it with the exact expected and actual values.
+
+## A nested fixture
+
+For nested cases, build the tree with the helpers in `tests/fixtures/nodes.ts` and go through `flattenLayout`. Solve in `container.layout`, and assert on `projectItemsToRoot` when the visible outcome matters.
+
+```ts
+import { expect, it } from 'bun:test'
+
+import { flattenLayout, moveItem, projectItemsToRoot, type GridNode } from 'gridla'
+
+it('moving inside a group keeps children in root coordinates', () => {
+  const tree: GridNode = {
+    id: 'page',
+    layout: {
+      canvas: {
+        width: 1200,
+        height: 800,
+        padding: { top: 0, right: 0, bottom: 0, left: 0 },
+        heightMode: 'bounded',
+      },
+      items: [{ id: 'group-a', x: 100, y: 100, w: 600, h: 400 }],
+    },
+    children: [
+      {
+        id: 'group-a',
+        gap: 8,
+        layout: {
+          canvas: {
+            width: 600,
+            height: 400,
+            padding: { top: 0, right: 0, bottom: 0, left: 0 },
+            heightMode: 'bounded',
+          },
+          items: [
+            { id: 'card-1', x: 0, y: 0, w: 296, h: 400 },
+            { id: 'card-2', x: 304, y: 0, w: 296, h: 400 },
+          ],
+        },
+        children: [{ id: 'card-1' }, { id: 'card-2' }],
+      },
+    ],
+  }
+  const flat = flattenLayout(tree, { x: 0, y: 0, w: 1200, h: 800 })
+  const group = flat.itemsById.get('group-a')!
+  const result = moveItem({
+    layout: group.layout!,
+    itemId: 'card-2',
+    position: { x: 0, y: 0 },
+    options: { gap: 8 },
+  })
+  expect(result.strategy).toBe('swap')
+  const rects = projectItemsToRoot(group, result.layout.items)
+  expect(rects.get('card-2')).toMatchObject({ x: 100, y: 100 })
+})
+```
+
+## An invariant
+
+When the property is general ("no accepted result overlaps a solid sibling"), add it to `tests/invariants/solver-invariants.test.ts` with an arbitrary from `arbitraries.ts` rather than a single example. Invariants catch what examples miss; examples explain what invariants cannot.
+
+## Running
+
+```sh
+bun test tests/compatibility/solver.test.ts      # one file
+bun test --watch tests/compatibility             # a directory
+bun run test                                     # everything CI runs
+```
+
+Fixtures run in Bun with `import { describe, expect, it } from 'bun:test'` and import the library as `gridla` through a path alias, so they exercise the source, not the build.

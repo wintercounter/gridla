@@ -1,0 +1,195 @@
+---
+title: Vanilla quickstart
+description: A draggable, resizable, responsive canvas built on the gridla core with plain DOM code and no framework.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Vanilla quickstart
+
+The core is a set of pure functions. You own the DOM, the pointer events, and the state; Gridla answers one question per pointer move: "given this layout and this intent, what is the next layout?"
+
+This page builds a canvas you can drag on and resize in about eighty lines. It also projects the layout onto the element's measured size, so it is responsive from the start.
+
+## 1. Describe a layout
+
+A layout is a canvas plus items in canvas-relative pixel coordinates. Nothing else.
+
+```ts title="layout.ts"
+import type { GridLayout } from 'gridla'
+
+export const initial: GridLayout = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'header', x: 0, y: 0, w: 960, h: 80, sizeMode: 'fixed-h', minH: 80, maxH: 80 },
+    { id: 'chart', x: 0, y: 92, w: 640, h: 508, minW: 240, minH: 160 },
+    { id: 'note', x: 652, y: 92, w: 308, h: 248, minW: 160, minH: 120 },
+    { id: 'panel', x: 652, y: 352, w: 308, h: 248, minW: 160, minH: 120 },
+  ],
+}
+```
+
+`sizeMode: 'fixed-h'` keeps the header 80px tall when the layout is projected; everything else scales. See [sizing modes](../concepts/sizing-modes).
+
+## 2. Render, project, solve
+
+```ts title="main.ts"
+import { moveItem, projectLayout, resizeItem, type GridLayout, type SolveResult } from 'gridla'
+
+import { initial } from './layout'
+
+const stage = document.querySelector<HTMLElement>('#stage')!
+stage.style.position = 'relative'
+
+// The authored layout keeps its own coordinate space. Every render projects
+// it onto the stage's current size; every commit writes the rendered
+// coordinates back so authoring and rendering stay in step.
+let source: GridLayout = initial
+let rendered: GridLayout = source
+const options = { gap: 12, snapDistance: 24 }
+
+function paint(layout: GridLayout) {
+  for (const item of layout.items) {
+    let el = stage.querySelector<HTMLElement>(`[data-id="${item.id}"]`)
+    if (!el) {
+      el = document.createElement('div')
+      el.dataset.id = item.id
+      el.textContent = item.id
+      el.style.position = 'absolute'
+      el.style.left = '0'
+      el.style.top = '0'
+      stage.append(el)
+    }
+    el.style.transform = `translate(${item.x}px, ${item.y}px)`
+    el.style.width = `${item.w}px`
+    el.style.height = `${item.h}px`
+  }
+}
+
+function project() {
+  const rect = stage.getBoundingClientRect()
+  rendered = projectLayout(
+    source,
+    { width: Math.round(rect.width), height: Math.round(rect.height) },
+    { gap: options.gap },
+  )
+  paint(rendered)
+}
+
+type Gesture =
+  | { mode: 'move'; id: string; offset: { x: number; y: number } }
+  | { mode: 'resize'; id: string; start: { x: number; y: number } }
+
+let gesture: Gesture | null = null
+let pending: SolveResult | null = null
+
+function local(event: PointerEvent) {
+  const rect = stage.getBoundingClientRect()
+  return { x: event.clientX - rect.left, y: event.clientY - rect.top }
+}
+
+stage.addEventListener('pointerdown', (event) => {
+  const target = (event.target as HTMLElement).closest<HTMLElement>('[data-id]')
+  const item = target && rendered.items.find((entry) => entry.id === target.dataset.id)
+  if (!target || !item) return
+  const point = local(event)
+  const nearCorner = point.x > item.x + item.w - 14 && point.y > item.y + item.h - 14
+  gesture = nearCorner
+    ? { mode: 'resize', id: item.id, start: point }
+    : { mode: 'move', id: item.id, offset: { x: point.x - item.x, y: point.y - item.y } }
+  stage.setPointerCapture(event.pointerId)
+  event.preventDefault()
+})
+
+stage.addEventListener('pointermove', (event) => {
+  if (!gesture) return
+  const point = local(event)
+  const snap = !(event.ctrlKey || event.metaKey)
+  const result =
+    gesture.mode === 'move'
+      ? moveItem({
+          layout: rendered,
+          itemId: gesture.id,
+          position: { x: point.x - gesture.offset.x, y: point.y - gesture.offset.y },
+          options: { ...options, snap },
+        })
+      : resizeItem({
+          layout: rendered,
+          itemId: gesture.id,
+          edge: 'se',
+          delta: { x: point.x - gesture.start.x, y: point.y - gesture.start.y },
+          options: { ...options, snap },
+        })
+  if (result.accepted) {
+    pending = result
+    paint(result.layout) // siblings move live; the solver already resolved them
+  }
+})
+
+function end(commit: boolean) {
+  if (commit && pending) {
+    source = pending.layout
+    rendered = pending.layout
+  }
+  paint(rendered)
+  gesture = null
+  pending = null
+}
+
+stage.addEventListener('pointerup', () => end(true))
+stage.addEventListener('pointercancel', () => end(false))
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') end(false)
+})
+
+new ResizeObserver(project).observe(stage)
+project()
+```
+
+Three things to notice:
+
+- **Solvers are pure.** `moveItem` and `resizeItem` return a new layout and never mutate their input. During a drag you paint `result.layout` directly; on release you keep the last accepted result. Cancel by painting the old one.
+- **`accepted` is the contract.** When the solver cannot honor a request, `accepted` is `false` and `result.layout` equals the input. You never end up with an invalid layout.
+- **`strategy` tells you why.** Every result names the strategy that produced it (`push-x`, `swap`, `free`, `rejected`, and so on). Show it in a debug overlay while you tune `gap` and `snapDistance`.
+
+## 3. Insert, remove, rearrange
+
+```ts
+import { applyPreset, createItem, placeItem, type GridLayout } from 'gridla'
+
+export function addNote(layout: GridLayout, id: string): GridLayout {
+  const item = createItem(id, { w: 220, h: 140, minW: 80, minH: 60 })
+  const result = placeItem({
+    layout,
+    item,
+    pointer: { x: layout.canvas.width / 2, y: layout.canvas.height / 2 },
+    options: { gap: 12 },
+  })
+  return result.accepted ? result.layout : layout
+}
+
+export function removeItem(layout: GridLayout, id: string): GridLayout {
+  return { canvas: layout.canvas, items: layout.items.filter((item) => item.id !== id) }
+}
+
+export function toGrid(layout: GridLayout): GridLayout {
+  return applyPreset(layout, 'grid', undefined, { gap: 12, columns: 2 })
+}
+```
+
+Removing an item is plain array filtering; the model is data. `placeItem` with a `pointer` centers the item on the pointer and falls back through smaller sizes and sibling shrinking until something fits; with a `position` it treats the top-left as the intent instead. See the [place recipe](../recipes/place).
+
+## Try it
+
+<Demo id="static-projection" title="Static vanilla layout and coordinate projection" />
+
+## Next
+
+- [Mental model](../concepts/mental-model) explains the layout/render split used above.
+- [Solver behavior](../concepts/solver) lists every strategy in order.
+- The [React quickstart](./react) does all of this with `GridProvider`.

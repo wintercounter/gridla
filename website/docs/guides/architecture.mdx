@@ -1,0 +1,174 @@
+---
+title: Architecture
+description: How the core and the React adapter are layered, and how data flows from a pointer event to the DOM.
+---
+
+import { Figure } from '../../theme/components/Figure'
+
+# Architecture
+
+Gridla is one package with two layers and a hard boundary between them.
+
+<Figure caption="The core is pure functions over plain objects. The React adapter is one consumer of it; your app is another.">
+  <svg
+    viewBox="0 0 640 300"
+    role="img"
+    aria-label="Layer diagram: core modules at the bottom, React adapter in the middle, application at the top"
+  >
+    <rect className="g-fig-box" x="16" y="200" width="608" height="84" rx="6" />
+    <text className="g-fig-ink" x="28" y="222">
+      gridla · core (no DOM, no React, zero dependencies)
+    </text>
+    <g className="g-fig-muted">
+      <text x="28" y="250">
+        model
+      </text>
+      <text x="96" y="250">
+        geometry
+      </text>
+      <text x="184" y="250">
+        projection
+      </text>
+      <text x="278" y="250">
+        solver
+      </text>
+      <text x="344" y="250">
+        nested
+      </text>
+      <text x="410" y="250">
+        presets
+      </text>
+      <text x="482" y="250">
+        instrumentation
+      </text>
+    </g>
+    <g className="g-fig-line">
+      <line x1="28" y1="258" x2="80" y2="258" />
+      <line x1="96" y1="258" x2="170" y2="258" />
+      <line x1="184" y1="258" x2="264" y2="258" />
+      <line x1="278" y1="258" x2="330" y2="258" />
+      <line x1="344" y1="258" x2="396" y2="258" />
+      <line x1="410" y1="258" x2="468" y2="258" />
+      <line x1="482" y1="258" x2="596" y2="258" />
+    </g>
+    <rect className="g-fig-box" x="16" y="108" width="380" height="72" rx="6" />
+    <text className="g-fig-ink" x="28" y="130">
+      gridla/react · adapter
+    </text>
+    <text className="g-fig-muted" x="28" y="156">
+      provider + store · hooks · components · interaction · transfer scope
+    </text>
+    <rect
+      className="g-fig-line"
+      x="420"
+      y="108"
+      width="204"
+      height="72"
+      rx="6"
+      strokeDasharray="4 4"
+    />
+    <text className="g-fig-muted" x="432" y="130">
+      any other adapter
+    </text>
+    <text className="g-fig-muted" x="432" y="156">
+      vanilla, Vue, Svelte, workers
+    </text>
+    <rect className="g-fig-accent-fill" x="16" y="24" width="608" height="60" rx="6" />
+    <text className="g-fig-ink" x="28" y="46">
+      your application
+    </text>
+    <text className="g-fig-muted" x="28" y="70">
+      owns the layout data, rendering, persistence, and appearance
+    </text>
+    <path className="g-fig-line" d="M206 108 V84 M522 108 V84 M206 200 V180 M522 200 V180" />
+  </svg>
+</Figure>
+
+## Core modules
+
+| Module            | Responsibility                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `model`           | The public types (`GridLayout`, `GridItem`, `GridCanvas`, policies, size modes) and shared constants and predicates.                 |
+| `geometry`        | Rect math, normalization, bounds, clamping, `resizeRect`, content extent, validation, gap enforcement. Everything else builds on it. |
+| `projection`      | `projectLayout` with the chain and segment engines, plus `applyGap`.                                                                 |
+| `solver`          | `moveItem`, `resizeItem`, `placeItem`, `transferItem`, and the strategy helpers they share.                                          |
+| `nested`          | `flattenLayout`, tree adapters, hit testing, coordinate conversion, and `compactLayout`.                                             |
+| `presets`         | `applyPreset` for rows, columns, and grids.                                                                                          |
+| `instrumentation` | `TraceEvent` and `SolveStrategy`; the optional `onTrace` channel.                                                                    |
+
+Rules the core follows: every input is a plain object and every output is a new plain object; no function reads or writes anything outside its arguments; no DOM, timers, or globals; results are deterministic for the same inputs. These rules are what make the solvers testable with fixtures and property tests, and what let the same code run in the browser, on the server, and in a worker.
+
+## React adapter
+
+The adapter adds exactly what a browser needs: measurement, pointer and keyboard orchestration, state, and headless positioning.
+
+- **Store.** A minimal external store (`createStore`) holds `GridState`: the source layout, the measured size, the rendered (projected) layout, the gesture in progress, the cursor-tracked rect, the solver preview, selection, and the transferring flag. Components subscribe to slices with `useSyncExternalStore`, so a drag rerenders only the items whose view changed.
+- **Provider.** `GridProvider` creates the store, projects the source onto the measured size, exposes `GridActions` (programmatic operations that go through the solvers) and an internal gesture API, and reports changes through `onLayoutChange` and `onCommit`. Controlled and uncontrolled modes differ only in where the source layout lives.
+- **Interaction.** `useGridInteraction` turns pointer and keyboard events on the canvas element into gesture calls. It finds items and handles by data attributes (`GRID_DATA`), applies the drag threshold, axis lock, and snap bypass, and delegates the math to the core.
+- **Components.** `GridCanvas` measures and wires; `GridItem` positions and exposes handles; `GridPreviewOutline` draws the landing rect.
+- **Transfer scope.** `GridTransferScope` registers providers and, during a drag, previews and commits drops in whichever registered canvas is under the pointer.
+
+## Data flow during a drag
+
+<Figure caption="One pointer move: the interaction hook computes a local point, the provider runs the solver on the rendered layout, the store publishes the preview, and subscribed items repaint.">
+  <svg
+    viewBox="0 0 640 120"
+    role="img"
+    aria-label="Sequence: pointer event, useGridInteraction, gesture.updateMove, moveItem, store.set, useGridItemView, GridItem style"
+  >
+    <g className="g-fig-box">
+      <rect x="8" y="30" width="86" height="40" rx="5" />
+      <rect x="118" y="30" width="110" height="40" rx="5" />
+      <rect x="252" y="30" width="92" height="40" rx="5" />
+      <rect x="368" y="30" width="80" height="40" rx="5" />
+      <rect x="472" y="30" width="72" height="40" rx="5" />
+      <rect x="568" y="30" width="64" height="40" rx="5" />
+    </g>
+    <g className="g-fig-ink">
+      <text x="16" y="54">
+        pointermove
+      </text>
+      <text x="126" y="54">
+        useGridInteraction
+      </text>
+      <text x="260" y="54">
+        updateMove
+      </text>
+      <text x="376" y="54">
+        moveItem
+      </text>
+      <text x="480" y="54">
+        store.set
+      </text>
+      <text x="576" y="54">
+        GridItem
+      </text>
+    </g>
+    <g className="g-fig-line">
+      <path d="M94 50 H118 M228 50 H252 M344 50 H368 M448 50 H472 M544 50 H568" />
+    </g>
+    <g className="g-fig-muted">
+      <text x="8" y="96">
+        client px → local px
+      </text>
+      <text x="252" y="96">
+        rendered layout + intent
+      </text>
+      <text x="472" y="96">
+        preview slice
+      </text>
+    </g>
+  </svg>
+</Figure>
+
+1. `pointerdown` on a drag handle selects the item and records a pending press. Once the pointer travels past `dragThreshold`, `beginMove` snapshots the item's rect and the grab offset.
+2. Every `pointermove` converts the client point to canvas-local pixels, applies Shift axis lock, and calls `updateMove(pointer, { snap })`.
+3. The provider runs `moveItem` on the rendered layout and stores the result as `preview` (only when accepted; a rejected step keeps the last accepted preview). `activeRect` tracks the cursor independently so the dragged item can follow the pointer while siblings show the solved positions.
+4. `useGridItemView` selects each item's rect from `preview.layout` (falling back to the rendered layout), and `GridItem` writes it to `transform`.
+5. `pointerup` calls `commit`: the preview layout becomes the new source (or is handed to `onLayoutChange` when controlled), `onCommit` fires, and the gesture state clears. `Escape` or `pointercancel` calls `cancel` instead.
+
+Transfers insert a step between 2 and 3: the scope asks the target provider to `previewIncoming`, and on release `commitIncoming` on the target followed by `completeOutgoing` on the source.
+
+## Nested layouts
+
+Nesting is a core concern, not an adapter one. `flattenLayout` produces root-relative rects and per-container rendered layouts; an application that renders trees keeps one provider per container (or one custom controller over the flat layout) and uses the coordinate conversions in `nested` to move between them. The studio example is built this way.

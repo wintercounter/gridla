@@ -1,0 +1,117 @@
+---
+title: Mental model
+description: Layouts are data, solvers are pure functions, and rendering is a projection. The three ideas everything else in Gridla builds on.
+---
+
+import { Demo } from '../../theme/components/Demo'
+import { Figure } from '../../theme/components/Figure'
+
+# Mental model
+
+Gridla has three ideas. Everything else is a consequence of them.
+
+## 1. A layout is data
+
+```ts
+import type { GridLayout } from 'gridla'
+
+const layout: GridLayout = {
+  canvas: {
+    width: 960,
+    height: 600,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [
+    { id: 'chart', x: 0, y: 0, w: 640, h: 360 },
+    { id: 'note', x: 652, y: 0, w: 308, h: 360, minW: 160 },
+  ],
+}
+```
+
+A `GridLayout` is a canvas and a list of items in canvas-relative pixel coordinates. There are no classes, no hidden state, no ids you did not choose. It serializes to JSON as-is, diffs with any structural comparison, and stores anywhere. `data` on an item is yours and passes through every function untouched.
+
+## 2. Solvers are pure functions over that data
+
+```ts
+import { moveItem, type GridLayout } from 'gridla'
+
+declare const layout: GridLayout
+
+const result = moveItem({ layout, itemId: 'note', position: { x: 0, y: 0 }, options: { gap: 12 } })
+result.accepted // true
+result.strategy // 'swap'
+result.layout // a new layout; `layout` is untouched
+```
+
+`moveItem`, `resizeItem`, `placeItem`, and `transferItem` take a layout plus an intent and return a `SolveResult`. The result is always a complete, independent copy. When the request cannot be honored, `accepted` is `false` and `layout` equals the input, so you never hold an invalid layout. The `strategy` names the rule that produced the result; the [solver page](./solver) lists them in the order they are tried.
+
+Because solvers are pure, "preview during drag" and "commit on release" are the same call. Paint `result.layout` on every pointer move; keep the last accepted result on release; paint the previous layout to cancel.
+
+## 3. Rendering is a projection
+
+A layout is authored at one canvas size and rendered at another. `projectLayout` maps the authored layout onto the rendered size while keeping its structure: rows and columns stay rows and columns, fixed-size items keep their pixels, gaps stay exact, free space scales.
+
+<Figure caption="The authored layout lives in its own coordinate space. Each render projects it onto the measured size; each commit writes the rendered coordinates back.">
+  <svg
+    viewBox="0 0 640 220"
+    role="img"
+    aria-label="Diagram: source layout projected to a rendered layout; solver operates on the rendered layout; commit writes back to source"
+  >
+    <rect className="g-fig-box" x="16" y="40" width="200" height="130" rx="6" />
+    <text className="g-fig-ink" x="24" y="30">
+      source layout (960 × 600)
+    </text>
+    <rect className="g-fig-line" x="28" y="52" width="110" height="60" rx="3" />
+    <rect className="g-fig-line" x="146" y="52" width="58" height="60" rx="3" />
+    <rect className="g-fig-line" x="28" y="120" width="176" height="38" rx="3" />
+    <rect className="g-fig-box" x="424" y="40" width="200" height="130" rx="6" />
+    <text className="g-fig-ink" x="432" y="30">
+      rendered layout (measured)
+    </text>
+    <rect className="g-fig-line" x="436" y="52" width="100" height="60" rx="3" />
+    <rect className="g-fig-accent-fill" x="544" y="52" width="68" height="60" rx="3" />
+    <rect className="g-fig-line" x="436" y="120" width="176" height="38" rx="3" />
+    <path className="g-fig-line" d="M216 80 H418" markerEnd="url(#arrow)" />
+    <text className="g-fig-muted" x="250" y="72">
+      projectLayout(source, size)
+    </text>
+    <path className="g-fig-line" d="M424 130 H222" markerEnd="url(#arrow)" />
+    <text className="g-fig-muted" x="262" y="150">
+      commit result.layout
+    </text>
+    <path className="g-fig-accent" d="M524 178 V200 H600 V178" />
+    <text className="g-fig-muted" x="440" y="214">
+      moveItem / resizeItem / placeItem
+    </text>
+    <defs>
+      <marker
+        id="arrow"
+        viewBox="0 0 10 10"
+        refX="9"
+        refY="5"
+        markerWidth="8"
+        markerHeight="8"
+        orient="auto-start-reverse"
+      >
+        <path className="g-fig-arrow" d="M0 0 L10 5 L0 10 z" />
+      </marker>
+    </defs>
+  </svg>
+</Figure>
+
+Solvers operate on the rendered layout, because that is what the pointer is over. After a commit, the rendered layout becomes the new source: it is a valid layout in its own right, and projecting it back onto the same size is the identity. This is exactly what `GridProvider` does; the [vanilla quickstart](../getting-started/vanilla) does it by hand in a dozen lines.
+
+## What follows from this
+
+- **No DOM in the core.** Nothing in `gridla` reads an element, listens to an event, or schedules a frame. The core runs in Node and in workers. The React adapter is one consumer of it; a vanilla, Vue, or Svelte adapter is the same amount of code.
+- **Nested layouts are the same model, applied recursively.** A container's children live in the container's own layout; `flattenLayout` projects each container into the rectangle its parent gave it. See [nesting](./nesting).
+- **Everything is inspectable.** Because results carry the strategy and the full next layout, a debug overlay is a `JSON.stringify` away. `onTrace` in `SolveOptions` reports every solve for logging.
+- **Constraints are per item, options are per call.** `minW`, `sizeMode`, and `policy` travel with the item; `gap`, `snapDistance`, and `snap` are passed to each solver call. That keeps the layout portable and the behavior tunable.
+
+<Demo id="responsive-projection" title="Responsive projection across container sizes" />
+
+## Next
+
+- [Coordinate systems](./coordinates): canvas, inner, root, and viewport coordinates and how to convert between them.
+- [Solver behavior](./solver): the ordered strategy lists.

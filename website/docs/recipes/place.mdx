@@ -1,0 +1,96 @@
+---
+title: Place
+description: Insert a new item by top-left intent or centered on a pointer, from the core or from a React action.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Place
+
+## Core
+
+`placeItem` takes a `NewGridItem`: a size, an id, and optionally a position, policy, and data. Give a `position` when the caller knows where the item should go, or a `pointer` when a cursor location is the intent.
+
+```ts
+import { placeItem, type GridLayout } from 'gridla'
+
+type Data = { kind: 'note' | 'chart' }
+
+export function addAtTop(layout: GridLayout<Data>): GridLayout<Data> {
+  const result = placeItem<Data>({
+    layout,
+    item: {
+      id: `note-${layout.items.length + 1}`,
+      w: 320,
+      h: 200,
+      minW: 120,
+      minH: 80,
+      data: { kind: 'note' },
+    },
+    position: { x: layout.canvas.padding.left, y: layout.canvas.padding.top },
+    options: { gap: 12 },
+  })
+  return result.accepted ? result.layout : layout
+}
+
+export function dropAt(
+  layout: GridLayout<Data>,
+  pointer: { x: number; y: number },
+): GridLayout<Data> {
+  const result = placeItem<Data>({
+    layout,
+    item: { id: 'chart-new', w: 480, h: 300, minW: 200, minH: 120, data: { kind: 'chart' } },
+    pointer,
+    options: { gap: 12 },
+  })
+  // The pointer form always accepts; the last resort is `pointer-overlap`.
+  return result.strategy === 'pointer-overlap' ? layout : result.layout
+}
+```
+
+The position form tries open snap candidates, adjacent fits, stacking blockers below, trimming a neighbor, pushing down, then the nearest open slot, and rejects when none applies. The pointer form centers the item on the pointer and never rejects: it slides, pushes, scales the item down to 50%, shrinks siblings, and finally returns an overlapping placement so a drop preview can still be drawn. Check the strategy (or `findLayoutViolations`) before committing a pointer placement.
+
+`createItem` is the helper behind `NewGridItem`; you can pass its result directly as `item`.
+
+## React
+
+```tsx
+import { useGridActions } from 'gridla/react'
+
+type Data = { kind: 'note' | 'chart' }
+
+export function Palette() {
+  const actions = useGridActions<Data>()
+  const add = (kind: Data['kind']) =>
+    actions.place(
+      {
+        id: `${kind}-${Date.now()}`,
+        w: kind === 'chart' ? 480 : 320,
+        h: 200,
+        minW: 120,
+        minH: 80,
+        data: { kind },
+      },
+      { pointer: { x: 480, y: 240 } },
+    )
+  return (
+    <div role="group" aria-label="Add item">
+      <button type="button" onClick={() => add('note')}>
+        Note
+      </button>
+      <button type="button" onClick={() => add('chart')}>
+        Chart
+      </button>
+    </div>
+  )
+}
+```
+
+`actions.place(item, { position } | { pointer }, options)` runs on the rendered layout, so the pointer should be in rendered canvas pixels (client coordinates minus the canvas element's bounding rect). It emits `onLayoutChange` with `reason: 'place'`.
+
+Placement from outside the canvas, such as dragging a palette entry over the grid, is a transfer in disguise: the previewing provider calls `placeItem` with the pointer form on every move. See [transfer](./transfer).
+
+<Demo
+  id="programmatic-operations"
+  title="Programmatic move, resize, place, and rejection results"
+/>

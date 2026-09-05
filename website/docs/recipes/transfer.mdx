@@ -1,0 +1,149 @@
+---
+title: Transfer
+description: Move an item between two layouts with transferItem, between nested containers, and between React providers with GridTransferScope.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Transfer
+
+## Between two layouts
+
+```ts
+import { transferItem, type GridLayout } from 'gridla'
+
+export function moveAcross(
+  source: GridLayout,
+  target: GridLayout,
+  itemId: string,
+  pointer: { x: number; y: number },
+) {
+  const result = transferItem({ source, target, itemId, pointer, options: { gap: 12 } })
+  if (!result.accepted) return { source, target }
+  return { source: result.source, target: result.target }
+}
+```
+
+`pointer` is in the _target's_ canvas coordinates. The item keeps roughly the same visual proportion: its size is scaled by the ratio of the two canvases' inner areas (`scaleSizeBetweenCanvases`) and capped at the target's inner size, unless you pass an explicit `size`. Placement uses the pointer form of `placeItem`, so a preview is always available; the transfer reports `accepted: false` only when placement did.
+
+## Between nested containers
+
+Containers are layouts, so the same call works once the coordinates line up:
+
+```ts
+import {
+  findContainerAt,
+  flattenLayout,
+  rootPointToContainer,
+  scaleSizeBetweenContainers,
+  toRenderedLayout,
+  transferItem,
+  type GridLayout,
+  type GridNode,
+} from 'gridla'
+
+declare const page: GridNode
+
+export function transferAt(
+  itemId: string,
+  rootPoint: { x: number; y: number },
+): { sourceId: string; source: GridLayout; targetId: string; target: GridLayout } | null {
+  const flat = flattenLayout(page, { x: 0, y: 0, w: 1440, h: 900 })
+  const item = flat.itemsById.get(itemId)
+  const source = item?.parentId ? flat.itemsById.get(item.parentId) : undefined
+  const target = findContainerAt(flat, rootPoint, { inset: 8, sourceId: source?.id })
+  if (!item || !source?.layout || !target?.layout || target.id === source.id) return null
+  const pointer = rootPointToContainer(target, rootPoint)
+  if (!pointer) return null
+  const sizing = item.sizing ?? item.rect
+  const result = transferItem({
+    source: source.layout,
+    target: target.layout,
+    itemId,
+    pointer,
+    size: scaleSizeBetweenContainers(source, target, { w: sizing.w, h: sizing.h }),
+    options: { gap: target.gap },
+  })
+  if (!result.accepted) return null
+  return {
+    sourceId: source.id,
+    source: toRenderedLayout(source, result.source.items),
+    targetId: target.id,
+    target: toRenderedLayout(target, result.target.items),
+  }
+}
+```
+
+`findContainerAt` with an `inset` keeps a drag that brushes an edge from switching targets, and `sourceId` lets the origin container win without the inset. Before starting, check `isInsideLockedSubtree` and `isDirectChildOfContained` so locked and contained nodes stay put.
+
+## Between React providers
+
+Wrap the providers in a `GridTransferScope`. Nothing else changes: dragging an item out of one canvas and over another previews the drop there and commits on release.
+
+```tsx
+import { useState } from 'react'
+import type { GridItem as Item, GridLayout } from 'gridla'
+import {
+  GridCanvas,
+  GridItem,
+  GridPreviewOutline,
+  GridProvider,
+  GridTransferScope,
+} from 'gridla/react'
+
+type Data = { label: string }
+
+function Board({
+  layout,
+  onChange,
+  accept,
+}: {
+  layout: GridLayout<Data>
+  onChange: (next: GridLayout<Data>) => void
+  accept?: (item: Item<Data>) => boolean
+}) {
+  return (
+    <GridProvider<Data>
+      layout={layout}
+      onLayoutChange={onChange}
+      gap={8}
+      acceptTransfers={accept ? (item) => accept(item) : true}
+      onTransferOut={(itemId, targetId) => console.warn(`${itemId} left for ${targetId}`)}
+      onTransferIn={(item, sourceId) => console.warn(`${item.id} arrived from ${sourceId}`)}
+    >
+      <GridCanvas style={{ height: 320 }}>
+        {layout.items.map((item) => (
+          <GridItem key={item.id} id={item.id}>
+            {item.data?.label}
+          </GridItem>
+        ))}
+        <GridPreviewOutline />
+      </GridCanvas>
+    </GridProvider>
+  )
+}
+
+export function TwoBoards({
+  initialA,
+  initialB,
+}: {
+  initialA: GridLayout<Data>
+  initialB: GridLayout<Data>
+}) {
+  const [a, setA] = useState(initialA)
+  const [b, setB] = useState(initialB)
+  return (
+    <GridTransferScope>
+      <Board layout={a} onChange={setA} />
+      <Board layout={b} onChange={setB} accept={(item) => item.data?.label !== 'pinned'} />
+    </GridTransferScope>
+  )
+}
+```
+
+How it works: on every pointer move the source canvas reports the client point to the scope, which finds the deepest registered canvas under the pointer that `acceptTransfers` allows. While the pointer is still inside the source element only its descendants may win, so nested boards behave. The target previews the item with `placeItem` at the pointer, after scaling its size so it keeps the same on-screen pixels; the source marks the item as `transferring` (rendered at 40% opacity by `GridItem`). On release the target commits (`onLayoutChange` with `reason: 'transfer'`), the source removes the item, and both `onTransferOut` and `onTransferIn` fire.
+
+<Demo
+  id="cross-container-transfer"
+  title="Cross-group transfer solving without DOM drag and drop"
+/>

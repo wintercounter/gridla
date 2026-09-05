@@ -1,0 +1,102 @@
+---
+title: Items and constraints
+description: The GridItem shape, size constraints, solver policies, normalization, and validation.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Items and constraints
+
+An item is a rectangle with an id, optional constraints, an optional policy, and your data.
+
+```ts
+import type { GridItem } from 'gridla'
+
+const item: GridItem<{ title: string }> = {
+  id: 'chart',
+  x: 0,
+  y: 92,
+  w: 640,
+  h: 360,
+  minW: 240,
+  minH: 160,
+  maxW: 960,
+  sizeMode: 'free',
+  policy: { collision: 'solid', movement: 'movable' },
+  data: { title: 'Revenue' },
+}
+```
+
+## Geometry
+
+`x`, `y`, `w`, `h` are pixels in canvas coordinates. The smallest allowed size is `MIN_ITEM_SIZE` (1px). Solvers round to whole pixels; `roundItem` does the same on demand.
+
+## Size constraints
+
+| Field                       | Effect                                                                                                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `minW`, `minH`              | Solvers never shrink the item below these, and refuse operations that would. Also the floor for sibling shrinking during push and resize.                                                                                      |
+| `maxW`, `maxH`              | Enforced by `normalizeItem` (and therefore by `normalizeLayout` and the React `update` action). During interactive resizing they bound only an axis that is fixed by `sizeMode`; a free axis is bounded by the canvas instead. |
+| `sizeMode`                  | Which axes keep their pixel size under projection. See [sizing modes](./sizing-modes).                                                                                                                                         |
+| `fixedWidth`, `fixedHeight` | The pixel size to pin when `sizeMode` fixes that axis. Falls back to `w` / `h`.                                                                                                                                                |
+
+`createItem(id, size, x, y, data)` builds an item from a `GridItemSize` (`w`, `h`, plus any constraint) and copies only the fields you set.
+
+## Policy
+
+`policy.collision` and `policy.movement` decide how an item participates in solving.
+
+| Policy                          | Meaning                                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `collision: 'solid'` (default)  | Occupies space and blocks other items.                                                                                                                                                            |
+| `collision: 'ignore'`           | A _ghost_. Solvers move, resize, and place other items straight through it, and never move it as a side effect. Overlap validation skips ghosts. Use for reserved slots and floating decorations. |
+| `movement: 'movable'` (default) | May be pushed, swapped, shrunk, or reordered to make room.                                                                                                                                        |
+| `movement: 'locked'`            | A _wall_. Still blocks, but never moves or resizes as a side effect of another item's operation. A push that would hit a locked item is refused; the solver tries its next strategy.              |
+
+`isGhost(item)` and `isLocked(item)` read the policy. Ghosts are partitioned out before solving and merged back afterwards, so a ghost's own geometry is never touched by another item's solve. You can still move or resize a ghost directly.
+
+## Normalization
+
+Inputs from storage or from users may be out of bounds or contradictory. The normalizers make them valid without losing intent:
+
+- `normalizePadding` rounds and clamps padding to non-negative integers.
+- `normalizeCanvas` fills in defaults from `DEFAULT_CANVAS` (1200 × 720, no padding, bounded) and makes the canvas at least one pixel larger than its padding on both axes.
+- `normalizeItem(item, canvas)` rounds, enforces `min` and `max`, and fits the item inside the padded area. It shrinks before it moves: the position only shifts when the minimum size would not fit otherwise. Scrollable canvases do not clamp `y` or `h`.
+- `normalizeLayout` applies both.
+
+```ts
+import { normalizeLayout, type GridLayout } from 'gridla'
+
+const raw: GridLayout = {
+  canvas: {
+    width: 400,
+    height: 300,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
+    heightMode: 'bounded',
+  },
+  items: [{ id: 'a', x: 350, y: 250, w: 200, h: 200, minW: 100, minH: 100 }],
+}
+normalizeLayout(raw).items[0] // { x: 200, y: 100, w: 200, h: 200, minW: 100, minH: 100, ... }
+```
+
+`clampItem(item, bounds)` is the solver-facing variant that works on `GridBounds` and respects fixed axes.
+
+## Validation
+
+`findLayoutViolations(layout)` reports `out-of-bounds` and `overlap` violations (ghosts are exempt from overlap). `canPlaceItem(items, item, bounds, gap)` answers whether one item fits within one pixel of bounds without violating `gap` against any solid sibling; `layoutIsValid` asks that of every item. These are the same checks the solvers use to accept or reject a result, so you can pre-validate imported layouts with the same rules.
+
+```ts
+import { findLayoutViolations, type GridLayout } from 'gridla'
+
+export function assertValid(layout: GridLayout) {
+  const violations = findLayoutViolations(layout)
+  if (violations.length > 0) throw new Error(JSON.stringify(violations))
+}
+```
+
+<Demo id="min-max-constraints" title="Minimum and maximum constraints" />
+
+## Related
+
+- [Sizing modes](./sizing-modes) for `sizeMode` under projection.
+- [Solver behavior](./solver) for how policies change each strategy.

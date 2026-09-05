@@ -1,0 +1,142 @@
+---
+title: Coordinate systems
+description: Canvas, inner, root, and viewport coordinates in Gridla, and the functions that convert between them.
+---
+
+import { Figure } from '../../theme/components/Figure'
+import { Demo } from '../../theme/components/Demo'
+
+# Coordinate systems
+
+Every number in Gridla is a pixel. What differs is the origin. There are four coordinate systems, and the API tells you which one it is in.
+
+<Figure caption="Canvas coordinates include padding. Inner coordinates start at the padding edge. Root coordinates place a nested container's children relative to the outermost canvas. Viewport coordinates add the canvas element's position on screen.">
+  <svg
+    viewBox="0 0 640 260"
+    role="img"
+    aria-label="Diagram of canvas, inner, root, and viewport coordinate origins"
+  >
+    <rect className="g-fig-box" x="40" y="40" width="380" height="200" rx="6" />
+    <text className="g-fig-ink" x="40" y="30">
+      canvas (0,0) at the element's top-left
+    </text>
+    <rect
+      className="g-fig-line"
+      x="64"
+      y="64"
+      width="332"
+      height="152"
+      rx="3"
+      strokeDasharray="4 4"
+    />
+    <text className="g-fig-muted" x="70" y="84">
+      inner (padding.left, padding.top)
+    </text>
+    <rect className="g-fig-line" x="80" y="100" width="150" height="100" rx="3" />
+    <text className="g-fig-muted" x="88" y="118">
+      container
+    </text>
+    <rect className="g-fig-accent-fill" x="96" y="132" width="60" height="52" rx="3" />
+    <text className="g-fig-muted" x="100" y="196">
+      child, root rect
+    </text>
+    <path className="g-fig-accent" d="M40 40 L96 132" strokeDasharray="3 3" />
+    <text className="g-fig-ink" x="460" y="60">
+      viewport
+    </text>
+    <text className="g-fig-muted" x="460" y="80">
+      = element.getBoundingClientRect()
+    </text>
+    <text className="g-fig-muted" x="460" y="96">
+      {' '}
+      + canvas coordinates
+    </text>
+    <text className="g-fig-ink" x="460" y="140">
+      root
+    </text>
+    <text className="g-fig-muted" x="460" y="160">
+      = container.rect.x
+    </text>
+    <text className="g-fig-muted" x="460" y="176">
+      {' '}
+      + projected child.x
+    </text>
+  </svg>
+</Figure>
+
+## Canvas coordinates
+
+The default. `GridItem.x` and `GridItem.y` are measured from the top-left corner of the canvas, and the item area starts at `padding.left` / `padding.top`. A layout with 16px padding has its first item at `x: 16`, not `x: 0`.
+
+`normalizeItem` clamps an item so it fits between the padding edges; `boundsFromCanvas` derives the `GridBounds` a solver checks against (`height` is `null` for scrollable canvases).
+
+```ts
+import { boundsFromCanvas, canvasInnerRect, normalizeLayout, type GridLayout } from 'gridla'
+
+const layout: GridLayout = {
+  canvas: {
+    width: 800,
+    height: 500,
+    padding: { top: 16, right: 16, bottom: 16, left: 16 },
+    heightMode: 'bounded',
+  },
+  items: [{ id: 'a', x: 0, y: 0, w: 200, h: 120 }],
+}
+
+normalizeLayout(layout).items[0] // x: 16, y: 16 — moved inside the padding
+canvasInnerRect(layout.canvas) // { x: 16, y: 16, w: 768, h: 468 }
+boundsFromCanvas(layout.canvas) // { width: 800, height: 500, padding: {...} }
+```
+
+## Inner coordinates
+
+Padding-relative. Useful when you compute proportions or compare layouts with different padding. `toInnerItem` and `toCanvasItem` convert one item; `canvasInnerWidth` and `canvasInnerHeight` give the usable size. The segment projection engine works in inner coordinates internally and converts back.
+
+```ts
+import { toCanvasItem, toInnerItem, type GridCanvas, type GridItem } from 'gridla'
+
+const canvas: GridCanvas = {
+  width: 800,
+  height: 500,
+  padding: { top: 16, right: 16, bottom: 16, left: 16 },
+  heightMode: 'bounded',
+}
+const item: GridItem = { id: 'a', x: 16, y: 16, w: 200, h: 120 }
+
+toInnerItem(item, canvas) // x: 0, y: 0
+toCanvasItem(toInnerItem(item, canvas), canvas) // back to x: 16, y: 16
+```
+
+## Root coordinates
+
+Only in nested layouts. `flattenLayout` returns every node with a `rect` in root coordinates: the top-left of the outermost canvas is the origin, regardless of depth. A child's root rect is its parent's root rect plus the child's projected position inside the parent.
+
+Each container also carries `layout`, the container's authored layout projected into its rendered rect. Solvers for that container's children run in that layout's canvas coordinates, which are local to the container. Converting between the two:
+
+```ts
+import { flattenLayout, rootPointToContainer, projectItemToRoot, type GridNode } from 'gridla'
+
+declare const tree: GridNode
+
+const flat = flattenLayout(tree, { x: 0, y: 0, w: 1200, h: 800 })
+const group = flat.itemsById.get('group-a')!
+
+// A root point (say, from hitTest) into the group's local canvas.
+const local = rootPointToContainer(group, { x: 640, y: 420 })
+
+// A child item from the group's local layout back to root pixels.
+const child = group.layout!.items[0]
+const rootRect = projectItemToRoot(group, child, group.layout!.items)
+```
+
+`rootPointToContainer` maps into the container's _rendered_ canvas by default; pass the authored `sourceLayout.canvas` as the third argument to map into authored units instead. `scaleSizeBetweenContainers` translates a size from one container's units to another's so it covers the same number of root pixels.
+
+## Viewport coordinates
+
+The screen. The core never sees the DOM, so conversion is one subtraction: `local = client - element.getBoundingClientRect()`. `rectToViewportEdges(origin, rect)` goes the other way for hit testing against pointer events. The React adapter does this in `useGridInteraction`; the vanilla quickstart does it in a `local()` helper.
+
+## Rendered versus source
+
+One more distinction that is not a coordinate system but behaves like one. A layout is authored at a canvas size (the _source_) and projected onto the element's measured size (the _rendered_ layout). Both are canvas coordinates, but in different canvases. Solvers run on the rendered layout; commits write the rendered layout back as the new source. `GridProvider` exposes both: `useGridSourceLayout()` and `useGridLayout()`.
+
+<Demo id="nested-groups" title="Nested groups with coordinate inspection" />

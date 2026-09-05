@@ -1,0 +1,79 @@
+---
+title: Accessibility
+description: Keyboard operation, focus, announcements, reduced motion, contrast, and touch targets for Gridla interfaces.
+---
+
+# Accessibility
+
+Gridla's adapter is headless, so most accessibility work is yours; the engine makes sure it is possible.
+
+## Keyboard
+
+Every pointer operation has a keyboard equivalent through the solver: arrow keys move, <kbd>Alt</kbd> + arrows resize, <kbd>Delete</kbd> removes (through `onDeleteKey`), <kbd>Escape</kbd> cancels. See [keyboard controls](../recipes/keyboard). Two things the adapter cannot decide for you:
+
+- **Which element is focusable.** `GridCanvas` is focusable (`tabIndex={0}`) and handles keys for the _selected_ item. Make each item selectable from the keyboard by giving it focusable content and calling `actions.select(id)` on focus, or implement roving `tabIndex` across items.
+- **What the canvas is called.** Give it an `aria-label` and, if useful, `role="application"` so screen readers pass arrow keys through instead of navigating.
+
+## Announcements
+
+Solver results are data, so they can be spoken. A polite live region that reports the strategy and the new position after each commit gives non-visual users the same feedback the preview outline gives sighted users.
+
+```tsx
+import { useState } from 'react'
+import type { GridLayout } from 'gridla'
+import { GridProvider, type GridChangeDetail } from 'gridla/react'
+import type { ReactNode } from 'react'
+
+export function AnnouncingProvider({
+  layout,
+  onChange,
+  children,
+}: {
+  layout: GridLayout
+  onChange: (next: GridLayout) => void
+  children: ReactNode
+}) {
+  const [message, setMessage] = useState('')
+  const handleChange = (next: GridLayout, detail: GridChangeDetail) => {
+    onChange(next)
+    const item = next.items.find((entry) => entry.id === detail.itemId)
+    if (item)
+      setMessage(
+        `${detail.reason} ${item.id}: ${item.x}, ${item.y}, ${item.w} by ${item.h}${detail.strategy ? ` (${detail.strategy})` : ''}`,
+      )
+  }
+  return (
+    <GridProvider layout={layout} onLayoutChange={handleChange}>
+      {children}
+      <p
+        aria-live="polite"
+        style={{
+          position: 'absolute',
+          width: 1,
+          height: 1,
+          overflow: 'hidden',
+          clip: 'rect(0 0 0 0)',
+        }}
+      >
+        {message}
+      </p>
+    </GridProvider>
+  )
+}
+```
+
+## Reduced motion
+
+The adapter animates nothing; transitions live in your CSS. Gate them behind `prefers-reduced-motion: reduce`, and keep them on `transform`, `width`, and `height` only. The docs site and demos set every motion token to `0ms` under reduced motion.
+
+## Pointer and touch
+
+`GridCanvas` sets `touch-action: none` so the browser does not scroll while an item is dragged, and uses pointer capture so a drag survives leaving the element. Built-in resize handles are 10px wide, which is fine for a mouse and too small for touch; render your own handles with `getResizeHandleProps` and make them at least 24px, or expose resize through the keyboard and a form.
+
+## Contrast and state
+
+Items expose `data-gridla-active`, `data-gridla-selected`, `data-gridla-shifted`, and `data-gridla-transferring` attributes. Use them to draw states that do not rely on color alone: a dashed border for shifted siblings, an outline for selection, and a visible focus ring (the tokens use a two-ring `box-shadow` that reads on both themes).
+
+## Content inside items
+
+Interactive content inside a draggable item competes with the drag. With `draggable={false}` only elements carrying `dragHandleProps` start a move, so buttons, links, and inputs keep their native behavior. The press-to-drag threshold (`dragThreshold`, default 4px) also means a click is a click.

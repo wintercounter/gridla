@@ -1,0 +1,105 @@
+---
+title: Solver behavior
+description: The ordered strategy lists for move, resize, place, and transfer, and how gap, snapping, and policies gate each one.
+---
+
+import { Demo } from '../../theme/components/Demo'
+
+# Solver behavior
+
+Each solver runs an ordered list of strategies. Each strategy has a clear gate, so the first one that applies wins and the behavior is predictable. The result names the strategy that produced it; `onTrace` reports it for logging.
+
+Shared inputs are `SolveOptions`:
+
+| Option         | Default | Meaning                                                                                                                                                                                |
+| -------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gap`          | `0`     | Minimum distance kept between solid neighbors.                                                                                                                                         |
+| `snapDistance` | `24`    | Distance within which edges attract during snapping.                                                                                                                                   |
+| `snap`         | `true`  | When `false`, alignment snapping is skipped so the item tracks the request exactly. Bounds, gap, and constraints still apply. The React adapter passes `false` while Ctrl/Cmd is held. |
+| `onTrace`      | none    | Receives one `TraceEvent` per solve.                                                                                                                                                   |
+
+Every solver returns a `SolveResult`: `accepted`, the new `layout`, the active `item` as it appears there (or the rejected candidate), the `strategy`, and `shiftedSiblings` (true when other items moved or resized). Inputs are never mutated.
+
+## Move
+
+`moveItem({ layout, itemId, position, options })`. The requested position is the item's top-left. Intent is inferred from how the moved rectangle overlaps its siblings. Strategies, in order:
+
+| #   | Strategy                          | Gate                                                                                           |
+| --- | --------------------------------- | ---------------------------------------------------------------------------------------------- |
+| 0   | `origin`                          | Requested position is within 4px of the current position. Nothing changes.                     |
+| 0b  | `reorder-column`                  | The item is part of a tight column; reorder it within the column.                              |
+| 1   | `push-x` / `push-y`               | Slide overlapping siblings along one axis (forward first, then backward).                      |
+| 1c  | `reorder-row`                     | The item is part of a tight row; reorder it within the row.                                    |
+| 2   | `swap`                            | The item covers a sibling by at least 50% of the smaller area.                                 |
+| 2b  | `group-swap`                      | The item covers a whole row or column of siblings.                                             |
+| 2c  | `insert-column` / `insert-row`    | The item arrives from another lane.                                                            |
+| 2d  | `shrink-neighbor`                 | Trim a much larger neighbor to make room.                                                      |
+| 3   | `snap`                            | Nearest edge-aligned free slot within `snapDistance`.                                          |
+| 3b  | `fit-open-slot`                   | Resize into an empty pocket between siblings.                                                  |
+| 4   | `free`                            | The requested rectangle is clear.                                                              |
+| 5   | `push-shrink-x` / `push-shrink-y` | Push, then shrink a row or column when it hits the canvas edge (down to `min` or 40% of size). |
+| 6   | `push-down`                       | Push overlapping siblings downward until the layout is valid.                                  |
+| 7   | `fallback-snap`                   | Nearest valid slot within the item's own size.                                                 |
+| 8   | `rejected`                        | Nothing applied; `layout` equals the input.                                                    |
+
+Ghosts are partitioned out before any strategy runs and merged back afterwards. A push that would displace a locked item, or a fixed-axis item anchored against the canvas edge, returns nothing and the solver proceeds to the next strategy.
+
+`pushAndShrinkSiblings` is exported for custom solvers; `edgeAlignedSlots` lists every canvas- or sibling-aligned slot an item could sit in.
+
+## Resize
+
+`resizeItem({ layout, itemId, edge, delta, rect, options })`. Provide `edge` and `delta` for interactive resizing (the opposite edge stays anchored) or `rect` for programmatic resizing (`edge` then only informs snapping).
+
+1. The requested rectangle is rounded, clamped to bounds, and, when `snap` is on and an edge is known, the moving edge snaps to nearby sibling edges (offset by `gap`) and the canvas edge.
+2. If the result overlaps no solid sibling: `resize`.
+3. Otherwise neighbors the new rectangle _newly_ collides with are trimmed on the side facing the resized item, down to their minimums: `resize-shrink-neighbors`. Neighbors that already overlapped the original rect, ghosts, and locked items are not touched; a locked or ghost collision, or a trim below `minW`/`minH`, refuses.
+4. `rejected`.
+
+`resizeRect` (geometry) computes the constrained rectangle without considering siblings; `resizeByShrinkingNeighbors` is the trimming step on its own.
+
+## Place
+
+`placeItem({ layout, item, position, pointer, options })` inserts a `NewGridItem` (size plus optional position, policy, and data). Two forms.
+
+**Position form** (`position`, or `item.x`/`item.y`; defaults to the padding corner). The top-left is the intent.
+
+| Strategy            | Gate                                                                                                                   |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `open`              | A snap candidate near the request is free.                                                                             |
+| `adjacent`          | A fitted slot adjacent to a neighbor is free.                                                                          |
+| `stack-below`       | Blocking items can be stacked below the new item.                                                                      |
+| `trim-neighbor`     | The neighbor with the largest overlap can be trimmed horizontally to make room (requires meaningful vertical overlap). |
+| `push-down`         | Overlapping siblings can be pushed down.                                                                               |
+| `nearest-open-slot` | Any open slot exists; the closest wins.                                                                                |
+| `rejected`          |                                                                                                                        |
+
+**Pointer form** (`pointer`). The item is centered on the pointer; this form is what a drop preview wants and it always accepts.
+
+| Strategy                  | Gate                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pointer`                 | The centered rectangle is free.                                                                                                                               |
+| `pointer-slide`           | A minimal slide out of the overlap is free.                                                                                                                   |
+| `pointer-push`            | Overlapping siblings can be pushed down.                                                                                                                      |
+| `pointer-scaled`          | An edge-aligned slot fits after scaling the item to 90%, 75%, 60%, or 50% (uniformly, then per axis), possibly pushing siblings down. Minimums are respected. |
+| `pointer-shrink-siblings` | Siblings can be shrunk to open a slot near the pointer.                                                                                                       |
+| `pointer-overlap`         | Nothing else worked: the centered rectangle is returned overlapping, so a preview can still be shown. Check `findLayoutViolations` before committing.         |
+
+If `item.id` already exists in the layout, the existing item is replaced.
+
+## Transfer
+
+`transferItem({ source, target, itemId, pointer, size, options })` removes the item from `source` and places it in `target` using the pointer form. Unless `size` is given, the item's size is scaled by the ratio of the two canvases' inner areas (`scaleSizeBetweenCanvases`) and capped at the target's inner size. The result carries both layouts; on rejection both equal their inputs.
+
+## Snapping
+
+Snap candidates for a move are built from sibling edges (`x`, `right - w`, `x - gap - w`, `right + gap`, and the same vertically) plus the canvas edges. The nearest candidate on each axis within `snapDistance` is tried first, then the mixed and original positions. Resize snapping considers the moving edge only. Set `snap: false` to disable alignment snapping for a single call; `snapDistance: 0` has the same effect for every call.
+
+<Demo id="policy-comparison" title="Push, swap, reorder, and shrink policy comparison" />
+
+<Demo id="snap-alignment" title="Snap distance and alignment customization" height="30rem" />
+
+## Related
+
+- [Items and constraints](./items) for `policy` and minimums.
+- [Instrumentation](../api/core/instrumentation) for `TraceEvent`.
+- [Adding solver fixtures](../guides/solver-fixtures) when a case behaves unexpectedly.

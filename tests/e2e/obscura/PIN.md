@@ -11,17 +11,17 @@ not a Chromium wrapper.
 
 ## Pinned release
 
-| Item | Value |
-| --- | --- |
-| Release tag | `v0.2.1` (published 2026-08-23) |
-| Tag commit | `2810cb478696885e0d44d1741cbf586f1cc98bb5` |
-| Asset | `obscura-x86_64-linux.tar.gz` (glibc build, rendering enabled) |
-| Asset URL | https://github.com/h4ckf0r0day/obscura/releases/download/v0.2.1/obscura-x86_64-linux.tar.gz |
-| Asset SHA-256 | `6a1a66b3f1ab118fa7d31330894a868617aea68c06d75436d851356c39df1ed3` |
-| `obscura` SHA-256 | `80153abcd279328f92c11903866df5911a90577d95633d329fe886db00abb332` |
-| `obscura-worker` SHA-256 | `509fbdbeb2e0cb7caf6c46cf905a6052f3ad6012487c1bdcdf405e3319ec0902` |
-| `obscura --version` | `obscura 0.2.1` |
-| Reported CDP identity | `Chrome/145.0.0.0`, Protocol-Version 1.3, V8 14.5.0.0 |
+| Item                     | Value                                                                                       |
+| ------------------------ | ------------------------------------------------------------------------------------------- |
+| Release tag              | `v0.2.1` (published 2026-08-23)                                                             |
+| Tag commit               | `2810cb478696885e0d44d1741cbf586f1cc98bb5`                                                  |
+| Asset                    | `obscura-x86_64-linux.tar.gz` (glibc build, rendering enabled)                              |
+| Asset URL                | https://github.com/h4ckf0r0day/obscura/releases/download/v0.2.1/obscura-x86_64-linux.tar.gz |
+| Asset SHA-256            | `6a1a66b3f1ab118fa7d31330894a868617aea68c06d75436d851356c39df1ed3`                          |
+| `obscura` SHA-256        | `80153abcd279328f92c11903866df5911a90577d95633d329fe886db00abb332`                          |
+| `obscura-worker` SHA-256 | `509fbdbeb2e0cb7caf6c46cf905a6052f3ad6012487c1bdcdf405e3319ec0902`                          |
+| `obscura --version`      | `obscura 0.2.1`                                                                             |
+| Reported CDP identity    | `Chrome/145.0.0.0`, Protocol-Version 1.3, V8 14.5.0.0                                       |
 
 Upstream publishes no checksum file for release assets; the hashes above were
 computed locally after download.
@@ -79,9 +79,9 @@ shim is missing `backtrace`, `mallopt`, `__res_init` and others.
 Debian bookworm packages into `.tools/obscura/glibc/` (no root, nothing
 installed system-wide):
 
-| Package | SHA-256 |
-| --- | --- |
-| `libc6_2.36-9+deb12u14_amd64.deb` | `ba4f88f73dbc3ae9055f3c20f4523bfdbaf1ad13ff95e258924f77d20b4fbedf` |
+| Package                                 | SHA-256                                                            |
+| --------------------------------------- | ------------------------------------------------------------------ |
+| `libc6_2.36-9+deb12u14_amd64.deb`       | `ba4f88f73dbc3ae9055f3c20f4523bfdbaf1ad13ff95e258924f77d20b4fbedf` |
 | `libgcc-s1_12.2.0-14+deb12u1_amd64.deb` | `3016e62cb4b7cd8038822870601f5ed131befe942774d0f745622cc77d8a88f7` |
 
 ```sh

@@ -1,0 +1,37 @@
+---
+title: Install
+description: Add Gridla to a project. One package, two entry points, zero runtime dependencies.
+---
+
+# Install
+
+Gridla is one npm package with two entry points: `gridla` is the framework-neutral core and `gridla/react` is the React adapter. Both are ESM only and ship TypeScript declarations.
+
+import { PackageManagerTabs } from '@rspress/core/theme'
+
+<PackageManagerTabs command="install gridla" />
+
+React is an optional peer dependency (`>=18`, `useSyncExternalStore` is required). Install it only if you use `gridla/react`.
+
+## Requirements
+
+- Node 20.19 or newer for tooling; the library itself has no Node-specific code.
+- A bundler or runtime that resolves the `exports` field. The core has no side effects and tree-shakes.
+- Browsers: the last two versions of evergreen browsers. Syntax targets ES2022. See [browser support](../guides/browser-support).
+
+## Entry points
+
+```ts
+// Core: pure functions over plain objects. Safe on the server.
+import { moveItem, projectLayout, flattenLayout } from 'gridla'
+
+// React adapter: provider, components, hooks, interaction.
+import { GridProvider, GridCanvas, GridItem } from 'gridla/react'
+```
+
+Everything in `gridla` takes plain objects and returns new plain objects. Nothing touches the DOM or global state, so the core runs in Node, workers, and server renderers unchanged.
+
+## Next
+
+- [Vanilla quickstart](./vanilla): a canvas you can drag on, in fifty lines and no framework.
+- [React quickstart](./react): the same with `GridProvider`.
