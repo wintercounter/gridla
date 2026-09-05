@@ -10,77 +10,44 @@ description: Nested exports of gridla. Generated from the source declarations.
 Trees of layouts. [`flattenLayout`](#flattenlayout) projects every container into the rectangle its parent assigned it and returns root-relative rectangles; the rest are queries, coordinate conversions, and compaction over that flat result.
 
 ```ts
-import {
-  compactLayout,
-  findContainerAt,
-  findFirstUnlockedAncestor,
-  flattenLayout,
-  getAncestors,
-  getDescendants,
-  gridNodeAdapter,
-  hitTest,
-  isDirectChildOfContained,
-  isInsideLockedSubtree,
-  markLockedItems,
-  projectItemsToRoot,
-  projectItemToRoot,
-  renderLayoutForRect,
-  rootPointToContainer,
-  scaleSizeBetweenContainers,
-  toRenderedLayout,
-} from 'gridla'
-import type {
-  CompactOptions,
-  CompactResult,
-  FindContainerOptions,
-  FlatItem,
-  FlatLayout,
-  FlattenOptions,
-  GridNode,
-  GridNodeBehavior,
-  GridTreeAdapter,
-} from 'gridla'
+import { compactLayout, findContainerAt, findFirstUnlockedAncestor, flattenLayout, getAncestors, getDescendants, gridNodeAdapter, hitTest, isDirectChildOfContained, isInsideLockedSubtree, markLockedItems, projectItemsToRoot, projectItemToRoot, renderLayoutForRect, rootPointToContainer, scaleSizeBetweenContainers, toRenderedLayout } from 'gridla'
+import type { CompactOptions, CompactResult, FindContainerOptions, FlatItem, FlatLayout, FlattenOptions, GridNode, GridNodeBehavior, GridTreeAdapter } from 'gridla'
 ```
 
-| Export                                                      | Kind     | Summary                                                                                                                                                                          |
-| ----------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`compactLayout`](#compactlayout)                           | function | Shrink items vertically until the layout fits a bounded canvas.                                                                                                                  |
-| [`CompactOptions`](#compactoptions)                         | type     | Options for `compactLayout`.                                                                                                                                                     |
-| [`CompactResult`](#compactresult)                           | type     | Result of `compactLayout`: the compacted layout and whether everything fit.                                                                                                      |
-| [`findContainerAt`](#findcontainerat)                       | function | Deepest container that accepts children and contains the point.                                                                                                                  |
-| [`FindContainerOptions`](#findcontaineroptions)             | type     | Options for `findContainerAt`.                                                                                                                                                   |
-| [`findFirstUnlockedAncestor`](#findfirstunlockedancestor)   | function | Nearest ancestor (or the item itself) that is outside every locked subtree.                                                                                                      |
-| [`FlatItem`](#flatitem)                                     | type     | One node of a flattened tree: its rectangle in root coordinates, its place in the hierarchy, its rendered and authored layouts, and its resolved behavior flags.                 |
-| [`FlatLayout`](#flatlayout)                                 | type     | Result of `flattenLayout`: every node in paint order (each parent before its children) plus lookups by id and by parent id.                                                      |
-| [`flattenLayout`](#flattenlayout)                           | function | Flatten a tree of nested layouts into root-relative rectangles.                                                                                                                  |
-| [`FlattenOptions`](#flattenoptions)                         | type     | Options for `flattenLayout`.                                                                                                                                                     |
-| [`getAncestors`](#getancestors)                             | function | Ancestors of an item from parent to root.                                                                                                                                        |
-| [`getDescendants`](#getdescendants)                         | function | All descendants of an item in paint order.                                                                                                                                       |
-| [`GridNode`](#gridnode)                                     | type     | Normalized tree node.                                                                                                                                                            |
-| [`gridNodeAdapter`](#gridnodeadapter)                       | const    | The `GridTreeAdapter` for plain `GridNode` trees.                                                                                                                                |
-| [`GridNodeBehavior`](#gridnodebehavior)                     | type     | Per-node flags that control how a node takes part in nesting: whether it is a container, accepts drops, confines its children, is locked, or keeps its height during compaction. |
-| [`GridTreeAdapter`](#gridtreeadapter)                       | type     | Callbacks that let `flattenLayout` read any tree shape without conversion.                                                                                                       |
-| [`hitTest`](#hittest)                                       | function | Deepest item whose rect contains the point (last in paint order wins).                                                                                                           |
-| [`isDirectChildOfContained`](#isdirectchildofcontained)     | function | True when the item's direct parent is a contained container.                                                                                                                     |
-| [`isInsideLockedSubtree`](#isinsidelockedsubtree)           | function | True when the item or any ancestor is locked.                                                                                                                                    |
-| [`markLockedItems`](#marklockeditems)                       | function | Mark items whose node is locked as `policy.movement: 'locked'` so solvers treat them as walls.                                                                                   |
-| [`projectItemsToRoot`](#projectitemstoroot)                 | function | Project items expressed in a container's rendered canvas into root coordinates using the same pipeline `flattenLayout` uses.                                                     |
-| [`projectItemToRoot`](#projectitemtoroot)                   | function | Root coordinates of one item after projecting `contextItems`.                                                                                                                    |
-| [`renderLayoutForRect`](#renderlayoutforrect)               | function | Project a container's authored layout into the rectangle it renders in.                                                                                                          |
-| [`rootPointToContainer`](#rootpointtocontainer)             | function | Convert a root-relative point into a container's rendered canvas coordinates.                                                                                                    |
-| [`scaleSizeBetweenContainers`](#scalesizebetweencontainers) | function | Translate a size authored in `source`'s canvas units to `target`'s so it covers the same number of root pixels.                                                                  |
-| [`toRenderedLayout`](#torenderedlayout)                     | function | Build the layout to persist after a solve inside `container`: the canvas is rebased to the container's rendered size and the items are projected into it.                        |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`compactLayout`](#compactlayout) | function | Shrink items vertically until the layout fits a bounded canvas. |
+| [`CompactOptions`](#compactoptions) | type | Options for `compactLayout`. |
+| [`CompactResult`](#compactresult) | type | Result of `compactLayout`: the compacted layout and whether everything fit. |
+| [`findContainerAt`](#findcontainerat) | function | Deepest container that accepts children and contains the point. |
+| [`FindContainerOptions`](#findcontaineroptions) | type | Options for `findContainerAt`. |
+| [`findFirstUnlockedAncestor`](#findfirstunlockedancestor) | function | Nearest ancestor (or the item itself) that is outside every locked subtree. |
+| [`FlatItem`](#flatitem) | type | One node of a flattened tree: its rectangle in root coordinates, its place in the hierarchy, its rendered and authored layouts, and its resolved behavior flags. |
+| [`FlatLayout`](#flatlayout) | type | Result of `flattenLayout`: every node in paint order (each parent before its children) plus lookups by id and by parent id. |
+| [`flattenLayout`](#flattenlayout) | function | Flatten a tree of nested layouts into root-relative rectangles. |
+| [`FlattenOptions`](#flattenoptions) | type | Options for `flattenLayout`. |
+| [`getAncestors`](#getancestors) | function | Ancestors of an item from parent to root. |
+| [`getDescendants`](#getdescendants) | function | All descendants of an item in paint order. |
+| [`GridNode`](#gridnode) | type | Normalized tree node. |
+| [`gridNodeAdapter`](#gridnodeadapter) | const | The `GridTreeAdapter` for plain `GridNode` trees. |
+| [`GridNodeBehavior`](#gridnodebehavior) | type | Per-node flags that control how a node takes part in nesting: whether it is a container, accepts drops, confines its children, is locked, or keeps its height during compaction. |
+| [`GridTreeAdapter`](#gridtreeadapter) | type | Callbacks that let `flattenLayout` read any tree shape without conversion. |
+| [`hitTest`](#hittest) | function | Deepest item whose rect contains the point (last in paint order wins). |
+| [`isDirectChildOfContained`](#isdirectchildofcontained) | function | True when the item's direct parent is a contained container. |
+| [`isInsideLockedSubtree`](#isinsidelockedsubtree) | function | True when the item or any ancestor is locked. |
+| [`markLockedItems`](#marklockeditems) | function | Mark items whose node is locked as `policy.movement: 'locked'` so solvers treat them as walls. |
+| [`projectItemsToRoot`](#projectitemstoroot) | function | Project items expressed in a container's rendered canvas into root coordinates using the same pipeline `flattenLayout` uses. |
+| [`projectItemToRoot`](#projectitemtoroot) | function | Root coordinates of one item after projecting `contextItems`. |
+| [`renderLayoutForRect`](#renderlayoutforrect) | function | Project a container's authored layout into the rectangle it renders in. |
+| [`rootPointToContainer`](#rootpointtocontainer) | function | Convert a root-relative point into a container's rendered canvas coordinates. |
+| [`scaleSizeBetweenContainers`](#scalesizebetweencontainers) | function | Translate a size authored in `source`'s canvas units to `target`'s so it covers the same number of root pixels. |
+| [`toRenderedLayout`](#torenderedlayout) | function | Build the layout to persist after a solve inside `container`: the canvas is rebased to the container's rendered size and the items are projected into it. |
 
 ## Functions
 
 ### compactLayout
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L585">
-    core/nested/index.ts:585
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L585">core/nested/index.ts:585</a></span>
 
 Shrink items vertically until the layout fits a bounded canvas. Authored
 gaps between rows are preserved, flexible items shrink proportionally down
@@ -95,12 +62,7 @@ export function compactLayout<T>(
 
 ### findContainerAt
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L313">
-    core/nested/index.ts:313
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L313">core/nested/index.ts:313</a></span>
 
 Deepest container that accepts children and contains the point.
 
@@ -114,12 +76,7 @@ export function findContainerAt<TNode>(
 
 ### findFirstUnlockedAncestor
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L384">
-    core/nested/index.ts:384
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L384">core/nested/index.ts:384</a></span>
 
 Nearest ancestor (or the item itself) that is outside every locked subtree.
 
@@ -132,12 +89,7 @@ export function findFirstUnlockedAncestor<TNode>(
 
 ### flattenLayout
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L177">
-    core/nested/index.ts:177
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L177">core/nested/index.ts:177</a></span>
 
 Flatten a tree of nested layouts into root-relative rectangles. Every
 container's children are projected into the container's rendered rect.
@@ -152,12 +104,7 @@ export function flattenLayout<TNode = GridNode>(
 
 ### getAncestors
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L341">
-    core/nested/index.ts:341
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L341">core/nested/index.ts:341</a></span>
 
 Ancestors of an item from parent to root.
 
@@ -167,57 +114,46 @@ export function getAncestors<TNode>(layout: FlatLayout<TNode>, itemId: string): 
 
 ### getDescendants
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L354">
-    core/nested/index.ts:354
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L354">core/nested/index.ts:354</a></span>
 
 All descendants of an item in paint order.
 
 ```ts
-export function getDescendants<TNode>(layout: FlatLayout<TNode>, itemId: string): FlatItem<TNode>[]
+export function getDescendants<TNode>(
+  layout: FlatLayout<TNode>,
+  itemId: string,
+): FlatItem<TNode>[]
 ```
 
 ### hitTest
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L290">
-    core/nested/index.ts:290
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L290">core/nested/index.ts:290</a></span>
 
 Deepest item whose rect contains the point (last in paint order wins).
 
 ```ts
-export function hitTest<TNode>(layout: FlatLayout<TNode>, point: GridPoint): FlatItem<TNode> | null
+export function hitTest<TNode>(
+  layout: FlatLayout<TNode>,
+  point: GridPoint,
+): FlatItem<TNode> | null
 ```
 
 ### isDirectChildOfContained
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L397">
-    core/nested/index.ts:397
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L397">core/nested/index.ts:397</a></span>
 
 True when the item's direct parent is a contained container.
 
 ```ts
-export function isDirectChildOfContained<TNode>(layout: FlatLayout<TNode>, itemId: string): boolean
+export function isDirectChildOfContained<TNode>(
+  layout: FlatLayout<TNode>,
+  itemId: string,
+): boolean
 ```
 
 ### isInsideLockedSubtree
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L374">
-    core/nested/index.ts:374
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L374">core/nested/index.ts:374</a></span>
 
 True when the item or any ancestor is locked.
 
@@ -227,12 +163,7 @@ export function isInsideLockedSubtree<TNode>(layout: FlatLayout<TNode>, itemId: 
 
 ### markLockedItems
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L410">
-    core/nested/index.ts:410
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L410">core/nested/index.ts:410</a></span>
 
 Mark items whose node is locked as `policy.movement: 'locked'` so solvers
 treat them as walls. Returns the input when nothing changes.
@@ -246,12 +177,7 @@ export function markLockedItems<TNode>(
 
 ### projectItemsToRoot
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L433">
-    core/nested/index.ts:433
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L433">core/nested/index.ts:433</a></span>
 
 Project items expressed in a container's rendered canvas into root
 coordinates using the same pipeline [`flattenLayout`](#flattenlayout) uses. Pass a full
@@ -266,12 +192,7 @@ export function projectItemsToRoot<TNode>(
 
 ### projectItemToRoot
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L465">
-    core/nested/index.ts:465
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L465">core/nested/index.ts:465</a></span>
 
 Root coordinates of one item after projecting `contextItems`.
 
@@ -285,12 +206,7 @@ export function projectItemToRoot<TNode>(
 
 ### renderLayoutForRect
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L152">
-    core/nested/index.ts:152
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L152">core/nested/index.ts:152</a></span>
 
 Project a container's authored layout into the rectangle it renders in.
 Returns a layout whose canvas matches `rect` (with the node's padding) and
@@ -307,12 +223,7 @@ export function renderLayoutForRect(
 
 ### rootPointToContainer
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L487">
-    core/nested/index.ts:487
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L487">core/nested/index.ts:487</a></span>
 
 Convert a root-relative point into a container's rendered canvas
 coordinates. Returns `null` for leaves.
@@ -327,12 +238,7 @@ export function rootPointToContainer<TNode>(
 
 ### scaleSizeBetweenContainers
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L512">
-    core/nested/index.ts:512
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L512">core/nested/index.ts:512</a></span>
 
 Translate a size authored in `source`'s canvas units to `target`'s so it
 covers the same number of root pixels.
@@ -347,12 +253,7 @@ export function scaleSizeBetweenContainers<TNode>(
 
 ### toRenderedLayout
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L536">
-    core/nested/index.ts:536
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L536">core/nested/index.ts:536</a></span>
 
 Build the layout to persist after a solve inside `container`: the canvas
 is rebased to the container's rendered size and the items are projected
@@ -369,12 +270,7 @@ export function toRenderedLayout<TNode>(
 
 ### gridNodeAdapter
 
-<span className="g-api-meta">
-  const ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L71">
-    core/nested/index.ts:71
-  </a>
-</span>
+<span className="g-api-meta">const · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L71">core/nested/index.ts:71</a></span>
 
 The [`GridTreeAdapter`](#gridtreeadapter) for plain [`GridNode`](#gridnode) trees. [`flattenLayout`](#flattenlayout) uses it
 when no adapter is given.
@@ -387,12 +283,7 @@ export const gridNodeAdapter: GridTreeAdapter<GridNode<unknown>>
 
 ### CompactOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L568">
-    core/nested/index.ts:568
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L568">core/nested/index.ts:568</a></span>
 
 Options for [`compactLayout`](#compactlayout).
 
@@ -403,18 +294,13 @@ export type CompactOptions = {
 }
 ```
 
-| Member     | Type                             | Description                                                 |
-| ---------- | -------------------------------- | ----------------------------------------------------------- |
+| Member | Type | Description |
+| --- | --- | --- |
 | `isRigid?` | `((item: GridItem) =\> boolean)` | Items that keep their height. Fixed-height items always do. |
 
 ### CompactResult
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L574">
-    core/nested/index.ts:574
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L574">core/nested/index.ts:574</a></span>
 
 Result of [`compactLayout`](#compactlayout): the compacted layout and whether everything fit.
 
@@ -426,19 +312,14 @@ export type CompactResult<T = unknown> = {
 }
 ```
 
-| Member   | Type              | Description                                                       |
-| -------- | ----------------- | ----------------------------------------------------------------- |
-| `layout` | `GridLayout\<T\>` |                                                                   |
-| `fits`   | `boolean`         | `false` when rigid heights, minimums, and gaps exceed the canvas. |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout` | `GridLayout\<T\>` |  |
+| `fits` | `boolean` | `false` when rigid heights, minimums, and gaps exceed the canvas. |
 
 ### FindContainerOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L302">
-    core/nested/index.ts:302
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L302">core/nested/index.ts:302</a></span>
 
 Options for [`findContainerAt`](#findcontainerat).
 
@@ -454,19 +335,14 @@ export type FindContainerOptions = {
 }
 ```
 
-| Member      | Type     | Description                                                                                                                              |
-| ----------- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `inset?`    | `number` | Containers other than `sourceId` must contain the point at least this far inside their edges. Keeps edge brushes from switching targets. |
-| `sourceId?` | `string` | Container the interaction started in; it wins without any inset.                                                                         |
+| Member | Type | Description |
+| --- | --- | --- |
+| `inset?` | `number` | Containers other than `sourceId` must contain the point at least this far inside their edges. Keeps edge brushes from switching targets. |
+| `sourceId?` | `string` | Container the interaction started in; it wins without any inset. |
 
 ### FlatItem
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L101">
-    core/nested/index.ts:101
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L101">core/nested/index.ts:101</a></span>
 
 One node of a flattened tree: its rectangle in root coordinates, its place in
 the hierarchy, its rendered and authored layouts, and its resolved behavior flags.
@@ -502,32 +378,27 @@ export type FlatItem<TNode = GridNode> = {
 }
 ```
 
-| Member            | Type           | Description                                                     |
-| ----------------- | -------------- | --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `id`              | `string`       |                                                                 |
-| `parentId`        | `string \\     | null`                                                           | Id of the enclosing container, or `null` for the root.                                                                             |
-| `depth`           | `number`       | 0 for the root, 1 for its children, and so on.                  |
-| `rect`            | `GridRect`     | Rectangle in root coordinates.                                  |
-| `canonicalRect`   | `GridRect \\   | null`                                                           | The node's item entry in its parent's authored layout. `null` for the root.                                                        |
-| `sizing`          | `GridItem \\   | null`                                                           | The node's item entry in its parent's rendered layout. `null` for the root.                                                        |
-| `layout`          | `GridLayout \\ | null`                                                           | For containers: the authored layout projected into `rect`. Solvers and hit testing for children operate in this coordinate system. |
-| `sourceLayout`    | `GridLayout \\ | null`                                                           | The authored layout, untouched. `null` for leaves.                                                                                 |
-| `gap`             | `number`       | Gap used when projecting and solving this container's children. |
-| `node`            | `TNode`        |                                                                 |
-| `isContainer`     | `boolean`      |                                                                 |
-| `acceptsChildren` | `boolean`      |                                                                 |
-| `locked`          | `boolean`      |                                                                 |
-| `contained`       | `boolean`      |                                                                 |
-| `scrollable`      | `boolean`      |                                                                 |
+| Member | Type | Description |
+| --- | --- | --- |
+| `id` | `string` |  |
+| `parentId` | `string \\| null` | Id of the enclosing container, or `null` for the root. |
+| `depth` | `number` | 0 for the root, 1 for its children, and so on. |
+| `rect` | `GridRect` | Rectangle in root coordinates. |
+| `canonicalRect` | `GridRect \\| null` | The node's item entry in its parent's authored layout. `null` for the root. |
+| `sizing` | `GridItem \\| null` | The node's item entry in its parent's rendered layout. `null` for the root. |
+| `layout` | `GridLayout \\| null` | For containers: the authored layout projected into `rect`. Solvers and hit testing for children operate in this coordinate system. |
+| `sourceLayout` | `GridLayout \\| null` | The authored layout, untouched. `null` for leaves. |
+| `gap` | `number` | Gap used when projecting and solving this container's children. |
+| `node` | `TNode` |  |
+| `isContainer` | `boolean` |  |
+| `acceptsChildren` | `boolean` |  |
+| `locked` | `boolean` |  |
+| `contained` | `boolean` |  |
+| `scrollable` | `boolean` |  |
 
 ### FlatLayout
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L134">
-    core/nested/index.ts:134
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L134">core/nested/index.ts:134</a></span>
 
 Result of [`flattenLayout`](#flattenlayout): every node in paint order (each parent before its
 children) plus lookups by id and by parent id. The root's parent id is `null`.
@@ -541,21 +412,16 @@ export type FlatLayout<TNode = GridNode> = {
 }
 ```
 
-| Member               | Type                                       | Description                      |
-| -------------------- | ------------------------------------------ | -------------------------------- | --- |
-| `rootId`             | `string`                                   |                                  |
-| `items`              | `ReadonlyArray\<FlatItem\<TNode\>\>`       |                                  |
-| `itemsById`          | `ReadonlyMap\<string, FlatItem\<TNode\>\>` |                                  |
-| `childrenByParentId` | `ReadonlyMap\<string \\                    | null, ReadonlyArray\<string\>\>` |     |
+| Member | Type | Description |
+| --- | --- | --- |
+| `rootId` | `string` |  |
+| `items` | `ReadonlyArray\<FlatItem\<TNode\>\>` |  |
+| `itemsById` | `ReadonlyMap\<string, FlatItem\<TNode\>\>` |  |
+| `childrenByParentId` | `ReadonlyMap\<string \\| null, ReadonlyArray\<string\>\>` |  |
 
 ### FlattenOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L142">
-    core/nested/index.ts:142
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L142">core/nested/index.ts:142</a></span>
 
 Options for [`flattenLayout`](#flattenlayout).
 
@@ -566,18 +432,13 @@ export type FlattenOptions<TNode> = {
 }
 ```
 
-| Member     | Type                       | Description                                                    |
-| ---------- | -------------------------- | -------------------------------------------------------------- |
+| Member | Type | Description |
+| --- | --- | --- |
 | `adapter?` | `GridTreeAdapter\<TNode\>` | Reads your own tree shape. Defaults to the `GridNode` adapter. |
 
 ### GridNode
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L44">
-    core/nested/index.ts:44
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L44">core/nested/index.ts:44</a></span>
 
 Normalized tree node. Use [`GridTreeAdapter`](#gridtreeadapter) to flatten other shapes directly.
 
@@ -596,24 +457,19 @@ export type GridNode<TData = unknown> = {
 }
 ```
 
-| Member      | Type                         | Description                                                        |
-| ----------- | ---------------------------- | ------------------------------------------------------------------ |
-| `id`        | `string`                     |                                                                    |
-| `layout?`   | `GridLayout`                 | Layout of this node's children. Present on containers.             |
-| `children?` | `Array\<GridNode\<TData\>\>` |                                                                    |
-| `gap?`      | `number`                     | Gap between children in pixels. Kept fixed during projection.      |
-| `padding?`  | `Partial\<GridPadding\>`     | Rendering padding for children. Overrides `layout.canvas.padding`. |
-| `behavior?` | `GridNodeBehavior`           |                                                                    |
-| `data?`     | `TData`                      |                                                                    |
+| Member | Type | Description |
+| --- | --- | --- |
+| `id` | `string` |  |
+| `layout?` | `GridLayout` | Layout of this node's children. Present on containers. |
+| `children?` | `Array\<GridNode\<TData\>\>` |  |
+| `gap?` | `number` | Gap between children in pixels. Kept fixed during projection. |
+| `padding?` | `Partial\<GridPadding\>` | Rendering padding for children. Overrides `layout.canvas.padding`. |
+| `behavior?` | `GridNodeBehavior` |  |
+| `data?` | `TData` |  |
 
 ### GridNodeBehavior
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L30">
-    core/nested/index.ts:30
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L30">core/nested/index.ts:30</a></span>
 
 Per-node flags that control how a node takes part in nesting: whether it is a
 container, accepts drops, confines its children, is locked, or keeps its
@@ -634,22 +490,17 @@ export type GridNodeBehavior = {
 }
 ```
 
-| Member             | Type      | Description                                                                              |
-| ------------------ | --------- | ---------------------------------------------------------------------------------------- |
-| `container?`       | `boolean` | Treat the node as a container even without children. Defaults to `layout !== undefined`. |
-| `acceptsChildren?` | `boolean` | Whether items may be dropped into this node. Defaults to `container`.                    |
-| `contained?`       | `boolean` | Direct children cannot leave, and outside items cannot enter.                            |
-| `locked?`          | `boolean` | The subtree is a wall: nothing inside moves, nothing outside enters.                     |
-| `scrollable?`      | `boolean` | Keeps its height during compaction (content scrolls instead).                            |
+| Member | Type | Description |
+| --- | --- | --- |
+| `container?` | `boolean` | Treat the node as a container even without children. Defaults to `layout !== undefined`. |
+| `acceptsChildren?` | `boolean` | Whether items may be dropped into this node. Defaults to `container`. |
+| `contained?` | `boolean` | Direct children cannot leave, and outside items cannot enter. |
+| `locked?` | `boolean` | The subtree is a wall: nothing inside moves, nothing outside enters. |
+| `scrollable?` | `boolean` | Keeps its height during compaction (content scrolls instead). |
 
 ### GridTreeAdapter
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L58">
-    core/nested/index.ts:58
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/nested/index.ts#L58">core/nested/index.ts:58</a></span>
 
 Callbacks that let [`flattenLayout`](#flattenlayout) read any tree shape without conversion.
 
@@ -664,11 +515,11 @@ export type GridTreeAdapter<TNode> = {
 }
 ```
 
-| Member         | Type                                          | Description |
-| -------------- | --------------------------------------------- | ----------- | --- |
-| `getId`        | `(node: TNode) =\> string`                    |             |
-| `getChildren`  | `(node: TNode) =\> readonly TNode[]`          |             |
-| `getLayout`    | `(node: TNode) =\> GridLayout \\              | null`       |     |
-| `getBehavior?` | `((node: TNode) =\> GridNodeBehavior \\       | undefined)` |     |
-| `getGap?`      | `((node: TNode) =\> number \\                 | undefined)` |     |
-| `getPadding?`  | `((node: TNode) =\> Partial\<GridPadding\> \\ | undefined)` |     |
+| Member | Type | Description |
+| --- | --- | --- |
+| `getId` | `(node: TNode) =\> string` |  |
+| `getChildren` | `(node: TNode) =\> readonly TNode[]` |  |
+| `getLayout` | `(node: TNode) =\> GridLayout \\| null` |  |
+| `getBehavior?` | `((node: TNode) =\> GridNodeBehavior \\| undefined)` |  |
+| `getGap?` | `((node: TNode) =\> number \\| undefined)` |  |
+| `getPadding?` | `((node: TNode) =\> Partial\<GridPadding\> \\| undefined)` |  |

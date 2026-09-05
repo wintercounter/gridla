@@ -10,57 +10,34 @@ description: Solvers exports of gridla. Generated from the source declarations.
 Move, resize, place, and transfer. Each solver takes a layout plus an intent, returns a new layout, and names the strategy that produced it. Inputs are never mutated.
 
 ```ts
-import {
-  edgeAlignedSlots,
-  moveItem,
-  placeItem,
-  pushAndShrinkSiblings,
-  resizeByShrinkingNeighbors,
-  resizeItem,
-  scaleSizeBetweenCanvases,
-  transferItem,
-} from 'gridla'
-import type {
-  MoveItemInput,
-  NewGridItem,
-  PlaceItemInput,
-  ResizeItemInput,
-  SolveOptions,
-  SolveResult,
-  TransferItemInput,
-  TransferResult,
-} from 'gridla'
+import { edgeAlignedSlots, moveItem, placeItem, pushAndShrinkSiblings, resizeByShrinkingNeighbors, resizeItem, scaleSizeBetweenCanvases, transferItem } from 'gridla'
+import type { MoveItemInput, NewGridItem, PlaceItemInput, ResizeItemInput, SolveOptions, SolveResult, TransferItemInput, TransferResult } from 'gridla'
 ```
 
-| Export                                                      | Kind     | Summary                                                                                                                                            |
-| ----------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`edgeAlignedSlots`](#edgealignedslots)                     | function | Every position aligned to a sibling or canvas edge where `item` could sit.                                                                         |
-| [`moveItem`](#moveitem)                                     | function | Move one item to a requested position.                                                                                                             |
-| [`MoveItemInput`](#moveiteminput)                           | type     | Input for `moveItem`.                                                                                                                              |
-| [`NewGridItem`](#newgriditem)                               | type     | Item description accepted by `placeItem`.                                                                                                          |
-| [`placeItem`](#placeitem)                                   | function | Insert an item into the layout.                                                                                                                    |
-| [`PlaceItemInput`](#placeiteminput)                         | type     | Input for `placeItem`.                                                                                                                             |
-| [`pushAndShrinkSiblings`](#pushandshrinksiblings)           | function | Push siblings forward along `axis`; when the chain hits the canvas edge, shrink the pushed siblings proportionally (down to `min` or 40% of size). |
-| [`resizeByShrinkingNeighbors`](#resizebyshrinkingneighbors) | function | Trim neighbors that the resized rectangle newly collides with.                                                                                     |
-| [`resizeItem`](#resizeitem)                                 | function | Resize one item.                                                                                                                                   |
-| [`ResizeItemInput`](#resizeiteminput)                       | type     | Input for `resizeItem`.                                                                                                                            |
-| [`scaleSizeBetweenCanvases`](#scalesizebetweencanvases)     | function | Scale a size authored against `source` so it covers the same fraction of `target`.                                                                 |
-| [`SolveOptions`](#solveoptions)                             | type     | Tuning shared by every solver: minimum gap, snapping, and tracing.                                                                                 |
-| [`SolveResult`](#solveresult)                               | type     | Outcome of a solve.                                                                                                                                |
-| [`transferItem`](#transferitem)                             | function | Move an item from `source` into `target` at `pointer`.                                                                                             |
-| [`TransferItemInput`](#transferiteminput)                   | type     | Input for `transferItem`: move an item out of one layout and into another at a pointer location.                                                   |
-| [`TransferResult`](#transferresult)                         | type     | Result of `transferItem`: both layouts after the operation, the item as placed in the target, and the strategy used.                               |
+| Export | Kind | Summary |
+| --- | --- | --- |
+| [`edgeAlignedSlots`](#edgealignedslots) | function | Every position aligned to a sibling or canvas edge where `item` could sit. |
+| [`moveItem`](#moveitem) | function | Move one item to a requested position. |
+| [`MoveItemInput`](#moveiteminput) | type | Input for `moveItem`. |
+| [`NewGridItem`](#newgriditem) | type | Item description accepted by `placeItem`. |
+| [`placeItem`](#placeitem) | function | Insert an item into the layout. |
+| [`PlaceItemInput`](#placeiteminput) | type | Input for `placeItem`. |
+| [`pushAndShrinkSiblings`](#pushandshrinksiblings) | function | Push siblings forward along `axis`; when the chain hits the canvas edge, shrink the pushed siblings proportionally (down to `min` or 40% of size). |
+| [`resizeByShrinkingNeighbors`](#resizebyshrinkingneighbors) | function | Trim neighbors that the resized rectangle newly collides with. |
+| [`resizeItem`](#resizeitem) | function | Resize one item. |
+| [`ResizeItemInput`](#resizeiteminput) | type | Input for `resizeItem`. |
+| [`scaleSizeBetweenCanvases`](#scalesizebetweencanvases) | function | Scale a size authored against `source` so it covers the same fraction of `target`. |
+| [`SolveOptions`](#solveoptions) | type | Tuning shared by every solver: minimum gap, snapping, and tracing. |
+| [`SolveResult`](#solveresult) | type | Outcome of a solve. |
+| [`transferItem`](#transferitem) | function | Move an item from `source` into `target` at `pointer`. |
+| [`TransferItemInput`](#transferiteminput) | type | Input for `transferItem`: move an item out of one layout and into another at a pointer location. |
+| [`TransferResult`](#transferresult) | type | Result of `transferItem`: both layouts after the operation, the item as placed in the target, and the strategy used. |
 
 ## Functions
 
 ### edgeAlignedSlots
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L295">
-    core/solver/shared.ts:295
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L295">core/solver/shared.ts:295</a></span>
 
 Every position aligned to a sibling or canvas edge where `item` could sit.
 
@@ -75,12 +52,7 @@ export function edgeAlignedSlots<T>(
 
 ### moveItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L1192">
-    core/solver/move.ts:1192
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L1192">core/solver/move.ts:1192</a></span>
 
 Move one item to a requested position. Siblings are pushed, swapped,
 reordered, or shrunk as needed. Returns a new layout; inputs are not
@@ -97,12 +69,7 @@ export function moveItem<T = unknown>({
 
 ### placeItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L332">
-    core/solver/place.ts:332
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L332">core/solver/place.ts:332</a></span>
 
 Insert an item into the layout. Give a `position` for a top-left intent
 or a `pointer` for a cursor-centered intent. Returns a new layout.
@@ -119,12 +86,7 @@ export function placeItem<T = unknown>({
 
 ### pushAndShrinkSiblings
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L204">
-    core/solver/move.ts:204
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L204">core/solver/move.ts:204</a></span>
 
 Push siblings forward along `axis`; when the chain hits the canvas edge,
 shrink the pushed siblings proportionally (down to `min` or 40% of size).
@@ -142,12 +104,7 @@ export function pushAndShrinkSiblings<T>(
 
 ### resizeByShrinkingNeighbors
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L120">
-    core/solver/resize.ts:120
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L120">core/solver/resize.ts:120</a></span>
 
 Trim neighbors that the resized rectangle newly collides with. Neighbors
 that already overlapped the original rect, ghosts, and locked items are not
@@ -169,12 +126,7 @@ export function resizeByShrinkingNeighbors<T>({
 
 ### resizeItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L215">
-    core/solver/resize.ts:215
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L215">core/solver/resize.ts:215</a></span>
 
 Resize one item. Provide `edge` + `delta` for interactive resizing, or
 `rect` for programmatic resizing. Returns a new layout; inputs are not
@@ -193,12 +145,7 @@ export function resizeItem<T = unknown>({
 
 ### scaleSizeBetweenCanvases
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L54">
-    core/solver/transfer.ts:54
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L54">core/solver/transfer.ts:54</a></span>
 
 Scale a size authored against `source` so it covers the same fraction of
 `target`. Used to keep items visually consistent across canvases.
@@ -213,12 +160,7 @@ export function scaleSizeBetweenCanvases(
 
 ### transferItem
 
-<span className="g-api-meta">
-  function ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L68">
-    core/solver/transfer.ts:68
-  </a>
-</span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L68">core/solver/transfer.ts:68</a></span>
 
 Move an item from `source` into `target` at `pointer`. Returns both updated
 layouts. Neither input is mutated.
@@ -238,12 +180,7 @@ export function transferItem<T = unknown>({
 
 ### MoveItemInput
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L1179">
-    core/solver/move.ts:1179
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/move.ts#L1179">core/solver/move.ts:1179</a></span>
 
 Input for [`moveItem`](#moveitem).
 
@@ -257,21 +194,16 @@ export type MoveItemInput<T = unknown> = {
 }
 ```
 
-| Member     | Type              | Description                                        |
-| ---------- | ----------------- | -------------------------------------------------- |
-| `layout`   | `GridLayout\<T\>` |                                                    |
-| `itemId`   | `string`          |                                                    |
-| `position` | `GridPoint`       | Requested top-left position in canvas coordinates. |
-| `options?` | `SolveOptions`    |                                                    |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout` | `GridLayout\<T\>` |  |
+| `itemId` | `string` |  |
+| `position` | `GridPoint` | Requested top-left position in canvas coordinates. |
+| `options?` | `SolveOptions` |  |
 
 ### NewGridItem
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L298">
-    core/solver/place.ts:298
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L298">core/solver/place.ts:298</a></span>
 
 Item description accepted by [`placeItem`](#placeitem). Position is optional.
 
@@ -285,22 +217,17 @@ export type NewGridItem<T = unknown> = GridItemSize & {
 }
 ```
 
-| Member    | Type             | Description |
-| --------- | ---------------- | ----------- |
-| `id`      | `string`         |             |
-| `x?`      | `number`         |             |
-| `y?`      | `number`         |             |
-| `policy?` | `GridItemPolicy` |             |
-| `data?`   | `T`              |             |
+| Member | Type | Description |
+| --- | --- | --- |
+| `id` | `string` |  |
+| `x?` | `number` |  |
+| `y?` | `number` |  |
+| `policy?` | `GridItemPolicy` |  |
+| `data?` | `T` |  |
 
 ### PlaceItemInput
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L311">
-    core/solver/place.ts:311
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/place.ts#L311">core/solver/place.ts:311</a></span>
 
 Input for [`placeItem`](#placeitem). Give `position` for a top-left intent, or `pointer` to
 center the item on a point.
@@ -318,22 +245,17 @@ export type PlaceItemInput<T = unknown> = {
 }
 ```
 
-| Member      | Type               | Description                                                                     |
-| ----------- | ------------------ | ------------------------------------------------------------------------------- |
-| `layout`    | `GridLayout\<T\>`  |                                                                                 |
-| `item`      | `NewGridItem\<T\>` | Item to insert. Its `id` must not already be in the layout unless replacing it. |
-| `position?` | `GridPoint`        | Requested top-left. Overrides `item.x`/`item.y`.                                |
-| `pointer?`  | `GridPoint`        | Pointer location in canvas coordinates. The item is centered on it.             |
-| `options?`  | `SolveOptions`     |                                                                                 |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout` | `GridLayout\<T\>` |  |
+| `item` | `NewGridItem\<T\>` | Item to insert. Its `id` must not already be in the layout unless replacing it. |
+| `position?` | `GridPoint` | Requested top-left. Overrides `item.x`/`item.y`. |
+| `pointer?` | `GridPoint` | Pointer location in canvas coordinates. The item is centered on it. |
+| `options?` | `SolveOptions` |  |
 
 ### ResizeItemInput
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L195">
-    core/solver/resize.ts:195
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/resize.ts#L195">core/solver/resize.ts:195</a></span>
 
 Input for [`resizeItem`](#resizeitem). Use `edge` + `delta` for a drag, or `rect` for a
 programmatic size.
@@ -355,23 +277,18 @@ export type ResizeItemInput<T = unknown> = {
 }
 ```
 
-| Member     | Type                  | Description                                                                                                             |
-| ---------- | --------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| `layout`   | `GridLayout\<T\>`     |                                                                                                                         |
-| `itemId`   | `string`              |                                                                                                                         |
-| `edge?`    | `GridResizeEdge`      | Edge or corner being dragged. Required when `delta` is used; optional with `rect`, where it only informs edge snapping. |
-| `delta?`   | `GridPoint`           | Pixel movement of the dragged edge. Ignored when `rect` is given.                                                       |
-| `rect?`    | `Partial\<GridRect\>` | Requested rectangle. Missing fields default to the current values.                                                      |
-| `options?` | `SolveOptions`        |                                                                                                                         |
+| Member | Type | Description |
+| --- | --- | --- |
+| `layout` | `GridLayout\<T\>` |  |
+| `itemId` | `string` |  |
+| `edge?` | `GridResizeEdge` | Edge or corner being dragged. Required when `delta` is used; optional with `rect`, where it only informs edge snapping. |
+| `delta?` | `GridPoint` | Pixel movement of the dragged edge. Ignored when `rect` is given. |
+| `rect?` | `Partial\<GridRect\>` | Requested rectangle. Missing fields default to the current values. |
+| `options?` | `SolveOptions` |  |
 
 ### SolveOptions
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L39">
-    core/solver/shared.ts:39
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L39">core/solver/shared.ts:39</a></span>
 
 Tuning shared by every solver: minimum gap, snapping, and tracing. Every field
 is optional.
@@ -393,21 +310,16 @@ export type SolveOptions = {
 }
 ```
 
-| Member          | Type            | Description                                                                                                                                                   |
-| --------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gap?`          | `number`        | Minimum distance kept between neighbors. Default `0`.                                                                                                         |
-| `snapDistance?` | `number`        | Distance within which edges attract. Default `24`.                                                                                                            |
-| `snap?`         | `boolean`       | When `false`, alignment snapping is skipped so the item tracks the requested position exactly. Bounds, gap, and constraint rules still apply. Default `true`. |
-| `onTrace?`      | `TraceCallback` | Receives one event per solve describing which strategy produced the result.                                                                                   |
+| Member | Type | Description |
+| --- | --- | --- |
+| `gap?` | `number` | Minimum distance kept between neighbors. Default `0`. |
+| `snapDistance?` | `number` | Distance within which edges attract. Default `24`. |
+| `snap?` | `boolean` | When `false`, alignment snapping is skipped so the item tracks the requested position exactly. Bounds, gap, and constraint rules still apply. Default `true`. |
+| `onTrace?` | `TraceCallback` | Receives one event per solve describing which strategy produced the result. |
 
 ### SolveResult
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L71">
-    core/solver/shared.ts:71
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/shared.ts#L71">core/solver/shared.ts:71</a></span>
 
 Outcome of a solve. `layout` is always a complete, independent copy.
 
@@ -429,22 +341,17 @@ export type SolveResult<T = unknown> = {
 }
 ```
 
-| Member            | Type              | Description                                                                                                                                     |
-| ----------------- | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| `accepted`        | `boolean`         | `false` means the request could not be honored; `layout` then equals the input.                                                                 |
-| `layout`          | `GridLayout\<T\>` | The layout after the operation.                                                                                                                 |
-| `item`            | `GridItem\<T\>`   | The active item as it appears in `layout`. When `accepted` is false this is the rejected candidate, useful for showing where a drop would land. |
-| `strategy`        | `SolveStrategy`   | Which strategy produced this result.                                                                                                            |
-| `shiftedSiblings` | `boolean`         | True when siblings moved or resized to make room.                                                                                               |
+| Member | Type | Description |
+| --- | --- | --- |
+| `accepted` | `boolean` | `false` means the request could not be honored; `layout` then equals the input. |
+| `layout` | `GridLayout\<T\>` | The layout after the operation. |
+| `item` | `GridItem\<T\>` | The active item as it appears in `layout`. When `accepted` is false this is the rejected candidate, useful for showing where a drop would land. |
+| `strategy` | `SolveStrategy` | Which strategy produced this result. |
+| `shiftedSiblings` | `boolean` | True when siblings moved or resized to make room. |
 
 ### TransferItemInput
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L18">
-    core/solver/transfer.ts:18
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L18">core/solver/transfer.ts:18</a></span>
 
 Input for [`transferItem`](#transferitem): move an item out of one layout and into another at a
 pointer location.
@@ -467,23 +374,18 @@ export type TransferItemInput<T = unknown> = {
 }
 ```
 
-| Member     | Type                  | Description                                                                                                                |
-| ---------- | --------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `source`   | `GridLayout\<T\>`     | Layout the item currently lives in.                                                                                        |
-| `target`   | `GridLayout\<T\>`     | Layout the item is dropped into.                                                                                           |
-| `itemId`   | `string`              |                                                                                                                            |
-| `pointer`  | `GridPoint`           | Pointer location in the target's canvas coordinates.                                                                       |
-| `size?`    | `Partial\<GridSize\>` | Size the item should take in the target. Defaults to the source size scaled by the ratio of the two canvases' inner areas. |
-| `options?` | `SolveOptions`        |                                                                                                                            |
+| Member | Type | Description |
+| --- | --- | --- |
+| `source` | `GridLayout\<T\>` | Layout the item currently lives in. |
+| `target` | `GridLayout\<T\>` | Layout the item is dropped into. |
+| `itemId` | `string` |  |
+| `pointer` | `GridPoint` | Pointer location in the target's canvas coordinates. |
+| `size?` | `Partial\<GridSize\>` | Size the item should take in the target. Defaults to the source size scaled by the ratio of the two canvases' inner areas. |
+| `options?` | `SolveOptions` |  |
 
 ### TransferResult
 
-<span className="g-api-meta">
-  type ·{' '}
-  <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L39">
-    core/solver/transfer.ts:39
-  </a>
-</span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/core/solver/transfer.ts#L39">core/solver/transfer.ts:39</a></span>
 
 Result of [`transferItem`](#transferitem): both layouts after the operation, the item as placed
 in the target, and the strategy used. When `accepted` is `false` both layouts
@@ -502,11 +404,11 @@ export type TransferResult<T = unknown> = {
 }
 ```
 
-| Member            | Type              | Description                                                     |
-| ----------------- | ----------------- | --------------------------------------------------------------- |
-| `accepted`        | `boolean`         |                                                                 |
-| `source`          | `GridLayout\<T\>` | Source layout without the item. Equals the input when rejected. |
-| `target`          | `GridLayout\<T\>` | Target layout with the item. Equals the input when rejected.    |
-| `item`            | `GridItem\<T\>`   |                                                                 |
-| `strategy`        | `SolveStrategy`   |                                                                 |
-| `shiftedSiblings` | `boolean`         |                                                                 |
+| Member | Type | Description |
+| --- | --- | --- |
+| `accepted` | `boolean` |  |
+| `source` | `GridLayout\<T\>` | Source layout without the item. Equals the input when rejected. |
+| `target` | `GridLayout\<T\>` | Target layout with the item. Equals the input when rejected. |
+| `item` | `GridItem\<T\>` |  |
+| `strategy` | `SolveStrategy` |  |
+| `shiftedSiblings` | `boolean` |  |

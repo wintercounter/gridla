@@ -1,4 +1,13 @@
-import { expect, itemRect, previewRect, resizeBy, test, type Page } from '../fixtures'
+import {
+  expect,
+  handlePoint,
+  itemRect,
+  previewRect,
+  resizeBy,
+  settledRect,
+  test,
+  type Page,
+} from '../fixtures'
 
 /**
  * Push, swap and shrink behaviour with a live drop preview, on the
@@ -11,9 +20,6 @@ const DEMO = 'react-uncontrolled'
 const PARAMS = { responsive: false }
 
 const item = (id: string) => `[data-gridla-item="${id}"]`
-const handle = (id: string, edge: string) =>
-  `[data-gridla-resize-handle="${id}"][data-gridla-edge="${edge}"]`
-
 async function ready(page: Page) {
   await expect(page.locator(item('table'))).toBeVisible()
   await expect.poll(() => itemRect(page, 'header').then((r) => r.w)).toBe(936)
@@ -69,14 +75,14 @@ test.describe('gallery: push/swap comparison', () => {
     await page.mouse.up()
 
     // The two traded places.
-    const swappedChart = await itemRect(page, 'chart')
-    const swappedSidebar = await itemRect(page, 'sidebar')
+    const swappedChart = await settledRect(page, 'chart')
+    const swappedSidebar = await settledRect(page, 'sidebar')
     expect(Math.abs(swappedChart.x - sidebar.x)).toBeLessThan(8)
     expect(Math.abs(swappedSidebar.x - chart.x)).toBeLessThan(8)
     expect(swappedSidebar.y).toBe(chart.y)
 
     await resizeBy(page, 'sidebar', 'e', 40, 0)
-    const after = await itemRect(page, 'sidebar')
+    const after = await settledRect(page, 'sidebar')
     expect(Math.abs(after.x - swappedSidebar.x)).toBeLessThan(8)
     expect(Math.abs(after.y - swappedSidebar.y)).toBeLessThan(8)
     expect(after.w - swappedSidebar.w).toBeGreaterThanOrEqual(30)
@@ -86,19 +92,24 @@ test.describe('gallery: push/swap comparison', () => {
     page,
   }) => {
     const original = await itemRect(page, 'sidebar')
-    const start = await centerOf(page, handle('chart', 'e'))
+    const start = await handlePoint(page, 'chart', 'e')
 
     await page.mouse.move(start.x, start.y)
     await page.mouse.down()
     for (let i = 1; i <= 12; i += 1) await page.mouse.move(start.x + (120 * i) / 12, start.y)
-    const expanded = await itemRect(page, 'sidebar')
-    expect(expanded.w).toBeLessThan(original.w - 60)
     await expect(page.locator(item('sidebar'))).toHaveAttribute('data-gridla-shifted', '')
+    // Shifted siblings animate to their preview rect; poll for the settled value.
+    await expect
+      .poll(() => itemRect(page, 'sidebar').then((r) => r.w))
+      .toBeLessThan(original.w - 60)
 
     for (let i = 1; i <= 15; i += 1) await page.mouse.move(start.x + 120 - 10 * i, start.y)
-    const retreated = await itemRect(page, 'sidebar')
-    expect(Math.abs(retreated.w - original.w)).toBeLessThanOrEqual(4)
-    expect(retreated.x).toBe(original.x)
+    await expect
+      .poll(() => itemRect(page, 'sidebar').then((r) => Math.abs(r.w - original.w)))
+      .toBeLessThanOrEqual(4)
+    await expect
+      .poll(() => itemRect(page, 'sidebar').then((r) => Math.abs(r.x - original.x)))
+      .toBeLessThanOrEqual(1)
     await page.mouse.up()
   })
 })
