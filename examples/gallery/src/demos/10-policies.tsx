@@ -61,7 +61,10 @@ function build(locked: boolean, ghost: boolean): GridLayout<Data> {
 export function PoliciesDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
   const [override, setOverride] = useState<GridLayout<Data>['items'] | null>(null)
-  const base = useMemo(() => build(state.locked, state.ghost), [state.locked, state.ghost])
+  const base = useMemo(
+    () => applyGap(build(state.locked, state.ghost), state.gap),
+    [state.locked, state.ghost, state.gap],
+  )
   const layout = useMemo<GridLayout<Data>>(
     () =>
       override

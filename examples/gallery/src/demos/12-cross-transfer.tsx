@@ -141,8 +141,8 @@ function Board({
 
 export function CrossTransferDemo() {
   const [state, update, reset] = useHashState(DEFAULTS)
-  const [left, setLeft] = useState<GridLayout<Data>>(buildLeft)
-  const [right, setRight] = useState<GridLayout<Data>>(buildRight)
+  const [left, setLeft] = useState<GridLayout<Data>>(() => applyGap(buildLeft(), state.gap))
+  const [right, setRight] = useState<GridLayout<Data>>(() => applyGap(buildRight(), state.gap))
   const [last, setLast] = useState<Transfer | null>(null)
 
   // Callbacks fire mid-gesture, before React re-renders: keep the layouts and
