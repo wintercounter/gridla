@@ -185,6 +185,8 @@ test.describe('studio: nested groups', () => {
     await expect
       .poll(() => itemBox(page, 'header').then((r) => r.y - headerBefore.y))
       .toBeGreaterThan(40)
+    // The pushed group and its children animate; read both from a settled frame.
+    await settleAll(page)
     const headerNow = await itemBox(page, 'header')
     const titleNow = await itemBox(page, 'title')
     const shift = headerNow.y - headerBefore.y
