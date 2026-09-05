@@ -207,7 +207,11 @@ test.describe('studio: persistence', () => {
     await pickTemplate(page, 'Editorial')
     await expect(page.locator('[data-gridla-canvas]')).toHaveCount(2)
     const items = await page.locator('[data-gridla-item]').count()
-    await waitForDraft(page)
+    // Wait for the draft that describes the NEW template, not the one the
+    // previous pick already wrote.
+    await expect
+      .poll(async () => (await storageKeys(page)).draft ?? '', { timeout: 5000 })
+      .toContain('Editorial')
     expect((await storageKeys(page)).saved).toBeNull()
     await page.reload()
     await expect(page.locator('[data-gridla-item]')).toHaveCount(items)
