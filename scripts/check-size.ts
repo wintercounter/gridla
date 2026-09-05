@@ -128,7 +128,18 @@ if (update) {
     next[name] = { gzip: Math.ceil((size.gzip * 1.1) / 100) * 100 }
   }
   writeFileSync(budgetPath, `${JSON.stringify(next, null, 2)}\n`)
-  console.log(`size-budget.json updated`)
+  // Shields endpoint badge for the README (core entry, measured gzip).
+  const core = results['gridla']
+  if (core) {
+    const badge = {
+      schemaVersion: 1,
+      label: 'core min+gzip',
+      message: `${(core.gzip / 1024).toFixed(1)} kB`,
+      color: '262A3F',
+    }
+    writeFileSync(resolve(root, 'assets/size-badge.json'), `${JSON.stringify(badge, null, 2)}\n`)
+  }
+  console.log(`size-budget.json and assets/size-badge.json updated`)
   process.exit(0)
 }
 process.exit(failed ? 1 : 0)

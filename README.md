@@ -1,5 +1,10 @@
 <p align="center">
-  <a href="https://wintercounter.github.io/gridla/"><img src="assets/wordmark.svg" width="260" alt="gridla"></a>
+  <a href="https://wintercounter.github.io/gridla/">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/wordmark-dark.svg">
+      <img src="assets/wordmark.svg" width="260" alt="gridla">
+    </picture>
+  </a>
 </p>
 
 <p align="center">
@@ -10,7 +15,7 @@
 <p align="center">
   <a href="https://www.npmjs.com/package/gridla"><img alt="npm" src="https://img.shields.io/npm/v/gridla?color=E0562F&label=npm"></a>
   <a href="https://github.com/wintercounter/gridla/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/wintercounter/gridla/actions/workflows/ci.yml/badge.svg"></a>
-  <a href="https://bundlephobia.com/package/gridla"><img alt="bundle size" src="https://img.shields.io/bundlephobia/minzip/gridla?label=core%20min%2Bgzip"></a>
+  <a href="https://github.com/wintercounter/gridla/blob/main/size-budget.json"><img alt="core size" src="https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fwintercounter%2Fgridla%2Fmain%2Fassets%2Fsize-badge.json"></a>
   <a href="https://github.com/wintercounter/gridla/blob/main/LICENSE"><img alt="MIT" src="https://img.shields.io/badge/license-MIT-262A3F"></a>
   <a href="https://wintercounter.github.io/gridla/"><img alt="docs" src="https://img.shields.io/badge/docs-gridla-262A3F"></a>
 </p>
