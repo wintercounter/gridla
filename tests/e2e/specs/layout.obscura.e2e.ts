@@ -33,24 +33,36 @@ test.describe('obscura layout lane @obscura', () => {
     }
   })
 
-  test('vanilla example re-projects when the viewport changes', async ({ page }) => {
-    await page.setViewportSize({ width: 1200, height: 900 })
+  test('vanilla example keeps items inside a resized stage', async ({ page }) => {
     await page.goto('examples/vanilla/')
     const read = () =>
-      page.evaluate(() =>
-        Array.from(document.querySelectorAll<HTMLElement>('#canvas [data-id]')).map((el) => [
-          el.dataset.id,
-          el.getBoundingClientRect().width,
-        ]),
-      )
-    const wide = await read()
-    await page.setViewportSize({ width: 700, height: 900 })
-    await page.waitForTimeout(300)
-    const narrow = await read()
-    expect(narrow.length).toBe(wide.length)
-    const header = (rows: (string | number | undefined)[][]) =>
-      rows.find((r) => r[0] === 'header')?.[1] as number
-    expect(header(narrow)).toBeLessThan(header(wide))
+      page.evaluate(() => {
+        const stage = document.getElementById('stage') as HTMLElement
+        const bounds = stage.getBoundingClientRect()
+        const items = Array.from(document.querySelectorAll<HTMLElement>('#canvas [data-id]')).map(
+          (el) => {
+            const r = el.getBoundingClientRect()
+            return {
+              id: el.dataset.id,
+              right: r.right - bounds.left,
+              bottom: r.bottom - bounds.top,
+            }
+          },
+        )
+        return { width: bounds.width, height: bounds.height, items }
+      })
+    await expect.poll(async () => (await read()).items.length).toBeGreaterThan(2)
+    await page.evaluate(() => {
+      const stage = document.getElementById('stage') as HTMLElement
+      stage.style.flex = '0 0 480px'
+      stage.style.width = '480px'
+    })
+    await expect.poll(async () => (await read()).width).toBeLessThanOrEqual(481)
+    const after = await read()
+    for (const item of after.items) {
+      expect(item.right, `${item.id} right edge`).toBeLessThanOrEqual(after.width + 1)
+      expect(item.bottom, `${item.id} bottom edge`).toBeLessThanOrEqual(after.height + 1)
+    }
   })
 
   test('documentation home renders in both themes', async ({ page }) => {
