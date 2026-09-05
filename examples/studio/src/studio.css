@@ -129,6 +129,22 @@ kbd {
   gap: var(--g-space-2);
 }
 
+.st-toolbar-kicker {
+  font: 500 var(--g-text-xs) / 1 var(--g-font-mono);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--g-fg-faint);
+}
+
+.st-wordmark {
+  text-decoration: none;
+  color: inherit;
+}
+
+.st-wordmark:hover {
+  color: var(--g-accent);
+}
+
 .st-wordmark {
   font: 600 var(--g-text-md) / 1 var(--g-font-display);
   letter-spacing: var(--g-tracking-display);
