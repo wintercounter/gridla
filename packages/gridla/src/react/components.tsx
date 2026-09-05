@@ -139,7 +139,8 @@ const EDGE_CURSORS: Record<GridResizeEdge, string> = {
 }
 
 function resizeHandleStyle(edge: GridResizeEdge, size = 10): CSSProperties {
-  const half = size / 2
+  // Handles sit fully inside the item so they stay hit-testable when the
+  // item clips its overflow.
   const base: CSSProperties = {
     position: 'absolute',
     cursor: EDGE_CURSORS[edge],
@@ -148,29 +149,17 @@ function resizeHandleStyle(edge: GridResizeEdge, size = 10): CSSProperties {
   const vertical = edge === 'n' || edge === 's'
   const horizontal = edge === 'e' || edge === 'w'
   if (vertical) {
-    return {
-      ...base,
-      left: half,
-      right: half,
-      height: size,
-      [edge === 'n' ? 'top' : 'bottom']: -half,
-    }
+    return { ...base, left: size, right: size, height: size, [edge === 'n' ? 'top' : 'bottom']: 0 }
   }
   if (horizontal) {
-    return {
-      ...base,
-      top: half,
-      bottom: half,
-      width: size,
-      [edge === 'w' ? 'left' : 'right']: -half,
-    }
+    return { ...base, top: size, bottom: size, width: size, [edge === 'w' ? 'left' : 'right']: 0 }
   }
   return {
     ...base,
     width: size,
     height: size,
-    [edge.includes('n') ? 'top' : 'bottom']: -half,
-    [edge.includes('w') ? 'left' : 'right']: -half,
+    [edge.includes('n') ? 'top' : 'bottom']: 0,
+    [edge.includes('w') ? 'left' : 'right']: 0,
   }
 }
 

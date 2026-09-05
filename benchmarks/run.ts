@@ -86,7 +86,7 @@ function parseArgs(argv: readonly string[]): CliOptions {
         break
       case '--tolerance':
         // Multiplies every budget; use on shared CI runners whose speed varies.
-        options.tolerance = Number(argv[++i] ?? '1')
+        options.tolerance = Number(next())
         break
       case '--write-budget':
         options.writeBudget = true
