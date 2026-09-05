@@ -59,9 +59,19 @@ export function usePersistence(
   const [status, setStatus] = useState<SaveStatus>('saved')
   const [savedAt, setSavedAt] = useState<number | null>(null)
   const savedRef = useRef<StudioDocument>(doc)
+  // The pending autosave. An explicit save, load, or clear cancels it: after
+  // Clear a timer scheduled by an earlier edit must not write the page back.
+  const timerRef = useRef<number | null>(null)
+
+  const cancelAutosave = useCallback(() => {
+    if (timerRef.current === null) return
+    window.clearTimeout(timerRef.current)
+    timerRef.current = null
+  }, [])
 
   const save = useCallback(
     (target: StudioDocument, announce = false) => {
+      cancelAutosave()
       const ok = writeStorage(STORAGE_KEY, serializeDocument(target))
       if (!ok) {
         setStatus('unavailable')
@@ -73,19 +83,21 @@ export function usePersistence(
       setSavedAt(Date.now())
       if (announce) notify('Saved to this browser.', 'ok')
     },
-    [notify],
+    [notify, cancelAutosave],
   )
 
   // Autosave, debounced.
   useEffect(() => {
     if (doc === savedRef.current) return
     setStatus('unsaved')
-    const timer = window.setTimeout(() => {
+    cancelAutosave()
+    timerRef.current = window.setTimeout(() => {
+      timerRef.current = null
       setStatus('saving')
       save(doc)
     }, 700)
-    return () => window.clearTimeout(timer)
-  }, [doc, save])
+    return cancelAutosave
+  }, [doc, save, cancelAutosave])
 
   const load = useCallback(() => {
     const stored = loadStoredDocument()
@@ -97,17 +109,21 @@ export function usePersistence(
       notify('Nothing saved in this browser yet.', 'info')
       return
     }
+    cancelAutosave()
     dispatch({ type: 'replace-document', doc: stored.doc })
     savedRef.current = stored.doc
     notify(`Loaded "${stored.doc.name}".`, 'ok')
-  }, [dispatch, notify])
+  }, [dispatch, notify, cancelAutosave])
 
   const clear = useCallback(() => {
+    cancelAutosave()
     writeStorage(STORAGE_KEY, null)
+    // The open page becomes the autosave baseline: only a later edit writes.
+    savedRef.current = doc
     setSavedAt(null)
     setStatus('unsaved')
     notify('Cleared the saved copy. The page you see is still open.', 'info')
-  }, [notify])
+  }, [doc, notify, cancelAutosave])
 
   return {
     status,

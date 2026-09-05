@@ -168,10 +168,6 @@ test.describe('studio: locks and fixed sizes', () => {
   })
 
   test('a resize gesture keeps the resized item selected', async ({ page }) => {
-    test.fixme(
-      true,
-      'After a handle resize the selection moves to the page: the click that ends the gesture lands on the canvas.',
-    )
     await page.locator(item('card')).click()
     await expect(page.locator(item('card'))).toHaveAttribute('data-studio-selected', '')
     await resizeBy(page, 'card', 'se', 60, 60)

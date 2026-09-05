@@ -61,10 +61,6 @@ test.describe('studio: persistence', () => {
   })
 
   test('load restores the exact width of a full-width item', async ({ page }) => {
-    test.fixme(
-      true,
-      'Depending on timing, a full-width item comes back 4 px narrower after Load (1148 instead of 1152 authored px).',
-    )
     await openStudioTemplate(page, 'Dashboard')
     await settleAll(page)
     const heading = await firstHeadingId(page)
@@ -87,10 +83,6 @@ test.describe('studio: persistence', () => {
   })
 
   test('after clear the storage stays empty and load reports nothing saved', async ({ page }) => {
-    test.fixme(
-      true,
-      'The autosave writes the open page back to storage within a second of Clear, so Load finds it again.',
-    )
     await openStudioTemplate(page, 'Dashboard')
     await page.getByRole('button', { name: 'Save', exact: true }).click()
     await page.getByRole('button', { name: 'Clear', exact: true }).click()
