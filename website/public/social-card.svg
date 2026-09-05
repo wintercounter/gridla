@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630" role="img" aria-label="gridla. Pixel-precise grids and nested layouts.">
+  <title>gridla</title>
+  <desc>Social preview card: the Gridla mark and name on an ink background with the tagline "Pixel-precise grids and nested layouts".</desc>
+  <!-- Ink ground, tinted toward the brand hue. -->
+  <rect width="1200" height="630" fill="#1D2033"/>
+  <!-- Fine drafting rules; decoration that repeats the grid motif. -->
+  <g stroke="#2A2E45" stroke-width="1">
+    <path d="M0 105.5H1200M0 210.5H1200M0 315.5H1200M0 420.5H1200M0 525.5H1200"/>
+    <path d="M150.5 0V630M300.5 0V630M450.5 0V630M600.5 0V630M750.5 0V630M900.5 0V630M1050.5 0V630"/>
+  </g>
+  <!-- The mark, paper cells with the accent cell in motion. -->
+  <g transform="translate(120 175) scale(4.375)">
+    <g fill="#F4F1EA">
+      <rect x="6" y="6" width="14" height="14" rx="2"/>
+      <rect x="25" y="6" width="14" height="14" rx="2"/>
+      <rect x="44" y="6" width="14" height="14" rx="2"/>
+      <rect x="6" y="25" width="14" height="14" rx="2"/>
+      <rect x="6" y="44" width="14" height="14" rx="2"/>
+      <rect x="44" y="44" width="14" height="14" rx="2"/>
+      <rect x="25" y="44" width="14" height="14" rx="2"/>
+    </g>
+    <rect x="25" y="25" width="33" height="14" rx="2" fill="#F0673F"/>
+  </g>
+  <!-- Name and tagline. Live text with system fallbacks. -->
+  <text x="450" y="338" fill="#F4F1EA" font-family="'Familjen Grotesk','Avenir Next','Segoe UI Variable',system-ui,sans-serif" font-size="148" font-weight="600" letter-spacing="-0.03em">gridla</text>
+  <text x="454" y="412" fill="#B9BBCB" font-family="'Instrument Sans','Avenir Next','Segoe UI',system-ui,sans-serif" font-size="38" font-weight="400" letter-spacing="-0.01em">Pixel-precise grids and nested layouts</text>
+  <!-- A coordinate readout, the way data is typeset in the product. -->
+  <text x="454" y="468" fill="#7C8098" font-family="'JetBrains Mono','SFMono-Regular',ui-monospace,Menlo,monospace" font-size="22" letter-spacing="0.04em">x 25  y 25  w 33  h 14</text>
+</svg>

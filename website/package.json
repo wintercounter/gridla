@@ -14,6 +14,7 @@
     "@rspress/plugin-llms": "2.0.21",
     "@rspress/plugin-sitemap": "2.0.21",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "typescript": "5.9.3"
   }
 }

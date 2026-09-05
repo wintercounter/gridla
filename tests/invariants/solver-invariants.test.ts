@@ -311,19 +311,69 @@ const canvas200: GridLayout['canvas'] = {
  * without a fast-check seed.
  */
 describe('solver invariants: minimized counterexamples', () => {
-  it('placeItem by pointer does not accept a drop that overlaps a sibling', () => {
-    // A single item fills the canvas; there is no room for the new one.
-    // Observed: strategy `pointer-overlap`, accepted: true, and the placed
-    // item overlaps the existing one.
+  it('moveItem returns the input items unchanged when it rejects', () => {
+    // Dragging the free column onto the locked one cannot be honoured.
+    // Observed: accepted: false, strategy `rejected`, yet `layout.items`
+    // carries the moved item at (0,0) overlapping the locked column.
     const layout: GridLayout = {
       canvas: canvas200,
-      items: [{ id: 'chart', x: 0, y: 0, w: 200, h: 200, minW: 20, minH: 20 }],
+      items: [
+        { id: 'sidebar', x: 0, y: 0, w: 100, h: 200, minW: 20, minH: 20, policy: { movement: 'locked' } },
+        { id: 'feed-a', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
+      ],
+    }
+    const result = moveItem({
+      layout,
+      itemId: 'feed-a',
+      position: { x: 0, y: 0 },
+      options: { gap: 0, snap: false },
+    })
+    if (!result.accepted) {
+      expect(result.layout.items).toEqual(layout.items)
+    } else {
+      expect(findLayoutViolations(result.layout)).toEqual([])
+    }
+  })
+
+  it('placeItem by pointer does not accept a drop that overlaps a sibling', () => {
+    // Two full-height columns with no free room for a 40px-wide, taller-than-
+    // canvas item. Observed: strategy `pointer-overlap`, accepted: true, and
+    // the placed 40×200 item overlaps the left column.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'feed-a', x: 0, y: 0, w: 94, h: 200, minW: 20, minH: 20 },
+        { id: 'feed-b', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
+      ],
     }
     const result = placeItem({
       layout,
-      item: { id: 'note', w: 40, h: 40, minW: 20, minH: 20 },
+      item: { id: 'note', w: 40, h: 403, minW: 20, minH: 20 },
       pointer: { x: 0, y: 0 },
       options: { gap: 6, snap: false },
+    })
+    if (result.accepted) {
+      expect(findLayoutViolations(result.layout)).toEqual([])
+    } else {
+      expect(result.layout.items).toEqual(layout.items)
+    }
+  })
+
+  it('placeItem by pointer does not drop a new item on top of a locked item', () => {
+    // A locked full-width header. Observed: strategy `pointer-overlap`
+    // accepts a 200×40 item at (0,0) covering the locked header.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'header', x: 0, y: 0, w: 200, h: 82, minW: 20, minH: 20, policy: { movement: 'locked' } },
+        { id: 'feed-a', x: 0, y: 100, w: 200, h: 100, minW: 20, minH: 20 },
+      ],
+    }
+    const result = placeItem({
+      layout,
+      item: { id: 'note', w: 403, h: 40, minW: 20, minH: 20 },
+      pointer: { x: 0, y: 0 },
+      options: { gap: 18, snap: false },
     })
     if (result.accepted) {
       expect(findLayoutViolations(result.layout)).toEqual([])
@@ -350,6 +400,29 @@ describe('solver invariants: minimized counterexamples', () => {
     })
     if (result.accepted) {
       expect(result.layout.items.find((item) => item.id === 'sidebar')!.w).toBe(100)
+    }
+  })
+
+  it('resizeItem does not shrink a fixed-height bystander to make room', () => {
+    // Dragging the right column's south-west corner left and up.
+    // Observed: strategy `resize-shrink-neighbors` pushes the fixed-h column
+    // to y=180 and cuts its height 200 → 20.
+    const layout: GridLayout = {
+      canvas: canvas200,
+      items: [
+        { id: 'sidebar', x: 0, y: 0, w: 94, h: 200, minW: 20, minH: 20, sizeMode: 'fixed-h' },
+        { id: 'feed-a', x: 100, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
+      ],
+    }
+    const result = resizeItem({
+      layout,
+      itemId: 'feed-a',
+      edge: 'sw',
+      delta: { x: -76, y: -26 },
+      options: { gap: 6, snap: true },
+    })
+    if (result.accepted) {
+      expect(result.layout.items.find((item) => item.id === 'sidebar')!.h).toBe(200)
     }
   })
 

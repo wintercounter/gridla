@@ -389,17 +389,16 @@ function fitContainer(
   const fitsH =
     (!hasFixedHeight(layout) || inner.h >= innerHeight(spec.canvas)) && need.h <= inner.h
   if (fitsW && fitsH) return { canvas: spec.canvas, padding: spec.padding, items }
+  // Rebase to the rect. The rect may be tiny, so drop the padding rather
+  // than let it exceed the rect and produce a negative inner size.
   const canvas: GridCanvas = {
     width: Math.max(1, Math.round(rect.w)),
     height: Math.max(1, Math.round(rect.h)),
-    padding: spec.canvas.padding,
+    padding: { top: 0, right: 0, bottom: 0, left: 0 },
     heightMode: 'bounded',
   }
-  return {
-    canvas,
-    padding: undefined,
-    items: tileItems(canvas, spec.spec, spec.gap, items[0]!.id.replace(/-\d+$/, '')),
-  }
+  const prefix = items[0]!.id.replace(/-\d+$/, '')
+  return { canvas, padding: undefined, items: tileItems(canvas, spec.spec, spec.gap, prefix) }
 }
 
 /**

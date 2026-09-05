@@ -223,6 +223,45 @@ describe('projection invariants: minimized counterexamples', () => {
     expect(Math.abs(a.y - b.y)).toBeLessThanOrEqual(TOL)
   })
 
+  it('chain: free-only items stay inside a target with asymmetric padding', () => {
+    // 200×200 → 200×200 with padding {top 0, right 6, bottom 1, left 2}
+    // (inner right edge 194). Observed: item-4 lands at x=142 w=54 → 196.
+    const layout: GridLayout = {
+      canvas: canvas(200, 200),
+      items: [
+        { id: 'stat-1', x: 0, y: 0, w: 80, h: 100, minW: 20, minH: 20 },
+        { id: 'stat-2', x: 80, y: 0, w: 120, h: 100, minW: 20, minH: 20 },
+        { id: 'card-1', x: 0, y: 100, w: 36, h: 100, minW: 20, minH: 20 },
+        { id: 'card-2', x: 36, y: 100, w: 44, h: 100, minW: 20, minH: 20 },
+        { id: 'card-3', x: 90, y: 100, w: 109, h: 100, minW: 20, minH: 20 },
+      ],
+    }
+    const target: GridCanvas = {
+      ...canvas(200, 200),
+      padding: { top: 0, right: 6, bottom: 1, left: 2 },
+    }
+    assertInside(projectLayout(layout, target, { strategy: 'chain' }))
+  })
+
+  it('chain: rows pinned by minH leave the free row inside the canvas', () => {
+    // Two 35px rows with minH 35, a 6px gap, and a free 120px row on a
+    // 200×205 canvas projected into 200×200 with 7px top padding (inner 193).
+    // Observed: the free row gets 113px (89 + 113 = 202 > 200) instead of 111.
+    const layout: GridLayout = {
+      canvas: canvas(200, 205),
+      items: [
+        { id: 'header', x: 0, y: 0, w: 200, h: 35, minW: 20, minH: 35 },
+        { id: 'ticker', x: 0, y: 41, w: 200, h: 35, minW: 20, minH: 35 },
+        { id: 'feed-a', x: 0, y: 82, w: 200, h: 120, minW: 20, minH: 20 },
+      ],
+    }
+    const target: GridCanvas = {
+      ...canvas(200, 200),
+      padding: { top: 7, right: 0, bottom: 0, left: 0 },
+    }
+    assertInside(projectLayout(layout, target, { strategy: 'chain', gap: 6 }))
+  })
+
   it('segments: a free item beside a full-width fixed item keeps a usable width', () => {
     // 200×300 → inner 200×182 (scrollable). Observed: the two free items in
     // the second row collapse to 1px wide and land at x=213/214, outside the
@@ -267,18 +306,18 @@ describe('projection invariants: minimized counterexamples', () => {
     }
   })
 
-  it('chain: identity projection with a gap does not stretch an item to the edge', () => {
-    // Same canvas, gap 12. Observed: the 99px item one pixel short of the
-    // right edge becomes 100px wide.
+  it('chain: identity projection keeps a 1px trailing margin instead of absorbing it', () => {
+    // Same canvas, no gap, two free columns whose right one ends 1px short
+    // of the edge. Observed: the left column grows 100 → 101 and the right
+    // one shifts to x=101.
     const layout = normalizeLayout({
       canvas: canvas(200, 200),
       items: [
-        { id: 'stat-1', x: 0, y: 0, w: 88, h: 88, minW: 20, minH: 20 },
-        { id: 'stat-2', x: 100, y: 0, w: 99, h: 88, minW: 20, minH: 20 },
-        { id: 'feed-a', x: 0, y: 100, w: 200, h: 100, minW: 20, minH: 20 },
+        { id: 'feed-a', x: 0, y: 0, w: 100, h: 200, minW: 20, minH: 20 },
+        { id: 'feed-b', x: 100, y: 0, w: 99, h: 200, minW: 20, minH: 20 },
       ],
     })
-    const same = projectLayout(layout, layout.canvas, { strategy: 'chain', gap: 12 })
+    const same = projectLayout(layout, layout.canvas, { strategy: 'chain' })
     expect(same.items.map(rectOf)).toEqual(layout.items.map(rectOf))
   })
 

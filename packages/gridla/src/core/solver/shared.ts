@@ -323,6 +323,63 @@ export function edgeAlignedSlots<T>(
   return slots
 }
 
+/**
+ * Like `edgeAlignedSlots`, but only the slots nearest to `pointer`. The x and
+ * y candidates are each narrowed to the closest `perAxis` values before they
+ * are combined, so the cost stays bounded for large item counts. With few
+ * items (4n + 2 <= perAxis) the result equals the full slot set.
+ */
+export function nearestEdgeAlignedSlots<T>(
+  item: GridItem<T>,
+  baseItems: readonly GridItem<T>[],
+  bounds: GridBounds,
+  gap: number,
+  pointer: { x: number; y: number },
+  perAxis = 48,
+): GridItem<T>[] {
+  const minX = bounds.padding.left
+  const maxX = Math.max(minX, boundsInnerRight(bounds) - item.w)
+  const minY = bounds.padding.top
+  const maxY =
+    bounds.height === null
+      ? Number.POSITIVE_INFINITY
+      : Math.max(minY, boundsInnerBottom(bounds) - item.h)
+
+  const xs = new Set<number>([minX, maxX])
+  const ys = new Set<number>([minY])
+  for (const sibling of baseItems) {
+    xs.add(Math.max(minX, Math.min(sibling.x, maxX)))
+    xs.add(Math.max(minX, Math.min(itemRight(sibling) + gap, maxX)))
+    xs.add(Math.max(minX, Math.min(sibling.x - item.w - gap, maxX)))
+    xs.add(Math.max(minX, Math.min(itemRight(sibling) - item.w, maxX)))
+    ys.add(Math.max(minY, Math.min(sibling.y, maxY)))
+    ys.add(Math.max(minY, Math.min(itemBottom(sibling) + gap, maxY)))
+    ys.add(Math.max(minY, Math.min(sibling.y - item.h - gap, maxY)))
+    ys.add(Math.max(minY, Math.min(itemBottom(sibling) - item.h, maxY)))
+  }
+  const nearestX = Array.from(xs)
+    .sort((a, b) => Math.abs(a - pointer.x) - Math.abs(b - pointer.x))
+    .slice(0, perAxis)
+  const nearestY = Array.from(ys)
+    .sort((a, b) => Math.abs(a - pointer.y) - Math.abs(b - pointer.y))
+    .slice(0, perAxis)
+
+  const slots: GridItem<T>[] = []
+  const seen = new Set<string>()
+  for (const x of nearestX) {
+    for (const y of nearestY) {
+      const key = `${Math.round(x)},${Math.round(y)}`
+      if (seen.has(key)) continue
+      seen.add(key)
+      slots.push(roundItem({ ...item, x, y }))
+    }
+  }
+  return slots.sort(
+    (a, b) =>
+      Math.hypot(pointer.x - a.x, pointer.y - a.y) - Math.hypot(pointer.x - b.x, pointer.y - b.y),
+  )
+}
+
 export function closestValidSlot<T>(
   desired: GridItem<T>,
   slots: readonly GridItem<T>[],
