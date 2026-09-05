@@ -107,6 +107,104 @@ export function galleryPath(demo: string, params?: Record<string, string | numbe
   return `${prefix}#${search.toString()}`
 }
 
+/**
+ * Where the studio lives relative to `baseURL`. In CI the base is the built
+ * site root and the studio sits under `studio/`. With GRIDLA_BASE_URL the base
+ * is assumed to be the studio server itself (prefix ''); set
+ * GRIDLA_STUDIO_PREFIX to override either default.
+ */
+export function studioPath() {
+  return process.env.GRIDLA_STUDIO_PREFIX ?? (process.env.GRIDLA_BASE_URL ? '' : 'studio/')
+}
+
+/** localStorage keys the studio persists under (see examples/studio/src/hooks/persistence.ts). */
+export const STUDIO_STORAGE_KEY = 'gridla-studio-document'
+export const STUDIO_WELCOME_KEY = 'gridla-studio-welcomed'
+
+export type StudioTemplate = 'Blank' | 'Dashboard' | 'Editorial' | 'Analytics' | 'Freeform'
+
+/**
+ * Make studio runs deterministic: wipe the studio's localStorage the first
+ * time the tab loads (reloads within the same tab keep what the page wrote
+ * since, so persistence can be tested) and optionally seed a document and the
+ * welcome flag before the app boots.
+ */
+export async function resetStudioStorage(
+  page: Page,
+  seed: { document?: unknown; welcomed?: boolean } = {},
+) {
+  await page.addInitScript(
+    ({ storageKey, welcomeKey, document, welcomed }) => {
+      try {
+        if (sessionStorage.getItem('gridla-e2e-reset')) return
+        sessionStorage.setItem('gridla-e2e-reset', '1')
+        localStorage.clear()
+        if (welcomed) localStorage.setItem(welcomeKey, '1')
+        if (document !== null) localStorage.setItem(storageKey, JSON.stringify(document))
+      } catch {
+        // Storage can be unavailable; the studio copes and so do the tests.
+      }
+    },
+    {
+      storageKey: STUDIO_STORAGE_KEY,
+      welcomeKey: STUDIO_WELCOME_KEY,
+      document: seed.document ?? null,
+      welcomed: seed.welcomed ?? false,
+    },
+  )
+}
+
+/** Navigate to the studio and wait for the root canvas. */
+export async function gotoStudio(page: Page) {
+  await page.goto(studioPath() || './')
+  await expect(page.locator('[data-gridla-canvas]').first()).toBeVisible()
+}
+
+/** Close the first-run dialog with its "blank page" action. */
+export async function dismissWelcome(page: Page) {
+  await page.getByRole('button', { name: 'Start with a blank page' }).click()
+  await expect(page.locator('dialog')).toHaveCount(0)
+}
+
+/** Pick a template from the palette's template list. */
+export async function pickTemplate(page: Page, name: StudioTemplate) {
+  await page
+    .getByRole('list', { name: 'Templates' })
+    .locator('button')
+    .filter({ has: page.locator('span', { hasText: new RegExp(`^${name}$`) }) })
+    .click()
+  if (name !== 'Blank') await expect(page.locator('[data-gridla-item]').first()).toBeVisible()
+}
+
+/**
+ * Fresh studio (storage cleared), welcome dismissed, template loaded. The
+ * welcome dialog is left in place when `template` is omitted so a test can
+ * exercise the first run itself.
+ */
+export async function openStudioTemplate(page: Page, template?: StudioTemplate) {
+  await resetStudioStorage(page)
+  await gotoStudio(page)
+  if (!template) return
+  await dismissWelcome(page)
+  await pickTemplate(page, template)
+}
+
+/** Fresh studio booted with `document` already in storage and the welcome dialog seen. */
+export async function openStudioDocument(page: Page, document: unknown) {
+  await resetStudioStorage(page, { document, welcomed: true })
+  await gotoStudio(page)
+  await expect(page.locator('dialog')).toHaveCount(0)
+  // A page booted from storage paints its group canvases at authored size
+  // until the next render; a click on the page inset (selects the page) and
+  // Escape (clears it) give it that render deterministically.
+  const root = page.locator('[data-gridla-canvas][data-root]')
+  const bounds = await root.boundingBox()
+  if (bounds) {
+    await page.mouse.click(bounds.x + bounds.width - 6, bounds.y + bounds.height - 6)
+    await page.keyboard.press('Escape')
+  }
+}
+
 export const test = base.extend<{
   gallery: (demo: string, params?: Record<string, string | number | boolean>) => Promise<void>
   studio: () => Promise<void>
@@ -119,8 +217,7 @@ export const test = base.extend<{
   },
   studio: async ({ page }, use) => {
     await use(async () => {
-      await page.goto('studio/')
-      await expect(page.locator('[data-gridla-canvas]').first()).toBeVisible()
+      await gotoStudio(page)
     })
   },
 })
