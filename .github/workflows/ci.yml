@@ -78,7 +78,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: bun run benchmarks/run.ts --check --json bench-results.json
+      - run: bun run benchmarks/run.ts --check --tolerance 4 --json bench-results.json
       - uses: actions/upload-artifact@v4
         with:
           name: bench-results

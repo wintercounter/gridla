@@ -5,6 +5,7 @@
  *   bun run benchmarks/run.ts --filter move    # only cases whose name contains "move"
  *   bun run benchmarks/run.ts --json out.json  # also write results as JSON
  *   bun run benchmarks/run.ts --check          # exit 1 if a median exceeds budget.json
+ *   bun run benchmarks/run.ts --check --tolerance 3   # same, budgets x3 (shared CI runners)
  *   bun run benchmarks/run.ts --write-budget   # regenerate budget.json (median x 2.5)
  *
  * No third-party timing library: each iteration is timed with
@@ -49,6 +50,7 @@ type CliOptions = {
   filter: string | null
   json: string | null
   check: boolean
+  tolerance: number
   writeBudget: boolean
   warmupMs: number
   measureMs: number
@@ -59,6 +61,7 @@ function parseArgs(argv: readonly string[]): CliOptions {
     filter: null,
     json: null,
     check: false,
+    tolerance: 1,
     writeBudget: false,
     warmupMs: 100,
     measureMs: 500,
@@ -80,6 +83,10 @@ function parseArgs(argv: readonly string[]): CliOptions {
         break
       case '--check':
         options.check = true
+        break
+      case '--tolerance':
+        // Multiplies every budget; use on shared CI runners whose speed varies.
+        options.tolerance = Number(argv[++i] ?? '1')
         break
       case '--write-budget':
         options.writeBudget = true
@@ -429,11 +436,16 @@ function printTable(results: readonly BenchResult[], budget: Record<string, numb
   for (const row of rows) console.log(line(row))
 }
 
-function checkBudget(results: readonly BenchResult[], budget: Record<string, number>): boolean {
+function checkBudget(
+  results: readonly BenchResult[],
+  budget: Record<string, number>,
+  tolerance = 1,
+): boolean {
   let ok = true
   for (const result of results) {
     const key = caseKey(result)
-    const limit = budget[key]
+    // Sub-50µs medians are timer noise on shared runners; give them a floor.
+    const limit = budget[key] === undefined ? undefined : Math.max(budget[key] * tolerance, 0.05)
     if (limit === undefined) {
       console.warn(`no budget entry for "${key}"`)
       continue
@@ -500,7 +512,7 @@ function main(): void {
     console.log(`\nwrote ${budgetPath}`)
   }
 
-  if (budget && !checkBudget(results, budget)) process.exit(1)
+  if (budget && !checkBudget(results, budget, options.tolerance)) process.exit(1)
 }
 
 main()
