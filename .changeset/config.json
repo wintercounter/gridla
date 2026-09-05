@@ -7,5 +7,14 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["@gridla/demo-kit", "gridla-vanilla-basics", "gridla-react-basics", "gridla-gallery", "gridla-studio", "gridla-website", "gridla-consumer-vanilla-esm", "gridla-consumer-react"]
+  "ignore": [
+    "@gridla/demo-kit",
+    "gridla-vanilla-basics",
+    "gridla-react-basics",
+    "gridla-gallery",
+    "gridla-studio",
+    "gridla-website",
+    "gridla-consumer-vanilla-esm",
+    "gridla-consumer-react"
+  ]
 }
