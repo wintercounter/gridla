@@ -16,7 +16,7 @@ import type { GridContextValue, GridItemView } from 'gridla/react'
 
 | Export | Kind | Summary |
 | --- | --- | --- |
-| [`GridContextValue`](#gridcontextvalue) | type | Value provided by `GridProvider`: its id, the state store, the imperative actions, the resolved config, and the internal gesture API. |
+| [`GridContextValue`](#gridcontextvalue) | type | Value provided by `GridProvider`: its id, the state store, the imperative actions, the resolved config, the internal gesture API, and the underlying `GridController` from `gridla/interaction`. |
 | [`GridItemView`](#griditemview) | type | Everything needed to paint one item: its current and pre-gesture rectangles plus its active, selected, shifted, and transferring flags. |
 | [`useElementSize`](#useelementsize) | hook | Observe an element's content box size with `ResizeObserver`. |
 | [`useGridActions`](#usegridactions) | hook | Imperative layout and selection actions. |
@@ -35,7 +35,7 @@ import type { GridContextValue, GridItemView } from 'gridla/react'
 
 ### useElementSize
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L14">react/measure.ts:14</a></span>
+<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/measure.ts#L15">react/measure.ts:15</a></span>
 
 Observe an element's content box size with `ResizeObserver`. The first
 measurement happens in a layout effect so the projected layout paints on the
@@ -61,7 +61,7 @@ export function useGridActions<TData = unknown>(): GridActions<TData>
 
 ### useGridContext
 
-<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L59">react/context.ts:59</a></span>
+<span className="g-api-meta">hook · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L28">react/context.ts:28</a></span>
 
 Read the nearest [`GridProvider`](/api/react/provider#gridprovider) context. Throws when called outside a provider.
 
@@ -167,10 +167,11 @@ export function useGridVisibleLayout<TData = unknown>(): GridLayout<TData>
 
 ### GridContextValue
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L12">react/context.ts:12</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/context.ts#L13">react/context.ts:13</a></span>
 
 Value provided by [`GridProvider`](/api/react/provider#gridprovider): its id, the state store, the imperative
-actions, the resolved config, and the internal gesture API.
+actions, the resolved config, the internal gesture API, and the underlying
+[`GridController`](/api/interaction/controller#gridcontroller) from `gridla/interaction`.
 
 ```ts
 export type GridContextValue<TData = unknown> = {
@@ -181,6 +182,8 @@ export type GridContextValue<TData = unknown> = {
   config: GridProviderConfig
   /** Internal gesture API used by `useGridInteraction`. */
   gesture: GridGestureApi<TData>
+  /** The controller the provider is built on. */
+  controller: GridController<TData>
 }
 ```
 
@@ -189,8 +192,9 @@ export type GridContextValue<TData = unknown> = {
 | `id` | `string` | Unique id of this provider. Used by transfer scopes. |
 | `store` | `Store\<GridState\<TData\>\>` |  |
 | `actions` | `GridActions\<TData\>` |  |
-| `config` | `GridProviderConfig` |  |
+| `config` | `GridControllerConfig` |  |
 | `gesture` | `GridGestureApi\<TData\>` | Internal gesture API used by `useGridInteraction`. |
+| `controller` | `GridController\<TData\>` | The controller the provider is built on. |
 
 ### GridItemView
 

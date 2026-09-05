@@ -4,5 +4,8 @@
   },
   "gridla/react": {
     "gzip": 26600
+  },
+  "gridla/interaction": {
+    "gzip": 24800
   }
 }

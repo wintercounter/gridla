@@ -4,7 +4,8 @@
     "noEmit": true,
     "paths": {
       "gridla": ["./packages/gridla/src/index.ts"],
-      "gridla/react": ["./packages/gridla/src/react.ts"]
+      "gridla/react": ["./packages/gridla/src/react.ts"],
+      "gridla/interaction": ["./packages/gridla/src/interaction.ts"]
     }
   },
   "include": ["packages/gridla/src", "tests", "benchmarks", "scripts"],

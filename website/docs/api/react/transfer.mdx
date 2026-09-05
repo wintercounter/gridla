@@ -21,11 +21,12 @@ import { GridTransferScope } from 'gridla/react'
 
 ### GridTransferScope
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/transfer.tsx#L36">react/transfer.tsx:36</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/transfer.tsx#L12">react/transfer.tsx:12</a></span>
 
 Lets items move between every [`GridProvider`](/api/react/provider#gridprovider) rendered inside it. The
 pointer decides the target: the deepest registered canvas under the pointer
 that accepts the item previews the drop; releasing there commits it.
+Wraps a [`TransferScope`](/api/interaction/transfer#transferscope) from `gridla/interaction` in context.
 
 ```ts
 export function GridTransferScope({ children }: { children?: ReactNode })

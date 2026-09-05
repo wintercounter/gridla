@@ -1,0 +1,10 @@
+{
+  "// why": "Used by scripts/verify-package.ts only. @preact/compat ships no declarations, so the packed `gridla/react` types see `react` through preact/compat's own declarations, the same mapping bundlers get from a preact/compat alias.",
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "react": ["./node_modules/preact/compat/src/index.d.ts"],
+      "react-dom": ["./node_modules/preact/compat/src/index.d.ts"]
+    }
+  }
+}

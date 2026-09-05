@@ -38,7 +38,7 @@ type Member = { name: string; type: string; doc: string; optional: boolean }
 type Group = {
   id: string
   title: string
-  entry: 'core' | 'react'
+  entry: EntryName
   intro: string
   /** Source files (relative to `src/`) whose exports belong to this group. */
   files: string[]
@@ -108,12 +108,43 @@ const GROUPS: Group[] = [
     files: ['core/instrumentation.ts'],
   },
   {
+    id: 'interaction/controller',
+    title: 'Controller',
+    entry: 'interaction',
+    intro:
+      '`createGridController` owns layout and gesture state for one canvas without any framework: a store to render from, imperative actions, the gesture API, projection onto the measured size, and controlled or uncontrolled layout sync.',
+    files: ['interaction/controller.ts', 'interaction/store.ts', 'interaction/measure.ts'],
+  },
+  {
+    id: 'interaction/gesture',
+    title: 'Pointer gesture',
+    entry: 'interaction',
+    intro:
+      'The pointer and keyboard state machine over a minimal event shape: drag threshold, click versus drag, axis lock, snap bypass, resize edges, pointer capture, keyboard nudges. `bindPointer` and `bindKeyboard` attach native listeners.',
+    files: ['interaction/gesture.ts', 'interaction/attributes.ts'],
+  },
+  {
+    id: 'interaction/transfer',
+    title: 'Transfer scope',
+    entry: 'interaction',
+    intro:
+      'Move items between controllers. `createTransferScope` hit-tests registered canvases against resting rects, previews the drop in the target, and commits it on release.',
+    files: ['interaction/transfer.ts'],
+  },
+  {
+    id: 'interaction/types',
+    title: 'Types',
+    entry: 'interaction',
+    intro: 'State, action, gesture, and change types shared by the controller and every adapter.',
+    files: ['interaction/types.ts'],
+  },
+  {
     id: 'react/provider',
     title: 'Provider',
     entry: 'react',
     intro:
       '`GridProvider` owns layout and gesture state for one canvas. It accepts every `SolveOptions` field as a prop, works controlled or uncontrolled, and exposes actions through context.',
-    files: ['react/provider.tsx', 'react/store.ts'],
+    files: ['react/provider.tsx', 'react/store.ts', 'interaction/store.ts'],
   },
   {
     id: 'react/components',
@@ -137,7 +168,7 @@ const GROUPS: Group[] = [
     entry: 'react',
     intro:
       'Pointer and keyboard orchestration for a canvas element you render yourself. `GridCanvas` uses this hook internally.',
-    files: ['react/interaction.ts'],
+    files: ['react/interaction.ts', 'interaction/attributes.ts', 'interaction/gesture.ts'],
   },
   {
     id: 'react/transfer',
@@ -152,7 +183,7 @@ const GROUPS: Group[] = [
     title: 'Types',
     entry: 'react',
     intro: 'State, action, and event types shared by the provider, hooks, and components.',
-    files: ['react/types.ts'],
+    files: ['react/types.ts', 'interaction/types.ts'],
   },
 ]
 
@@ -162,7 +193,15 @@ const GROUPS: Group[] = [
 
 const entryFiles = {
   core: path.join(SRC_DIR, 'core/index.ts'),
+  interaction: path.join(SRC_DIR, 'interaction/index.ts'),
   react: path.join(SRC_DIR, 'react/index.ts'),
+}
+type EntryName = keyof typeof entryFiles
+const ENTRY_ORDER: EntryName[] = ['core', 'interaction', 'react']
+const IMPORT_PATH: Record<EntryName, string> = {
+  core: 'gridla',
+  interaction: 'gridla/interaction',
+  react: 'gridla/react',
 }
 
 const program = ts.createProgram(Object.values(entryFiles), {
@@ -269,7 +308,7 @@ function membersOf(decl: ts.Declaration): Member[] {
   })
 }
 
-function collect(entry: 'core' | 'react'): Entry[] {
+function collect(entry: EntryName): Entry[] {
   const file = program.getSourceFile(entryFiles[entry])
   if (!file) throw new Error(`missing entry ${entryFiles[entry]}`)
   const moduleSymbol = checker.getSymbolAtLocation(file)
@@ -385,7 +424,7 @@ function renderEntry(entry: Entry, index: Map<string, string>, group: Group): st
 }
 
 function renderGroup(group: Group, entries: Entry[], index: Map<string, string>): string {
-  const importPath = group.entry === 'core' ? 'gridla' : 'gridla/react'
+  const importPath = IMPORT_PATH[group.entry]
   const lines: string[] = []
   lines.push('---')
   lines.push(`title: ${group.title}`)
@@ -438,22 +477,22 @@ function renderIndex(groups: { group: Group; entries: Entry[] }[]): string {
   lines.push('---')
   lines.push('title: API reference')
   lines.push(
-    'description: Every public export of gridla and gridla/react, grouped by module and generated from the source declarations.',
+    'description: Every public export of gridla, gridla/interaction, and gridla/react, grouped by module and generated from the source declarations.',
   )
   lines.push('---')
   lines.push('')
   lines.push('# API reference')
   lines.push('')
   lines.push(
-    'Gridla publishes one package with two entry points. `gridla` is the framework-neutral core: pure functions over plain objects. `gridla/react` is the adapter: a provider, headless components, hooks, and pointer orchestration on top of the core.',
+    'Gridla publishes one package with three entry points. `gridla` is the framework-neutral core: pure functions over plain objects. `gridla/interaction` is the framework-neutral interaction layer: a controller, pointer gesture, transfer scope, and measurement on top of the core. `gridla/react` is the adapter: a provider, headless components, and hooks as thin bindings over the interaction layer.',
   )
   lines.push('')
   lines.push(
     '> These pages are generated from the JSDoc on the exported declarations by `website/scripts/generate-api.ts`. If something here is unclear, the fix belongs in the source comment.',
   )
   lines.push('')
-  for (const entry of ['core', 'react'] as const) {
-    lines.push(`## ${entry === 'core' ? '`gridla`' : '`gridla/react`'}`)
+  for (const entry of ENTRY_ORDER) {
+    lines.push(`## \`${IMPORT_PATH[entry]}\``)
     lines.push('')
     lines.push('| Module | Exports | What it covers |')
     lines.push('| --- | --- | --- |')
@@ -476,7 +515,11 @@ function renderIndex(groups: { group: Group; entries: Entry[] }[]): string {
 // Main
 // ---------------------------------------------------------------------------
 
-const all = { core: collect('core'), react: collect('react') }
+const all = {
+  core: collect('core'),
+  interaction: collect('interaction'),
+  react: collect('react'),
+}
 const index = new Map<string, string>()
 const assigned = new Set<string>()
 const output: { group: Group; entries: Entry[] }[] = []
@@ -490,10 +533,9 @@ for (const group of GROUPS) {
   output.push({ group, entries })
 }
 
-const unassigned = [
-  ...all.core.map((e) => `core:${e.name} (${e.file})`),
-  ...all.react.map((e) => `react:${e.name} (${e.file})`),
-].filter((key) => !assigned.has(key.split(' ')[0]))
+const unassigned = ENTRY_ORDER.flatMap((entry) =>
+  all[entry].map((e) => `${entry}:${e.name} (${e.file})`),
+).filter((key) => !assigned.has(key.split(' ')[0]))
 if (unassigned.length > 0) {
   console.error('generate-api: exports without a group:\n  ' + unassigned.join('\n  '))
   process.exit(1)
@@ -506,9 +548,9 @@ for (const { group, entries } of output) {
 }
 fs.writeFileSync(path.join(OUT_DIR, 'index.mdx'), renderIndex(output))
 
-const undocumented = [...all.core, ...all.react].filter((entry) => !entry.documented)
+const undocumented = ENTRY_ORDER.flatMap((entry) => all[entry]).filter((entry) => !entry.documented)
 process.stdout.write(
-  `generate-api: wrote ${output.length + 1} pages for ${all.core.length} core and ${all.react.length} react exports\n`,
+  `generate-api: wrote ${output.length + 1} pages for ${all.core.length} core, ${all.interaction.length} interaction, and ${all.react.length} react exports\n`,
 )
 if (undocumented.length > 0) {
   process.stdout.write(`generate-api: ${undocumented.length} exports have no JSDoc:\n`)

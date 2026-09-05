@@ -28,7 +28,7 @@ import type { GridCanvasProps, GridItemProps, GridItemRenderProps, GridPreviewOu
 
 ### GridCanvas
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L39">react/components.tsx:39</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L38">react/components.tsx:38</a></span>
 
 The element items are positioned in. Measures itself, feeds the size to the
 provider, and wires pointer and keyboard handling. Renders a `div` with
@@ -36,12 +36,12 @@ provider, and wires pointer and keyboard handling. Renders a `div` with
 `responsive=\{false\}`).
 
 ```ts
-export const GridCanvas: React.ForwardRefExoticComponent<Omit<HTMLAttributes<HTMLDivElement>, "onKeyDown"> & UseGridInteractionOptions & { children?: ReactNode; } & React.RefAttributes<HTMLDivElement>>
+export const GridCanvas: React.ForwardRefExoticComponent<Omit<HTMLAttributes<HTMLDivElement>, "onKeyDown"> & GridPointerGestureOptions & { children?: ReactNode; } & React.RefAttributes<HTMLDivElement>>
 ```
 
 ### GridItem
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L184">react/components.tsx:184</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L183">react/components.tsx:183</a></span>
 
 Positions one item inside [`GridCanvas`](#gridcanvas). Headless: it renders a `div` with
 geometry styles and data attributes and leaves appearance to you.
@@ -52,7 +52,7 @@ export const GridItem: React.ForwardRefExoticComponent<Omit<HTMLAttributes<HTMLD
 
 ### GridPreviewOutline
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L265">react/components.tsx:265</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L264">react/components.tsx:264</a></span>
 
 Renders a box where the active item will land when released. Renders
 nothing when no gesture is in progress.
@@ -69,7 +69,7 @@ export function GridPreviewOutline({
 
 ### GridCanvasProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L28">react/components.tsx:28</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L27">react/components.tsx:27</a></span>
 
 Props for [`GridCanvas`](#gridcanvas): `div` attributes (except `onKeyDown`, which the canvas
 owns) plus [`UseGridInteractionOptions`](/api/react/interaction#usegridinteractionoptions).
@@ -87,7 +87,7 @@ export type GridCanvasProps = Omit<HTMLAttributes<HTMLDivElement>, 'onKeyDown'> 
 
 ### GridItemProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L108">react/components.tsx:108</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L107">react/components.tsx:107</a></span>
 
 Props for [`GridItem`](#griditem). `id` selects the item; the rest control drag surfaces,
 built-in resize handles, and how the element is positioned.
@@ -128,7 +128,7 @@ export type GridItemProps = Omit<HTMLAttributes<HTMLDivElement>, 'children' | 'i
 
 ### GridItemRenderProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L94">react/components.tsx:94</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L93">react/components.tsx:93</a></span>
 
 Passed to a [`GridItem`](#griditem) render function: the item's [`GridItemView`](/api/react/hooks#griditemview) plus props
 for drag and resize handles.
@@ -152,7 +152,7 @@ export type GridItemRenderProps = GridItemView & {
 
 ### GridPreviewOutlineProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L257">react/components.tsx:257</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/components.tsx#L256">react/components.tsx:256</a></span>
 
 Props for [`GridPreviewOutline`](#gridpreviewoutline): `div` attributes plus the positioning mode
 (`transform` by default).

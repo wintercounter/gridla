@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * Public API surface snapshot. Lists every export of the built declaration
- * files (`dist/index.d.ts`, `dist/react.d.ts`) with its kind and compares the
+ * files (`dist/index.d.ts`, `dist/react.d.ts`, `dist/interaction.d.ts`) with its kind and compares the
  * list to `api-surface.txt`. Any difference fails, so removing or renaming an
  * export is always a deliberate change reviewed in the diff. Run with
  * `--update` to accept the current surface.
@@ -47,7 +47,11 @@ if (!existsSync(resolve(dist, 'index.d.ts'))) {
   process.exit(1)
 }
 
-const surface = [...surfaceOf('index.d.ts', 'gridla'), ...surfaceOf('react.d.ts', 'gridla/react')]
+const surface = [
+  ...surfaceOf('index.d.ts', 'gridla'),
+  ...surfaceOf('react.d.ts', 'gridla/react'),
+  ...surfaceOf('interaction.d.ts', 'gridla/interaction'),
+]
   .filter((line, index, all) => all.indexOf(line) === index)
   .sort()
 const current = `${surface.join('\n')}\n`

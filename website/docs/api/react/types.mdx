@@ -16,23 +16,23 @@ import type { GridActions, GridChangeDetail, GridChangeReason, GridInteraction, 
 
 | Export | Kind | Summary |
 | --- | --- | --- |
-| [`GridActions`](#gridactions) | type | Imperative layout and selection API exposed by the provider. |
+| [`GridActions`](#gridactions) | type | Imperative layout and selection API exposed by the controller. |
 | [`GridChangeDetail`](#gridchangedetail) | type | Describes an accepted change: the reason, the affected item when there is one, and the solver strategy for solved operations. |
 | [`GridChangeReason`](#gridchangereason) | type | Why the layout changed, as reported in `GridChangeDetail`. |
 | [`GridInteraction`](#gridinteraction) | type | The gesture currently in progress. |
 | [`GridInteractionMode`](#gridinteractionmode) | type | Kind of gesture: dragging an item or resizing it. |
 | [`GridPreview`](#gridpreview) | type | The solver's latest answer for the gesture in progress. |
 | [`GridProviderConfig`](#gridproviderconfig) | type | Resolved provider configuration: every `SolveOptions` field plus the responsive, drag-threshold, and keyboard-step settings with defaults applied. |
-| [`GridState`](#gridstate) | type | Provider state held in the store. |
+| [`GridState`](#gridstate) | type | Controller state held in the store. |
 
 ## Types
 
 ### GridActions
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L99">react/types.ts:99</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L99">interaction/types.ts:99</a></span>
 
-Imperative layout and selection API exposed by the provider. The object is
-stable for the provider's lifetime.
+Imperative layout and selection API exposed by the controller. The object is
+stable for the controller's lifetime.
 
 ```ts
 export type GridActions<TData = unknown> = {
@@ -87,7 +87,7 @@ export type GridActions<TData = unknown> = {
 
 ### GridChangeDetail
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L73">react/types.ts:73</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L73">interaction/types.ts:73</a></span>
 
 Describes an accepted change: the reason, the affected item when there is one,
 and the solver strategy for solved operations.
@@ -108,7 +108,7 @@ export type GridChangeDetail = {
 
 ### GridChangeReason
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L60">react/types.ts:60</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L60">interaction/types.ts:60</a></span>
 
 Why the layout changed, as reported in [`GridChangeDetail`](#gridchangedetail).
 
@@ -125,7 +125,7 @@ export type GridChangeReason =
 
 ### GridInteraction
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L17">react/types.ts:17</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L17">interaction/types.ts:17</a></span>
 
 The gesture currently in progress.
 
@@ -156,7 +156,7 @@ export type GridInteraction = {
 
 ### GridInteractionMode
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L14">react/types.ts:14</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L14">interaction/types.ts:14</a></span>
 
 Kind of gesture: dragging an item or resizing it.
 
@@ -166,7 +166,7 @@ export type GridInteractionMode = 'move' | 'resize'
 
 ### GridPreview
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L31">react/types.ts:31</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L31">interaction/types.ts:31</a></span>
 
 The solver's latest answer for the gesture in progress.
 
@@ -190,41 +190,36 @@ export type GridPreview<TData = unknown> = {
 
 ### GridProviderConfig
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L83">react/types.ts:83</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L18">react/types.ts:18</a></span>
 
 Resolved provider configuration: every [`SolveOptions`](/api/core/solvers#solveoptions) field plus the
 responsive, drag-threshold, and keyboard-step settings with defaults applied.
+Same shape as [`GridControllerConfig`](/api/interaction/types#gridcontrollerconfig) from `gridla/interaction`.
 
 ```ts
-export type GridProviderConfig = SolveOptions & {
-  /**
-   * Project the layout onto the measured canvas size. When `false`, the
-   * canvas element is sized to the layout instead. Default `true`.
-   */
-  responsive: boolean
-  /** Minimum pointer travel before a press becomes a drag. Default `4`. */
-  dragThreshold: number
-  /** Pixels moved per arrow key press. Default `8`; Shift multiplies by 4. */
-  keyboardStep: number
-}
+export type GridProviderConfig = GridControllerConfig
 ```
 
 | Member | Type | Description |
 | --- | --- | --- |
+| `gap?` | `number` | Minimum distance kept between neighbors. Default `0`. |
+| `snapDistance?` | `number` | Distance within which edges attract. Default `24`. |
+| `snap?` | `boolean` | When `false`, alignment snapping is skipped so the item tracks the requested position exactly. Bounds, gap, and constraint rules still apply. Default `true`. |
+| `onTrace?` | `TraceCallback` | Receives one event per solve describing which strategy produced the result. |
 | `responsive` | `boolean` | Project the layout onto the measured canvas size. When `false`, the canvas element is sized to the layout instead. Default `true`. |
 | `dragThreshold` | `number` | Minimum pointer travel before a press becomes a drag. Default `4`. |
 | `keyboardStep` | `number` | Pixels moved per arrow key press. Default `8`; Shift multiplies by 4. |
 
 ### GridState
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/types.ts#L43">react/types.ts:43</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/interaction/types.ts#L43">interaction/types.ts:43</a></span>
 
-Provider state held in the store. `layout` is what interactions operate on;
+Controller state held in the store. `layout` is what interactions operate on;
 `source` is what the caller owns.
 
 ```ts
 export type GridState<TData = unknown> = {
-  /** The layout the provider was given (or owns). */
+  /** The layout the controller was given (or owns). */
   source: GridLayout<TData>
   /** Measured canvas element size, or `null` until measured. */
   size: GridSize | null
@@ -242,7 +237,7 @@ export type GridState<TData = unknown> = {
 
 | Member | Type | Description |
 | --- | --- | --- |
-| `source` | `GridLayout\<TData\>` | The layout the provider was given (or owns). |
+| `source` | `GridLayout\<TData\>` | The layout the controller was given (or owns). |
 | `size` | `GridSize \\| null` | Measured canvas element size, or `null` until measured. |
 | `layout` | `GridLayout\<TData\>` | `source` projected onto `size`. Interactions operate on this layout. |
 | `interaction` | `GridInteraction \\| null` |  |

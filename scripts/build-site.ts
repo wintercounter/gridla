@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 /**
  * Assemble the GitHub Pages artifact: the Rspress site at the root, the
- * gallery under /gallery/, the studio under /studio/, and the basic examples
- * under /examples/. Every app is built with the correct asset prefix so the
- * result works beneath the repository base path.
+ * gallery under /gallery/, the studio under /studio/, the basic examples under
+ * /examples/, and every adapter demo app found in examples/adapters/<name>/
+ * under /adapters/<name>/. Every app is built with the correct asset prefix so
+ * the result works beneath the repository base path.
  */
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, existsSync, mkdirSync, readdirSync, rmSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
 const root = resolve(import.meta.dir, '..')
@@ -18,7 +19,23 @@ const apps: Array<{ dir: string; sub: string; dist: string }> = [
   { dir: 'examples/studio', sub: 'studio/', dist: 'dist' },
   { dir: 'examples/vanilla-basics', sub: 'examples/vanilla/', dist: 'dist' },
   { dir: 'examples/react-basics', sub: 'examples/react/', dist: 'dist' },
+  ...adapterApps(),
 ]
+
+/**
+ * Adapter demo apps are discovered by directory: every
+ * `examples/adapters/<name>/package.json` is built and mounted under
+ * `/adapters/<name>/`. Adding an adapter needs no change here.
+ */
+function adapterApps(): Array<{ dir: string; sub: string; dist: string }> {
+  const dir = resolve(root, 'examples/adapters')
+  if (!existsSync(dir)) return []
+  return readdirSync(dir, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && existsSync(resolve(dir, entry.name, 'package.json')))
+    .map((entry) => entry.name)
+    .sort()
+    .map((name) => ({ dir: `examples/adapters/${name}`, sub: `adapters/${name}/`, dist: 'dist' }))
+}
 
 rmSync(out, { recursive: true, force: true })
 mkdirSync(out, { recursive: true })

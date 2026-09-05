@@ -26,7 +26,7 @@ import type { GridProviderProps, Store } from 'gridla/react'
 
 ### applyMeasuredSize
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L543">react/provider.tsx:543</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L111">react/provider.tsx:111</a></span>
 
 Update the measured size. Used by [`GridCanvas`](/api/react/components#gridcanvas); exposed for custom canvases.
 
@@ -40,7 +40,7 @@ export function applyMeasuredSize<TData>(
 
 ### createStore
 
-<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L24">react/store.ts:24</a></span>
+<span className="g-api-meta">function · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L14">react/store.ts:14</a></span>
 
 Create a [`Store`](#store) holding `initial`. Listeners fire only when `set` changes the
 state reference (compared with `Object.is`).
@@ -53,10 +53,11 @@ export function createStore<S>(initial: S): Store<S>
 
 ### GridProvider
 
-<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L109">react/provider.tsx:109</a></span>
+<span className="g-api-meta">component · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L53">react/provider.tsx:53</a></span>
 
 Owns layout state and gesture state for one canvas. Place a [`GridCanvas`](/api/react/components#gridcanvas)
-(or your own element wired with [`useGridInteraction`](/api/react/interaction#usegridinteraction)) inside it.
+(or your own element wired with [`useGridInteraction`](/api/react/interaction#usegridinteraction)) inside it. A binding
+over [`createGridController`](/api/interaction/controller#creategridcontroller) from `gridla/interaction`.
 
 ```ts
 export function GridProvider<TData = unknown>(props: GridProviderProps<TData>)
@@ -66,7 +67,7 @@ export function GridProvider<TData = unknown>(props: GridProviderProps<TData>)
 
 ### GridProviderProps
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L37">react/provider.tsx:37</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/provider.tsx#L21">react/provider.tsx:21</a></span>
 
 Props for [`GridProvider`](#gridprovider): every [`SolveOptions`](/api/core/solvers#solveoptions) field, a controlled or
 uncontrolled layout, change and transfer callbacks, and [`GridProviderConfig`](/api/react/types#gridproviderconfig)
@@ -119,22 +120,18 @@ export type GridProviderProps<TData = unknown> = SolveOptions & {
 
 ### Store
 
-<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L13">react/store.ts:13</a></span>
+<span className="g-api-meta">type · <a href="https://github.com/wintercounter/gridla/blob/main/packages/gridla/src/react/store.ts#L8">react/store.ts:8</a></span>
 
 Minimal external store: a snapshot getter, a subscribe function, and a setter.
-Shaped for `useSyncExternalStore`.
+Shaped for `useSyncExternalStore`. Same shape as [`GridStore`](/api/interaction/controller#gridstore) from
+`gridla/interaction`.
 
 ```ts
-export type Store<S> = {
-  getSnapshot: () => S
-  subscribe: (listener: Listener) => () => void
-  /** Replace the state. Listeners fire only when the reference changes. */
-  set: (next: S | ((prev: S) => S)) => void
-}
+export type Store<S> = GridStore<S>
 ```
 
 | Member | Type | Description |
 | --- | --- | --- |
 | `getSnapshot` | `() =\> S` |  |
-| `subscribe` | `(listener: Listener) =\> () =\> void` |  |
+| `subscribe` | `(listener: GridStoreListener) =\> () =\> void` |  |
 | `set` | `(next: S \\| ((prev: S) =\> S)) =\> void` | Replace the state. Listeners fire only when the reference changes. |

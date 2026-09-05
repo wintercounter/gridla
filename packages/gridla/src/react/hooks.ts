@@ -2,7 +2,7 @@ import { useCallback, useRef, useSyncExternalStore } from 'react'
 
 import type { GridItem, GridLayout, GridRect } from '../core'
 import { useGridContext } from './context'
-import type { GridActions, GridInteraction, GridPreview, GridState } from './types'
+import type { GridActions, GridInteraction, GridPreview, GridState } from '../interaction/types'
 
 const EMPTY_RECT: GridRect = { x: 0, y: 0, w: 0, h: 0 }
 

@@ -4,16 +4,18 @@
   "workspaces": [
     "packages/*",
     "examples/*",
+    "examples/adapters/*",
     "website",
     "tests/package/consumers/*"
   ],
   "type": "module",
   "scripts": {
     "build": "bun run --filter gridla build",
-    "build:examples": "bun run --filter './examples/*' build",
+    "build:examples": "bun run --filter './examples/*' --filter './examples/adapters/*' build",
     "build:website": "bun run --filter gridla-website build",
     "dev:gallery": "bun run --filter gridla-gallery dev",
     "dev:studio": "bun run --filter gridla-studio dev",
+    "dev:adapters:vanilla-dom": "bun run --filter gridla-adapter-vanilla-dom dev",
     "dev:website": "bun run --filter gridla-website dev",
     "test": "bun test packages tests/compatibility tests/invariants",
     "test:watch": "bun test --watch packages tests/compatibility tests/invariants",

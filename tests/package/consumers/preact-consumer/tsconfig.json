@@ -1,0 +1,16 @@
+{
+  "// why": "Bun applies the nearest tsconfig's `paths` when resolving imports; without this file the root tsconfig would map `gridla` to packages/gridla/src instead of the installed tarball. No `paths` here on purpose: a directory mapping for `react` would make Bun load preact's CommonJS build next to the ESM one and split preact into two instances. At runtime `react` resolves through the package.json alias to @preact/compat. Type-checking uses tsconfig.typecheck.json.",
+  "compilerOptions": {
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
+    "target": "es2022",
+    "jsx": "react-jsx",
+    "jsxImportSource": "preact",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"]
+  },
+  "include": ["main.tsx"]
+}

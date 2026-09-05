@@ -158,3 +158,34 @@ suite. Descriptions are neutral rewrites, not source titles.
 | B-072 | A free-resize item with headroom below can be south-resized toward the canvas bottom (no stray max-height clamp).                                                         | ported-core            | tests/compatibility/solver.test.ts                                                           | Covered: "south resize honours the effective padding so a feed can reach the canvas edge". The original defect was seed data (maxH == minH), not engine.                                                                                                                                                                                                                                                                       |
 | B-073 | In edit mode a fixed-size item can be resized from its south-east handle and the new size becomes its fixed size.                                                         | ported-react-or-studio | studio.locks.e2e.ts · B-073                                                                  | Setup: Fixed-size item; edit mode; select it. Action: Drag the south-east handle +60,+60; release. Assert: Width and height grew ≈60; inspector fixed width/height reflect the new values.                                                                                                                                                                                                                                     |
 | B-074 | A fixed 121x36 child keeps its size while its fixed-height parent group is grown then shrunk in edit mode; the child itself can then be resized directly.                 | ported-react-or-studio | studio.locks.e2e.ts · B-074                                                                  | Setup: Fixed-height header group containing a fixed 121x36 child; edit mode. Action: Resize the group south +100, then back; then drag the child north-east handle +30,−30. Assert: Child stays 121x36 through the group resizes; group shrinks back ≥40; child then changes size during its own resize. — Fixed-child projection is core-covered (projection-chain fixed-width); kept here for the edit-mode override halves. |
+
+## Dev server ports
+
+Each example app owns one Rsbuild dev port (`server.port` in its
+`rsbuild.config.ts`). Adapter demo apps under `examples/adapters/<name>/` take
+the 3010 block in this order; reserve the port here before adding the app.
+
+| Port | App                             | Site path                |
+| ---- | ------------------------------- | ------------------------ |
+| 3001 | `examples/vanilla-basics`       | `/examples/vanilla/`     |
+| 3002 | `examples/react-basics`         | `/examples/react/`       |
+| 3003 | `examples/gallery`              | `/gallery/`              |
+| 3004 | `examples/studio`               | `/studio/`               |
+| 3010 | `examples/adapters/vanilla-dom` | `/adapters/vanilla-dom/` |
+| 3011 | `examples/adapters/elements`    | `/adapters/elements/`    |
+| 3012 | `examples/adapters/vue`         | `/adapters/vue/`         |
+| 3013 | `examples/adapters/svelte`      | `/adapters/svelte/`      |
+| 3014 | `examples/adapters/solid`       | `/adapters/solid/`       |
+| 3015 | `examples/adapters/angular`     | `/adapters/angular/`     |
+| 3016 | `examples/adapters/preact`      | `/adapters/preact/`      |
+| 3017 | `examples/adapters/qwik`        | `/adapters/qwik/`        |
+
+The built site is served on 4173 by `playwright.config.ts` (`GRIDLA_SITE_PORT`).
+
+## Adapter contract specs
+
+Framework adapters share one contract (`docs/private/adapters-brief.md`). The
+specs run against every demo app listed in their `ADAPTERS` array; add the name
+when the app lands.
+
+- **adapters: smoke** — canvas present, at least one item, no console errors → `specs/adapters.smoke.e2e.ts` (vanilla-dom)

@@ -40,7 +40,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install --frozen-lockfile
-      - run: bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage packages tests/unit tests/compatibility tests/invariants tests/react
+      - run: bun test --coverage --coverage-reporter=lcov --coverage-dir=coverage packages tests/unit tests/compatibility tests/invariants tests/react tests/interaction
       - uses: actions/upload-artifact@v4
         with:
           name: coverage
@@ -86,7 +86,7 @@ jobs:
           retention-days: 30
 
   site:
-    name: Build site, gallery, studio
+    name: Build site, gallery, studio, adapters
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
