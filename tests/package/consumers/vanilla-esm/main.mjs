@@ -7,7 +7,8 @@ assert.equal(typeof document, 'undefined', 'fixture must run without a DOM')
 assert.equal(typeof globalThis.React, 'undefined', 'fixture must run without React')
 
 const gridla = await import('gridla')
-const { createItem, moveItem, projectLayout, flattenLayout, layoutIsValid, boundsFromCanvas } = gridla
+const { createItem, moveItem, projectLayout, flattenLayout, layoutIsValid, boundsFromCanvas } =
+  gridla
 
 for (const name of ['createItem', 'moveItem', 'projectLayout', 'flattenLayout']) {
   assert.equal(typeof gridla[name], 'function', `gridla exports ${name}`)
@@ -23,8 +24,14 @@ const a = createItem('a', { w: 100, h: 100 }, 0, 0)
 const b = createItem('b', { w: 100, h: 100 }, 200, 0)
 const layout = { canvas, items: [a, b] }
 
-assert.deepEqual({ id: a.id, x: a.x, y: a.y, w: a.w, h: a.h }, { id: 'a', x: 0, y: 0, w: 100, h: 100 })
-assert.ok(layoutIsValid(layout.items, boundsFromCanvas(layout.canvas), 0), 'fixture layout is valid')
+assert.deepEqual(
+  { id: a.id, x: a.x, y: a.y, w: a.w, h: a.h },
+  { id: 'a', x: 0, y: 0, w: 100, h: 100 },
+)
+assert.ok(
+  layoutIsValid(layout.items, boundsFromCanvas(layout.canvas), 0),
+  'fixture layout is valid',
+)
 
 // moveItem: free space, must be accepted and must not mutate the input.
 const moved = moveItem({ layout, itemId: 'a', position: { x: 300, y: 0 } })
@@ -32,7 +39,10 @@ assert.equal(moved.accepted, true, 'move into free space is accepted')
 assert.equal(moved.item.x, 300)
 assert.equal(moved.layout.items.find((item) => item.id === 'a')?.x, 300)
 assert.equal(layout.items[0].x, 0, 'moveItem does not mutate the input layout')
-assert.ok(layoutIsValid(moved.layout.items, boundsFromCanvas(moved.layout.canvas), 0), 'moved layout is valid')
+assert.ok(
+  layoutIsValid(moved.layout.items, boundsFromCanvas(moved.layout.canvas), 0),
+  'moved layout is valid',
+)
 
 // projectLayout: onto a wider canvas, items stay in bounds and keep their order.
 const projected = projectLayout(layout, { width: 800 })
@@ -61,4 +71,6 @@ assert.equal(flatB.depth, 1)
 assert.deepEqual(flatB.rect, { x: 200, y: 0, w: 100, h: 100 })
 assert.deepEqual([...(flat.childrenByParentId.get('root') ?? [])], ['a', 'b'])
 
-console.log(`vanilla-esm ok (${typeof Bun === 'undefined' ? `node ${process.version}` : `bun ${Bun.version}`})`)
+console.log(
+  `vanilla-esm ok (${typeof Bun === 'undefined' ? `node ${process.version}` : `bun ${Bun.version}`})`,
+)

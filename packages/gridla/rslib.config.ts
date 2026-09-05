@@ -16,7 +16,7 @@ export default defineConfig({
       syntax: 'es2022',
       bundle: true,
       dts: {
-        bundle: false,
+        bundle: true,
       },
       output: {
         distPath: {

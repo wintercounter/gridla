@@ -1,1 +1,19 @@
-{"name":"gridla-website","private":true,"type":"module"}
+{
+  "name": "gridla-website",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "rspress dev",
+    "build": "rspress build",
+    "preview": "rspress preview",
+    "generate": "bun run scripts/generate-api.ts",
+    "check-links": "bun run scripts/check-links.ts"
+  },
+  "devDependencies": {
+    "@rspress/core": "2.0.21",
+    "@rspress/plugin-llms": "2.0.21",
+    "@rspress/plugin-sitemap": "2.0.21",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  }
+}

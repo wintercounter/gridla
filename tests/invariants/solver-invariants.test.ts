@@ -67,7 +67,10 @@ function apply(layout: GridLayout, op: Op, step: number, options: SolveOptions):
     case 'move': {
       const target = pickItem(layout.items, op.index)
       const position = resolvePoint(layout.canvas, op.px, op.py)
-      return { result: moveItem({ layout, itemId: target.id, position, options }), activeId: target.id }
+      return {
+        result: moveItem({ layout, itemId: target.id, position, options }),
+        activeId: target.id,
+      }
     }
     case 'resize': {
       const target = pickItem(layout.items, op.index)
@@ -252,18 +255,12 @@ describe('solver invariants', () => {
 
   it('random operation sequences keep every accepted intermediate layout valid', () => {
     fc.assert(
-      fc.property(
-        gappedLayoutArb,
-        opSequenceArb,
-        gapArb,
-        snapArb,
-        ({ layout }, ops, gap, snap) => {
-          let current = layout
-          ops.forEach((op, index) => {
-            current = step(current, op, index, gap, snap)
-          })
-        },
-      ),
+      fc.property(gappedLayoutArb, opSequenceArb, gapArb, snapArb, ({ layout }, ops, gap, snap) => {
+        let current = layout
+        ops.forEach((op, index) => {
+          current = step(current, op, index, gap, snap)
+        })
+      }),
       { numRuns: 200 },
     )
   })

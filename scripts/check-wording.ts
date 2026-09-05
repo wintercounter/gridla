@@ -18,12 +18,18 @@ const words = readFileSync(listPath, 'utf8')
   .map((line) => line.trim().toLowerCase())
   .filter((line) => line && !line.startsWith('#'))
 
-const proc = Bun.spawnSync(['git', 'ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root })
+const proc = Bun.spawnSync(['git', 'ls-files', '--cached', '--others', '--exclude-standard'], {
+  cwd: root,
+})
 const files = proc.stdout
   .toString()
   .split('\n')
-  .filter((file) => file && /\.(ts|tsx|js|jsx|mjs|cjs|json|md|mdx|css|html|yml|yaml|txt|svg)$/.test(file))
-  .filter((file) => !file.startsWith('docs/') && !file.includes('node_modules/') && file !== 'bun.lock')
+  .filter(
+    (file) => file && /\.(ts|tsx|js|jsx|mjs|cjs|json|md|mdx|css|html|yml|yaml|txt|svg)$/.test(file),
+  )
+  .filter(
+    (file) => !file.startsWith('docs/') && !file.includes('node_modules/') && file !== 'bun.lock',
+  )
 
 const escape = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 const patterns = words.map((word) => new RegExp(`(?<![a-z0-9])${escape(word)}(?![a-z0-9])`, 'gi'))

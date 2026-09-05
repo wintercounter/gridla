@@ -11,14 +11,7 @@ import {
   type ProjectionStrategy,
 } from 'gridla'
 
-import {
-  canvasArb,
-  deepFreeze,
-  gappedLayoutArb,
-  idsOf,
-  rectOf,
-  snapshot,
-} from './arbitraries'
+import { canvasArb, deepFreeze, gappedLayoutArb, idsOf, rectOf, snapshot } from './arbitraries'
 
 /**
  * Property-based invariants for `projectLayout` under both strategies:
@@ -52,7 +45,12 @@ function assertInside(layout: GridLayout): void {
   }
 }
 
-function project(layout: GridLayout, target: GridCanvas, strategy: ProjectionStrategy, gap: number) {
+function project(
+  layout: GridLayout,
+  target: GridCanvas,
+  strategy: ProjectionStrategy,
+  gap: number,
+) {
   return strategy === 'chain'
     ? projectLayout(layout, target, { strategy, gap })
     : projectLayout(layout, target, { strategy })
@@ -125,7 +123,11 @@ describe('projection invariants', () => {
         strategyArb,
         ({ gap, layout }, extraW, extraH, strategy) => {
           const a = normalizeLayout(layout)
-          const b: GridCanvas = { ...a.canvas, width: a.canvas.width + extraW, height: a.canvas.height + extraH }
+          const b: GridCanvas = {
+            ...a.canvas,
+            width: a.canvas.width + extraW,
+            height: a.canvas.height + extraH,
+          }
           const there = project(a, b, strategy, gap)
           const back = project(there, a.canvas, strategy, gap)
           const source = new Map(a.items.map((item) => [item.id, item]))
